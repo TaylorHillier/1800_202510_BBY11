@@ -59,7 +59,7 @@ project-name/
 
 ## Contributors
 - **Taylor Hillier** - BCIT CST Student, learning to code still and do cool stuff.
-
+- **Son Bui** - excited to get this project done.
 
 ---
 
