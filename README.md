@@ -58,7 +58,7 @@ project-name/
 ---
 
 ## Contributors
-- **Your Name** - BCIT CST Student with a passion for creating user-friendly applications. Fun fact: Loves solving Rubik's Cubes in under a minute.
+- **Harshaan** - Hi, I'm a BCIT CST student who graduated from high school in 2024, I did a semester at Douglas before coming here. I love basketball, working out, and Tim Hortons!
 - **Teammate Name** - BCIT CST Student, Frontend enthusiast with a knack for creative design. Fun fact: Has a collection of over 50 houseplants.
 
 ---
