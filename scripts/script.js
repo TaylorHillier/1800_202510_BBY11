@@ -1,4 +1,3 @@
-function sayHello() {
-    
+function closeCTA() {
+    document.getElementById('cta-section').classList.add('hidden');
 }
-//sayHello();
