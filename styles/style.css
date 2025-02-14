@@ -1,1 +1,60 @@
+.navigation{
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    left: 0;
+}
 
+.hidden-mobile{
+    display: none;
+}
+
+.nav-list{
+    display: flex;
+    justify-content: space-evenly;
+}
+
+a{
+    text-decoration: none;
+    text-wrap: none;
+    white-space: nowrap;
+}
+
+ul{
+    list-style: none;
+    padding: 0;
+}
+
+.nav-item{
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+@media(min-width: 780px){
+ 
+    
+}
+
+
+@media(min-width: 1280px){
+    .navigation{
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .hidden-mobile{
+        display: flex;
+    }
+
+    .nav-list{
+        display: flex;
+        justify-content: space-evenly;
+        width: 100%;
+        gap: 2rem;
+    }
+}
