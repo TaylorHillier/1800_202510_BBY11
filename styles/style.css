@@ -1,7 +1,8 @@
-:root{
+:root {
     --link: #757575
 }
 
+/* Harshaan */
 .hero-section {
     padding: 2rem 0;
 }
@@ -43,7 +44,8 @@
     justify-content: center;
 }
 
-.btn-primary, .btn-secondary {
+.btn-primary,
+.btn-secondary {
     padding: 0.8rem 1.5rem;
     border: none;
     border-radius: 6px;
@@ -63,7 +65,8 @@
     border: 2px solid white;
 }
 
-.btn-primary:hover, .btn-secondary:hover {
+.btn-primary:hover,
+.btn-secondary:hover {
     transform: translateY(-2px);
 }
 
@@ -72,16 +75,17 @@
         width: 90%;
         margin: 1rem auto;
     }
-    
+
     .cta-overlay {
         padding: 1.5rem;
     }
-    
+
     .cta-buttons {
         flex-direction: column;
     }
-    
-    .btn-primary, .btn-secondary {
+
+    .btn-primary,
+    .btn-secondary {
         width: 100%;
     }
 }
@@ -90,7 +94,7 @@
     display: none;
 }
 
-.navigation{
+.navigation {
     position: fixed;
     bottom: 0;
     right: 0;
@@ -100,22 +104,22 @@
     align-items: center;
 }
 
-nav{
+nav {
     width: 100%;
 }
 
-.hidden-mobile{
+.hidden-mobile {
     display: none;
 }
 
-a{
+a {
     text-decoration: none;
     white-space: nowrap;
     color: var(--link);
     width: 100%;
 }
 
-ul{
+ul {
     list-style: none;
     padding: 0;
 }
@@ -128,14 +132,14 @@ ul{
     padding: 0;
 }
 
-.nav-link{
+.nav-link {
     flex-direction: column;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-.nav-link>p{
+.nav-link>p {
     margin: 10px;
 }
 
@@ -147,35 +151,65 @@ ul{
     position: relative;
 }
 
-@media(min-width: 768px){
- 
-    
-}
+@media(min-width: 768px) {}
 
-@media(min-width: 1280px){
-    .navigation{
+@media(min-width: 1280px) {
+    .navigation {
         position: relative;
         display: flex;
         align-items: center;
         justify-content: space-between;
     }
 
-    .nav-link svg{
+    .nav-link svg {
         display: none;
     }
 
-    nav{
+    nav {
         width: auto;
     }
 
-    .hidden-mobile{
+    .hidden-mobile {
         display: flex;
     }
 
-    .nav-list{
+    .nav-list {
         display: flex;
         justify-content: space-evenly;
         width: 100%;
         gap: 2rem;
     }
+}
+
+/* Son */
+.welcomeBanner {
+    margin-left: 2%;
+    margin-right: 40%;
+}
+
+.bigWelcome {
+    font-size: 50px;
+}
+
+.welcomeMessage {
+    font-size: 18px;
+}
+
+.welcomeButtons button {
+    font-size: 16px;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    width: 100px;
+    height: 50px;
+}
+
+.logIn {
+    background-color: rgb(83, 151, 247);
+}
+
+.welcomeButtons button:hover {
+    background-color: rgb(123, 134, 140);
+    transform: scale(1.02);
+    transition: background-color 0.3s, transform 0.2s;
 }
