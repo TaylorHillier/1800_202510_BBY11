@@ -180,12 +180,14 @@ ul {
         gap: 2rem;
     }
 }
+
 /* General Styles */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f4f4f4; /* Light background for contrast */
+    background-color: #f4f4f4;
+    /* Light background for contrast */
     color: #333;
 }
 
@@ -217,32 +219,41 @@ body {
 }
 
 /* Section Box Styling */
-.about-section, 
-.how-it-works, 
-.testimonials, 
-.security-privacy, 
+.about-section,
+.how-it-works,
+.testimonials,
+.security-privacy,
 .contact-info {
     max-width: 800px;
     margin: 40px auto;
     padding: 25px;
     text-align: center;
-    background: white;  /* Box background */
-    border-radius: 12px; /* Rounded corners */
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Soft shadow */
+    background: white;
+    /* Box background */
+    border-radius: 12px;
+    /* Rounded corners */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    /* Soft shadow */
 }
 
 /* Add spacing between sections */
-.how-it-works, .testimonials, .security-privacy, .contact-info {
+.how-it-works,
+.testimonials,
+.security-privacy,
+.contact-info {
     margin-top: 30px;
 }
 
 /* Headings */
-h1, h2 {
-    color: #007bff;
+h1,
+h2 {
     font-size: 2em;
 }
 
-p, ol, blockquote, ul {
+p,
+ol,
+blockquote,
+ul {
     font-size: 1.2em;
     color: #555;
 }
