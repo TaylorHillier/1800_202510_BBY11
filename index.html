@@ -1,16 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <title>My BCIT Project</title>
-    <meta name="comp1800 template" content="My 1800 App">
-
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <link rel="stylesheet" href="styles/style.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homepage</title>
+    <link rel="stylesheet" href="styles/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
@@ -40,32 +35,59 @@
         </nav>
     </header>
 
-    <div class="welcomeBanner">
-        <h1 class="bigWelcome">Welcome to MediConnect</h1>
-        <div class="welcomeContent">
-          <p class="welcomeMessage">Easily track symptoms, medications, and upcoming checkups. Stay connected with caregivers, access emergency medical history when you need it most, and enjoy peace of mind knowing your family’s health is well cared for—all in one simple app.</p>
-          <div class="welcomeButtons">
-            <button type="button" class="logIn">LOG IN</button>
-            <button type="button" class="signUp">SIGN UP</button>
-          </div>
+    <!-- Hero Section -->
+    <div class="hero">
+        <div class="hero-content">
+            <h1>Welcome to MediConnect</h1>
+            <p>Easily track symptoms, medications, and upcoming checkups. Stay connected with caregivers, access emergency medical history when you need it most, and enjoy peace of mind knowing your family’s health is well cared for—all in one simple app.</p>
+            <div class="hero-buttons">
+                <a href="#" class="btn btn-primary">Log In</a>
+                <a href="#" class="btn btn-secondary">Sign Up</a>
+            </div>
         </div>
     </div>
 
-    <div id="cta-section" class="hero-section">
+    <section id="cta-section" class="hero-section">
         <div class="cta-container">
             <div class="cta-overlay">
                 <h2>Skip the Waiting Room Paperwork</h2>
                 <p>Submit your symptoms and medications securely before your appointment. Save time for what matters most - your health.</p>
                 <div class="cta-buttons">
-                    <button class="btn-primary"><a href="login.html">Get Started Now</a></button>
+                    <button class="btn-primary" onclick="">Get Started Now</button>
                     <button class="btn-secondary">Learn More</button>
                 </div>
             </div>
         </div>
-    </div>
-    
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-column">
+                <h4>MediConnect</h4>
+                <p>Innovative solutions for modern businesses, driving growth and efficiency.</p>
+            </div>
+            <div class="footer-column">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#">My Medical</a></li>
+                    <li><a href="#">Symptoms</a></li>
+                    <li><a href="#">My Communications</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Contact Us</h4>
+                <p>Email: contact@mediconnect.com</p>
+                <p>Phone: (555) 123-4567</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 MediConnect. All Rights Reserved.</p>
+        </div>
+    </footer>
+
     <script src="./scripts/script.js"></script>
     <script src="./scripts/FIREBASE_API.js"></script>
 </body>
-
 </html>
