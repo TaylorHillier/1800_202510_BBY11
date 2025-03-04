@@ -291,30 +291,45 @@ p, ol, blockquote, ul {
 
 
 /* Son */
-.welcomeBanner {
-    margin-left: 2%;
-    margin-right: 40%;
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-.bigWelcome {
-    font-size: 50px;
+:root {
+    --primary-color: #3b82f6;
+    --secondary-color: #6366f1;
+    --text-color: #1f2937;
+    --background-color: #f9fafb;
 }
 
-.welcomeMessage {
-    font-size: 18px;
+body {
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--background-color);
 }
 
-.welcomeButtons button {
-    font-size: 16px;
-    padding: 12px;
-    border-radius: 8px;
-    font-weight: bold;
-    width: 100px;
-    height: 50px;
+/* Navigation Styles */
+nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
 }
 
-.logIn {
-    background-color: rgb(83, 151, 247);
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem 2rem;
 }
 
 .welcomeButtons button:hover {
