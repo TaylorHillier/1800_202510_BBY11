@@ -1,3 +1,8 @@
-function closeCTA() {
-    document.getElementById('cta-section').classList.add('hidden');
+function logout() {
+    firebase.auth().signOut().then(() => {
+        // Sign-out successful.
+        console.log("logging out user");
+      }).catch((error) => {
+        // An error happened.
+      });
 }
