@@ -191,13 +191,6 @@ body {
     color: #333;
 }
 
-/* Navigation Bar */
-.navigation {
-    background-color: #007bff;
-    padding: 15px;
-    text-align: center;
-}
-
 .nav-list {
     list-style: none;
     padding: 0;
@@ -318,6 +311,7 @@ body {
     line-height: 1.6;
     color: var(--text-color);
     background-color: var(--background-color);
+    height: 100%;
 }
 
 /* Navigation Styles */

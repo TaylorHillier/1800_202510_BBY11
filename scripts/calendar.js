@@ -145,7 +145,7 @@ class CalendarApp {
 
 
 // Inject styles
-document.head.insertAdjacentHTML('beforeend', calendarStyles);
+document.head.insertAdjacentHTML('beforeend', calendar);
 
 // Initialize Calendar on page load
 document.addEventListener('DOMContentLoaded', () => {

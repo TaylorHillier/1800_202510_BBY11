@@ -23,9 +23,6 @@
 
 <body>
     <header class='navigation'>
-        <div class="hidden-mobile">
-            <p>MediConnect</p>
-        </div>
         <nav>
             <ul class="nav-list">
                 <li class="nav-item">
@@ -70,8 +67,18 @@
         </nav>
     </header>
 
+    <section>
+        <h1 > Good Morning, <span id="user-name"></span></h1>
+    </section>
+
     <section id="calendar">
        
+        <div id="medications">
+            Here are your medications for the day:
+            <ul id="med-list">
+              
+            </ul>
+        </div>
     </section>
 
     <section id="symptoms">
@@ -91,6 +98,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const calendar = new CalendarApp('calendar');
         });
+        getMedicationList();
     </script>
 </body>
 
