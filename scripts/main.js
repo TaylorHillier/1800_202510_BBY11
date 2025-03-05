@@ -21,15 +21,46 @@ getNameFromAuth(); //run the function
 
 function getMedicationList() {
     firebase.auth().onAuthStateChanged(user => {
-        if(user){
-            db.collection("users").doc(user.uid).collection("Meds").get().then((querySnapshot) => {
-                querySnapshot.forEach((doc) => {
-                    console.log(doc.data());
-                    document.getElementById("med-list").innerHTML = '<li>' + doc.id + ' ' + doc.data().Frequency + ' times a day</li>';
+        if (user) {
+            // Reference to the Dependants collection
+            db.collection("users").doc(user.uid).collection("Dependants").get()
+                .then((dependantsSnapshot) => {
+                    // Clear existing list before populating
+                    const medListElement = document.getElementById("med-list");
+                    medListElement.innerHTML = '';
+                
+                    // Iterate through each dependant
+                    dependantsSnapshot.forEach((dependantDoc) => {
+                        // Access the Meds subcollection for each dependant
+                        console.log(dependantDoc.data());
+                        dependantDoc.ref.collection("Meds").get()
+                            .then((medsSnapshot) => {
+                                // Iterate through medications for this dependant
+                                medsSnapshot.forEach((medDoc) => {
+                                    const medData = medDoc.data();
+                             
+                                    // Create list item with medication details
+                                    const listItem = document.createElement('li');
+                                    listItem.textContent = `${dependantDoc.data().Name} - ${medData.Medication.Name}: ${medData.Medication.Frequency} times a day`;
+                                    
+                                    // Append to the list
+                                    medListElement.appendChild(listItem);
+                                });
+                            })
+                            .catch((error) => {
+                                console.error(`Error fetching medications for ${dependantDoc.id}:`, error);
+                            });
+                    });
+                })
+                .catch((error) => {
+                    console.error("Error fetching dependants:", error);
                 });
-            });
         } else {
-            console.log ("no user");
+            console.log("No user logged in");
         }
-    })
+    });
+}
+
+function addMedication()  {
+
 }
