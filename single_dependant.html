@@ -17,8 +17,11 @@
 </head>
 <body>
     <section id="calendar">
-       
+       <header id="navigation" class="navigation">
+
+       </header>
         <div id="medications">
+            <h1 id="dependant-info"></h1>
             Here are your medications for the day:
             <ul id="med-list">
               
@@ -28,12 +31,16 @@
             </div>
         </div>
     </section>
+
+    <script src="./scripts/FIREBASE_API.js"></script>
+    <script src="./scripts/script.js"></script>
     <script src="./scripts/dependants.js"></script>
+    <script src="./scripts/calendar.js"></script>
+    <script src="./scripts/single_dependant.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const calendar = new CalendarApp('calendar');
         });
-        getMedicationList();
     </script>
 </body>
 </html>
