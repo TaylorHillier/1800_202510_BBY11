@@ -39,6 +39,7 @@ function createForm() {
         event.preventDefault();
         console.log("Form submitted!");
         addDependant();
+        form.reset();
     });
 
     // Append inputs to form
@@ -59,7 +60,6 @@ function addDependant() {
         return;
     }
 
-    const form = document .getElementById("dependant-form");
     const firstname = document.getElementById("firstname").value.trim();
     const lastname = document.getElementById("lastname").value.trim();
 
@@ -70,7 +70,7 @@ function addDependant() {
 
     const dependant = {
         firstname: firstname,
-        lastName: lastname,
+        lastname: lastname,
         careTaker: user.uid
     }
 
@@ -85,3 +85,4 @@ function addDependant() {
         console.error("Error adding dependant: ", error);
     });
 }
+
