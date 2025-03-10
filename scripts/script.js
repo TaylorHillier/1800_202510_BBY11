@@ -6,3 +6,93 @@ function logout() {
         // An error happened.
       });
 }
+
+function setNav() {
+
+  firebase.auth().onAuthStateChanged(user => {
+    if (user) {                   
+      document.getElementById("navigation").insertAdjacentHTML("afterbegin", 
+        `<nav>
+          <ul class="nav-list">
+              <li class="nav-item">
+                  <a href=""  class="nav-link">
+                      <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd">
+                          <path d="M22 11.414v12.586h-20v-12.586l-1.293 1.293-.707-.707 12-12 12 12-.707.707-1.293-1.293zm-6 11.586h5v-12.586l-9-9-9 9v12.586h5v-9h8v9zm-1-7.889h-6v7.778h6v-7.778z"/>
+                      </svg>
+                      <p>Home</p>
+                  </a>
+              </li>
+              <li class="nav-item">
+                  <a href=""  class="nav-link">
+                      <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd">
+                          <path d="M22 6c1.104 0 2 .896 2 2v12c0 1.104-.896 2-2 2h-20c-1.104 0-2-.896-2-2v-12c0-1.104.896-2 2-2h5v-2c0-1.104.896-2 2-2h6c1.104 0 2 .896 2 2v2h5zm0 2.5c0-.276-.224-.5-.5-.5h-19c-.276 0-.5.224-.5.5v11c0 .276.224.5.5.5h19c.276 0 .5-.224.5-.5v-11zm-9 4.5h3v2h-3v3h-2v-3h-3v-2h3v-3h2v3zm1.5-9h-5c-.276 0-.5.224-.5.5v1.5h6v-1.5c0-.276-.224-.5-.5-.5"/>
+                      </svg>
+                      <p>My Medical</p>
+                  </a>
+              </li>
+              <li class="nav-item">
+                  <a href=""  class="nav-link">
+                      <svg clip-rule="evenodd" fill-rule="evenodd" width="24" height="24" stroke-linejoin="round" stroke-miterlimit="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path d="m11.25 6c.398 0 .75.352.75.75 0 .414-.336.75-.75.75-1.505 0-7.75 0-7.75 0v12h17v-8.749c0-.414.336-.75.75-.75s.75.336.75.75v9.249c0 .621-.522 1-1 1h-18c-.48 0-1-.379-1-1v-13c0-.481.38-1 1-1zm1.521 9.689 9.012-9.012c.133-.133.217-.329.217-.532 0-.179-.065-.363-.218-.515l-2.423-2.415c-.143-.143-.333-.215-.522-.215s-.378.072-.523.215l-9.027 8.996c-.442 1.371-1.158 3.586-1.264 3.952-.126.433.198.834.572.834.41 0 .696-.099 4.176-1.308zm-2.258-2.392 1.17 1.171c-.704.232-1.274.418-1.729.566zm.968-1.154 7.356-7.331 1.347 1.342-7.346 7.347z" fill-rule="nonzero"/>
+                      </svg>
+                      <p>Symptoms</p>
+                  </a>
+              </li>
+              <li class="nav-item">
+                  <a href="" class="nav-link">
+                      <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd">
+                          <path d="M24 21h-24v-18h24v18zm-23-16.477v15.477h22v-15.477l-10.999 10-11.001-10zm21.089-.523h-20.176l10.088 9.171 10.088-9.171z"/>
+                      </svg>
+                      <p>My Communications</p>
+                  </a>
+              </li>
+              <li class="nav-item">
+                  <a href="about.html" class="nav-link">
+                      <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd">
+                          <path d="M12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10-10-4.477-10-10 4.477-10 10-10zm0 1.5c-4.687 0-8.5 3.813-8.5 8.5s3.813 8.5 8.5 8.5 8.5-3.813 8.5-8.5-3.813-8.5-8.5-8.5zm.75 12.75h-1.5v-1.5h1.5v1.5zm0-3h-1.5v-6h1.5v6z"/>
+                      </svg>
+                      <p>About</p>
+                  </a>
+              </li>                
+              <li class="nav-item">
+                  <a onclick="logout()" class="nav-link" href="index.html">
+                      <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd">
+                          <path d="M24 21h-24v-18h24v18zm-23-16.477v15.477h22v-15.477l-10.999 10-11.001-10zm21.089-.523h-20.176l10.088 9.171 10.088-9.171z"/>
+                      </svg>
+                      <p>Log Out</p>
+                  </a>
+              </li>
+          </ul>
+      </nav>`
+      );
+    } else {
+      document.getElementById("navigation").insertAdjacentHTML("afterbegin", 
+      `<nav>
+          <ul class="nav-list">
+              <li class="nav-item">
+                  <a href="index.html"  class="nav-link">
+                      <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd"><path d="M22 11.414v12.586h-20v-12.586l-1.293 1.293-.707-.707 12-12 12 12-.707.707-1.293-1.293zm-6 11.586h5v-12.586l-9-9-9 9v12.586h5v-9h8v9zm-1-7.889h-6v7.778h6v-7.778z"></path>
+                      </svg>
+                      <p>Home</p>
+                  </a>
+              </li>
+              <li class="nav-item">
+                  <a href="login.html"  class="nav-link">
+                      <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd"><path d="M22 6c1.104 0 2 .896 2 2v12c0 1.104-.896 2-2 2h-20c-1.104 0-2-.896-2-2v-12c0-1.104.896-2 2-2h5v-2c0-1.104.896-2 2-2h6c1.104 0 2 .896 2 2v2h5zm0 2.5c0-.276-.224-.5-.5-.5h-19c-.276 0-.5.224-.5.5v11c0 .276.224.5.5.5h19c.276 0 .5-.224.5-.5v-11zm-9 4.5h3v2h-3v3h-2v-3h-3v-2h3v-3h2v3zm1.5-9h-5c-.276 0-.5.224-.5.5v1.5h6v-1.5c0-.276-.224-.5-.5-.5"></path></svg>
+                      <p>Login</p>
+                  </a>
+              </li>
+              <li class="nav-item">
+                  <a href="about.html" class="nav-link">
+                      <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd">
+                              <path d="M12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10-10-4.477-10-10 4.477-10 10-10zm0 1.5c-4.687 0-8.5 3.813-8.5 8.5s3.813 8.5 8.5 8.5 8.5-3.813 8.5-8.5-3.813-8.5-8.5-8.5zm.75 12.75h-1.5v-1.5h1.5v1.5zm0-3h-1.5v-6h1.5v6z"></path>
+                      </svg>
+                      <p>About</p>
+                  </a>
+              </li>
+          </ul>
+      </nav>`);
+    }
+});
+}
+setNav();

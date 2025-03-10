@@ -34,8 +34,8 @@ function getMedicationList() {
                         // Access the Meds subcollection for each dependant
                         console.log(dependantDoc.data());
                         dependantDoc.ref.collection("Meds").get()
-                            .then((medsSnapshot) => {
-                                // Iterate through medications for this dependant
+                        .then((medsSnapshot) => {
+                            // Iterate through medications for this dependant
                                 medsSnapshot.forEach((medDoc) => {
                                     const medData = medDoc.data();
                              

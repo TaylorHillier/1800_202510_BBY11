@@ -1,15 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <title>User Hub</title>
-    <meta name="comp1800 template" content="My 1800 App">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
 
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <link rel="stylesheet" href="styles/style.css"/>
+    <link rel="stylesheet" href="styles/style.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -17,31 +13,19 @@
     <script src="https://www.gstatic.com/firebasejs/ui/4.8.1/firebase-ui-auth.js"></script> 
     <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.8.1/firebase-ui-auth.css" />
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
-
 </head>
-
 <body>
     <header class='navigation' id="navigation">
     
     </header>
-
-    <section>
-        <h1 > Good Morning, <span id="user-name"></span></h1>
-    </section>
-
-    <section id="dependants">
-        <h2>View your dependants:</h2>
-        <a href="./dependants.html">Here</a>
-    </section>
+    <main>
+        <section id="dependant-main">
+            <button id="add-dependant">Add a Dependant</button>
+        </section>
+    </main>
 
     <script src="./scripts/FIREBASE_API.js"></script>
-    <script src="./scripts/main.js"></script>
-    <script src="./scripts/dependants.js"></script>
     <script src="./scripts/script.js"></script>
-
-    <script>
-
-    </script>
+    <script src="./scripts/dependants.js"></script>
 </body>
-
 </html>
