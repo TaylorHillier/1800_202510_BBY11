@@ -13,7 +13,7 @@ class CalendarApp {
     }
 
     renderNavigation() {
-        // Son test fix duplicated calender nav
+        // Son test fix duplicated calendar nav
         const existingNav = this.container.querySelector('.calendar-navigation');
         if (existingNav) {
             existingNav.remove();
