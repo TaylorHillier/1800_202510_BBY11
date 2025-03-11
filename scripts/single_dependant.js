@@ -186,6 +186,10 @@ function addMedication() {
     const medicationName = document.getElementById("medication").value.trim();
     const frequency = document.getElementById("frequency").value;
 
+    if (!startDate || !endDate || !medicationName || !frequency) {
+        console.error("Fill in all fields");
+        return;
+    }
     const medication = {
         name: medicationName,
         startDate: startDate,
