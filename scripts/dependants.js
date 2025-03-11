@@ -17,6 +17,7 @@ function createForm() {
     var form = document.createElement("form");
     form.setAttribute("method", "post");
     form.setAttribute("action", "addDependant");
+    form.id = "dependants-form"
 
     var firstname = document.createElement("input");
     firstname.setAttribute("id", "firstname");
@@ -47,8 +48,9 @@ function createForm() {
     form.appendChild(lastname);
     form.appendChild(submit);
 
-    // Append form to body
-    document.body.appendChild(form);
+    if(!document.getElementById("dependants-form")){
+        document.body.appendChild(form);
+    }
 }
 
 function addDependant() {
