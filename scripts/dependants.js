@@ -78,7 +78,11 @@ function addDependant() {
         careTaker: user.uid
     }
 
-    const dependantsRef = firebase.firestore().collection('users').doc(user.uid).collection('dependants').add(dependant);
+    const dependantsRef = firebase.firestore()
+        .collection('users')
+        .doc(user.uid)
+        .collection('dependants')
+        .add(dependant);
 
     dependantsRef.then((doc) => {
         console.log("new dependant added");

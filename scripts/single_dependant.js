@@ -109,6 +109,28 @@ function createMedicationForm() {
     medication.setAttribute("name", "medication");
     medication.setAttribute("placeholder", "Medication");
 
+    // Frequency Label and Select Dropdown
+    var frequencyLabel = document.createElement("label");
+    frequencyLabel.setAttribute("for", "frequency");
+    frequencyLabel.textContent = "Frequency: ";
+
+    var frequency = document.createElement("select");
+    frequency.setAttribute("id", "frequency");
+    frequency.setAttribute("name", "frequency");
+
+    // Frequency Options
+    var options = [
+        "Twice Daily",
+        "Daily",
+        "Weekly",
+        "Once a Lifetime"];
+    options.forEach(optionText => {
+        var option = document.createElement("option");
+        option.value = optionText;
+        option.textContent = optionText;
+        frequency.appendChild(option);
+    });
+
     // Submit Button
     var submit = document.createElement("input");
     submit.setAttribute("type", "submit");
@@ -117,25 +139,73 @@ function createMedicationForm() {
     form.addEventListener("submit", function (event) {
         event.preventDefault();
         console.log("Form submitted!");
-        submitMedication();
+        addMedication();
         form.reset();
     });
 
     // Append elements to form
     form.appendChild(startDateLabel);
     form.appendChild(startDate);
-    form.appendChild(document.createElement("br")); // Line break
+    form.appendChild(document.createElement("br"));
 
     form.appendChild(endDateLabel);
     form.appendChild(endDate);
-    form.appendChild(document.createElement("br")); // Line break
+    form.appendChild(document.createElement("br"));
 
     form.appendChild(medicationLabel);
     form.appendChild(medication);
-    form.appendChild(document.createElement("br")); // Line break
+    form.appendChild(document.createElement("br"));
+
+    form.appendChild(frequencyLabel);
+    form.appendChild(frequency);
+    form.appendChild(document.createElement("br"));
 
     form.appendChild(submit);
 
-    // Insert form right below the button
     button.insertAdjacentElement("afterend", form);
+}
+
+function addMedication() {
+    const user = firebase.auth().currentUser;
+
+    if (!user) {
+        console.error("No user signed in");
+        return;
+    }
+
+    const url = new URLSearchParams(window.location.search);
+    const dependantId = url.get('id');
+
+    if (!dependantId) {
+        console.error("No dependant selected");
+        return;
+    }
+
+    const startDate = document.getElementById("start-date").value.trim();
+    const endDate = document.getElementById("end-date").value.trim();
+    const medicationName = document.getElementById("medication").value.trim();
+    const frequency = document.getElementById("frequency").value;
+
+    const medication = {
+        name: medicationName,
+        startDate: startDate,
+        endDate: endDate,
+        frequency: frequency,
+        addedBy: user.uid
+    };
+
+    const medicationRef = firebase.firestore()
+        .collection('users')
+        .doc(user.uid)
+        .collection('dependants')
+        .doc(dependantId)
+        .collection('medications')
+        .add(medication);
+
+    medicationRef.then(() => {
+        console.log("New medication added:", medicationName);
+    })
+        .catch((error) => {
+            console.error("Error adding medication:", error);
+        });
 }
