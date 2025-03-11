@@ -8,8 +8,9 @@ class CalendarApp {
     }
 
     init() {
-        this.renderCalendar();
+        // render Nav first so that it always stay on top
         this.renderNavigation();
+        this.renderCalendar();
     }
 
     renderNavigation() {
