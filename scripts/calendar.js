@@ -13,9 +13,15 @@ class CalendarApp {
     }
 
     renderNavigation() {
+        // Son test fix duplicated calender nav
+        const existingNav = this.container.querySelector('.calendar-navigation');
+        if (existingNav) {
+            existingNav.remove();
+        }
+
         const navContainer = document.createElement('div');
         navContainer.className = 'calendar-navigation';
-        
+
         const prevButton = document.createElement('button');
         prevButton.innerText = '←';
         prevButton.addEventListener('click', () => this.changeMonth(-1));
@@ -57,7 +63,7 @@ class CalendarApp {
         // Get first day of the month and total days
         const firstDay = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
         const lastDay = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 0);
-        
+
         // Pad with previous month's days
         const startingDay = firstDay.getDay();
         for (let i = 0; i < startingDay; i++) {
@@ -72,8 +78,8 @@ class CalendarApp {
             dayElement.className = 'calendar-day';
             dayElement.innerText = day;
             dayElement.dataset.date = new Date(
-                this.currentDate.getFullYear(), 
-                this.currentDate.getMonth(), 
+                this.currentDate.getFullYear(),
+                this.currentDate.getMonth(),
                 day
             ).toISOString().split('T')[0];
 
@@ -83,7 +89,7 @@ class CalendarApp {
             // Mark today's date
             const today = new Date();
             if (
-                day === today.getDate() && 
+                day === today.getDate() &&
                 this.currentDate.getMonth() === today.getMonth() &&
                 this.currentDate.getFullYear() === today.getFullYear()
             ) {
@@ -115,7 +121,7 @@ class CalendarApp {
     fetchFirebaseData(selectedDate) {
         // Placeholder for Firebase data retrieval
         console.log('Fetching data for:', selectedDate);
-        
+
         // Example Firebase retrieval (modify as per your structure)
         // firebase.firestore().collection('events')
         //     .where('date', '==', selectedDate)
