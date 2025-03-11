@@ -661,3 +661,13 @@ footer {
 #welcome_message {
     margin-left: 1%;
 }
+
+/* dependant html */
+#dependant-main {
+    margin: 1%;
+}
+
+/* single_dependant html */
+#calendar {
+    margin: 1%;
+}

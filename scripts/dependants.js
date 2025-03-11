@@ -1,7 +1,7 @@
 function getCurrentUser() {
     firebase.auth().onAuthStateChanged(user => {
         if (user) {
-            
+
             let button = document.getElementById("add-dependant");
             if (button) {
                 button.addEventListener("click", createForm);
@@ -17,13 +17,14 @@ function createForm() {
     var form = document.createElement("form");
     form.setAttribute("method", "post");
     form.setAttribute("action", "addDependant");
-    form.id = "dependants-form"
+    form.id = "dependants-form";
 
     var firstname = document.createElement("input");
     firstname.setAttribute("id", "firstname");
     firstname.setAttribute("type", "text");
     firstname.setAttribute("name", "firstname");
     firstname.setAttribute("placeholder", "First Name");
+    firstname.style.margin = "0 0 0 1%";
 
     var lastname = document.createElement("input");
     lastname.setAttribute("id", "lastname");
@@ -36,7 +37,7 @@ function createForm() {
     submit.setAttribute("value", "Submit");
 
     // Prevent form from submitting (optional)
-    form.addEventListener("submit", function(event) {
+    form.addEventListener("submit", function (event) {
         event.preventDefault();
         console.log("Form submitted!");
         addDependant();
@@ -48,16 +49,17 @@ function createForm() {
     form.appendChild(lastname);
     form.appendChild(submit);
 
-    if(!document.getElementById("dependants-form")){
+    if (!document.getElementById("dependants-form")) {
         document.body.appendChild(form);
     }
 }
+
 
 function addDependant() {
 
     const user = firebase.auth().currentUser;
 
-    if(!user) {
+    if (!user) {
         console.error("No user signed in");
         return;
     }
@@ -65,7 +67,7 @@ function addDependant() {
     const firstname = document.getElementById("firstname").value.trim();
     const lastname = document.getElementById("lastname").value.trim();
 
-    if(!firstname || !lastname) {
+    if (!firstname || !lastname) {
         console.error("Fill in all fields");
         return;
     }
@@ -81,10 +83,10 @@ function addDependant() {
     dependantsRef.then((doc) => {
         console.log("new dependant added");
         console.log(firstname + lastname);
-  
+
     })
-    .catch((error) => {
-        console.error("Error adding dependant: ", error);
-    });
+        .catch((error) => {
+            console.error("Error adding dependant: ", error);
+        });
 }
 
