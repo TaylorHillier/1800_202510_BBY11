@@ -7,6 +7,37 @@
     padding: 2rem 0;
 }
 
+
+.hero {
+    position: relative;
+    display: flex; 
+    justify-content: center;    
+    align-items: center; 
+}
+
+.hero-bg {
+    background-image: url('/images/family_at_hospital.jpg'); 
+    background-size: cover;
+    background-position: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 80%; 
+    max-width: 800px; 
+    height: 100%;
+    z-index: -1;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.hero-content {
+    position: relative;
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+
 .cta-container {
     background-image: url('/images/DSC_2360.jpg');
     background-size: cover;
