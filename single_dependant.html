@@ -16,11 +16,11 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
 </head>
 <body>
-    <section id="calendar">
-       <header id="navigation" class="navigation">
+    <header id="navigation" class="navigation">
 
-       </header>
-        <div id="medications">
+    </header>
+    <main>
+        <section id="medications">
             <h1 id="dependant-info"></h1>
             Here are your medications for the day:
             <ul id="med-list">
@@ -29,8 +29,11 @@
             <div>
                 <button id="addMedication" onclick="addMedication()">Add a Medication</button>
             </div>
-        </div>
-    </section>
+        </section>
+        <section id="calendar">
+        
+        </section>
+    </main>
 
     <script src="./scripts/FIREBASE_API.js"></script>
     <script src="./scripts/script.js"></script>

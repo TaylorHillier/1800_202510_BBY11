@@ -1,6 +1,8 @@
+var dependant;
+
 function getCurrentDependant() {
     const url = new URLSearchParams(window.location.search);
-    const dependant = url.get('id');
+    dependant = url.get('id');
 
     firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
@@ -23,29 +25,28 @@ getCurrentDependant();
 
 
 function getMedicationList() {
-
     firebase.auth().onAuthStateChanged(user => {
         if (user) {
             // Reference to the Dependants collection
-            db.collection("users").doc(user.uid).collection("Dependants").get()
+            db.collection("users").doc(user.uid).collection("dependants").get()
                 .then((dependantsSnapshot) => {
                     // Clear existing list before populating
                     const medListElement = document.getElementById("med-list");
-                    medListElement.innerHTML = '';
+                    //medListElement.innerHTML = '';
 
                     // Iterate through each dependant
                     dependantsSnapshot.forEach((dependantDoc) => {
                         // Access the Meds subcollection for each dependant
                         console.log(dependantDoc.data());
-                        dependantDoc.ref.collection("Meds").get()
+                        dependantDoc.ref.collection("medications").get()
                             .then((medsSnapshot) => {
                                 // Iterate through medications for this dependant
                                 medsSnapshot.forEach((medDoc) => {
                                     const medData = medDoc.data();
-
+                                    console.log(medData);
                                     // Create list item with medication details
                                     const listItem = document.createElement('li');
-                                    listItem.textContent = `${dependantDoc.data().Name} - ${medData.Medication.Name}: ${medData.Medication.Frequency} times a day`;
+                                    listItem.textContent = `${medData.name}: ${medData.frequency}`;
 
                                     // Append to the list
                                     medListElement.appendChild(listItem);
@@ -64,6 +65,7 @@ function getMedicationList() {
         }
     });
 }
+getMedicationList();
 
 function createMedicationForm() {
     let button = document.getElementById("addMedication");

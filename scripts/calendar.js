@@ -119,19 +119,6 @@ class CalendarApp {
         this.fetchFirebaseData(this.selectedDate);
     }
 
-    fetchFirebaseData(selectedDate) {
-        // Placeholder for Firebase data retrieval
-        console.log('Fetching data for:', selectedDate);
-
-        // Example Firebase retrieval (modify as per your structure)
-        // firebase.firestore().collection('events')
-        //     .where('date', '==', selectedDate)
-        //     .get()
-        //     .then(snapshot => {
-        //         // Process retrieved data
-        //     });
-    }
-
     changeMonth(delta) {
         this.currentDate.setMonth(this.currentDate.getMonth() + delta);
         this.renderCalendar();
