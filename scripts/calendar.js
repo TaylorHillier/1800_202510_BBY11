@@ -1,20 +1,21 @@
-// Calendar Class for Dynamic Calendar Generation
+
 class CalendarApp {
+
     constructor(containerId) {
         this.container = document.getElementById(containerId);
         this.currentDate = new Date();
         this.selectedDate = null;
         this.init();
+        this.medications = [];
     }
 
     init() {
-        // render Nav first so that it always stay on top
         this.renderNavigation();
         this.renderCalendar();
     }
 
     renderNavigation() {
-        // Son test fix duplicated calendar nav
+       
         const existingNav = this.container.querySelector('.calendar-navigation');
         if (existingNav) {
             existingNav.remove();
@@ -61,11 +62,11 @@ class CalendarApp {
             calendarGrid.appendChild(dayHeader);
         });
 
-        // Get first day of the month and total days
+        
         const firstDay = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
         const lastDay = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 0);
 
-        // Pad with previous month's days
+        
         const startingDay = firstDay.getDay();
         for (let i = 0; i < startingDay; i++) {
             const paddingDay = document.createElement('div');
@@ -73,7 +74,7 @@ class CalendarApp {
             calendarGrid.appendChild(paddingDay);
         }
 
-        // Render days of the month
+       
         for (let day = 1; day <= lastDay.getDate(); day++) {
             const dayElement = document.createElement('div');
             dayElement.className = 'calendar-day';
@@ -84,10 +85,10 @@ class CalendarApp {
                 day
             ).toISOString().split('T')[0];
 
-            // Add click event for date selection
+           
             dayElement.addEventListener('click', () => this.selectDate(dayElement));
 
-            // Mark today's date
+           
             const today = new Date();
             if (
                 day === today.getDate() &&
@@ -105,17 +106,15 @@ class CalendarApp {
     }
 
     selectDate(dayElement) {
-        // Remove previous selections
+        
         const previousSelected = this.container.querySelector('.selected');
         if (previousSelected) {
             previousSelected.classList.remove('selected');
         }
 
-        // Mark new selection
         dayElement.classList.add('selected');
         this.selectedDate = dayElement.dataset.date;
 
-        // Trigger Firebase data retrieval
         this.fetchFirebaseData(this.selectedDate);
     }
 
@@ -134,14 +133,58 @@ class CalendarApp {
             monthDisplay.innerText = this.formatMonthYear(this.currentDate);
         }
     }
+
+    updateDependantSchedule() {
+        var dependantDoc;
+        const url = new URLSearchParams(window.location.search);
+        const dependant = url.get('id');
+        firebase.auth().onAuthStateChanged(async (user) => {
+            if (user) {
+                globalUserId = user.uid;
+                let button = document.getElementById("addMedication");
+                if (button) {
+                    button.addEventListener("click", createMedicationForm); // Attach the event listener correctly
+                }
+                dependantDoc = await firebase.firestore().collection('users').doc(user.uid).collection('dependants').doc(dependant).collection
+                ('medications').get();
+
+                dependantDoc.docs.map(medication => {
+                    const medData = medication.data();
+    
+                    const medObject = {
+                        "Medication": {
+                            "Frequency": medData.frequency || "Not specified", 
+                            "StartTime": medData.startTime || "Not specified",
+                            "StartDate": medData.startDate || "Not specified",
+                            "EndDate": medData.endDate || "Not specified"
+                        }
+                    };
+
+                    medObject.Medication.name = medData.name;
+                    medObject.Medication.startTime = medData.startTime;
+                    medObject.Medication.startDate = medData.startDate;
+                    medObject.Medication.endDate = medData.endDate;
+                    
+                    // Add the medication object to your array
+                    this.medications.push(medObject);
+
+                    console.log(medObject);
+                })
+            } else {
+                console.log("No user logged in");
+            }
+        });
+    }
 }
 
-
-
-// Inject styles
 document.head.insertAdjacentHTML('beforeend', calendar);
 
-// Initialize Calendar on page load
 document.addEventListener('DOMContentLoaded', () => {
     const calendar = new CalendarApp('calendar');
+
+    var url = window.location.href;
+    if(url.indexOf("single_dependant") > -1){
+        calendar.updateDependantSchedule();
+    }
 });
+

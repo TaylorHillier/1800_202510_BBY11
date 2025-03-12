@@ -39,13 +39,13 @@ function getMedicationList() {
                     // Iterate through each dependant
                     dependantsSnapshot.forEach((dependantDoc) => {
                         // Access the Meds subcollection for each dependant
-                        console.log(dependantDoc.data());
+                        //console.log(dependantDoc.data());
                         dependantDoc.ref.collection("medications").get()
                             .then((medsSnapshot) => {
                                 // Iterate through medications for this dependant
                                 medsSnapshot.forEach((medDoc) => {
                                     const medData = medDoc.data();
-                                    console.log(medData);
+                                    //console.log(medData);
                                     // Create list item with medication details
                                     const listItem = document.createElement('li');
                                     listItem.textContent = `${medData.name}: ${medData.frequency}`;
@@ -102,6 +102,16 @@ function createMedicationForm() {
     endDate.setAttribute("type", "date");
     endDate.setAttribute("name", "end-date");
 
+     // End Date Label and Input
+     var startTimeLabel = document.createElement("label");
+     startTimeLabel.setAttribute("for", "start-time");
+     startTimeLabel.textContent = "Start Time: ";
+ 
+     var startTime = document.createElement("input");
+     startTime.setAttribute("id", "start-time");
+     startTime.setAttribute("type", "time");
+     startTime.setAttribute("name", "start-time");
+
     // Medication Label and Input
     var medicationLabel = document.createElement("label");
     medicationLabel.setAttribute("for", "medication");
@@ -156,6 +166,10 @@ function createMedicationForm() {
     form.appendChild(endDate);
     form.appendChild(document.createElement("br"));
 
+    form.appendChild(startTimeLabel);
+    form.appendChild(startTime);
+    form.appendChild(document.createElement("br"));
+
     form.appendChild(medicationLabel);
     form.appendChild(medication);
     form.appendChild(document.createElement("br"));
@@ -187,6 +201,7 @@ function addMedication() {
 
     const startDate = document.getElementById("start-date").value.trim();
     const endDate = document.getElementById("end-date").value.trim();
+    const startTime = document.getElementById("start-time").value.trim();
     const medicationName = document.getElementById("medication").value.trim();
     const frequency = document.getElementById("frequency").value;
 
@@ -198,6 +213,7 @@ function addMedication() {
         name: medicationName,
         startDate: startDate,
         endDate: endDate,
+        startTime: startTime,
         frequency: frequency,
         addedBy: user.uid
     };
@@ -282,3 +298,4 @@ function loadNotesIssues() {
             console.error('Error loading notes/issues: ', error);
         });
 }
+
