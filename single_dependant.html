@@ -35,15 +35,28 @@
         </section>
     </main>
 
-    <script src="./scripts/FIREBASE_API.js"></script>
-    <script src="./scripts/script.js"></script>
-    <script src="./scripts/dependants.js"></script>
-    <script src="./scripts/calendar.js"></script>
-    <script src="./scripts/single_dependant.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const calendar = new CalendarApp('calendar');
-        });
-    </script>
+<section id="notes-issues">
+    <h2>Notes and Issues</h2>
+    <div id="view-notes-issues"></div>
+
+    <div>
+        <label for="new-note-issue">Add a new note or issue:</label><br>
+        <textarea id="new-note-issue"></textarea>
+        <button onclick="saveNoteIssue()">Save</button>
+    </div>
+</section>
+
+<script src="./scripts/FIREBASE_API.js"></script>
+<script src="./scripts/script.js"></script>
+<script src="./scripts/dependants.js"></script>
+<script src="./scripts/calendar.js"></script>
+<script src="./scripts/single_dependant.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const calendar = new CalendarApp('calendar');
+        loadNotesIssues(); 
+    });
+</script>
+
 </body>
 </html>

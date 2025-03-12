@@ -214,4 +214,74 @@ function addMedication() {
         .catch((error) => {
             console.error("Error adding medication:", error);
         });
-}
+
+    }
+    
+    function saveNoteIssue() {
+        const userId = firebase.auth().currentUser.uid;
+        const dependantId = getDependantIdFromUrl();
+        const newNoteIssue = document.getElementById('new-note-issue').value;
+    
+        if (newNoteIssue.trim() === '') {
+            alert('Please enter a note or issue.');
+            return;
+        }
+    
+        const newEntry = {
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            content: newNoteIssue
+        };
+    
+        firebase.firestore()
+            .collection('users')
+            .doc(userId)
+            .collection('dependants')
+            .doc(dependantId)
+            .collection('notes-issues')
+            .add(newEntry)
+            .then(() => {
+                document.getElementById('new-note-issue').value = '';
+                loadNotesIssues();
+            })
+            .catch(error => {
+                console.error('Error saving note/issue: ', error);
+            });
+    }
+    
+    function loadNotesIssues() {
+        const userId = firebase.auth().currentUser.uid;
+        const dependantId = getDependantIdFromUrl();
+        const notesIssuesContainer = document.getElementById('view-notes-issues');
+        notesIssuesContainer.innerHTML = '';
+    
+        firebase.firestore()
+            .collection('users')
+            .doc(userId)
+            .collection('dependants')
+            .doc(dependantId)
+            .collection('notes-issues')
+            .orderBy('timestamp', 'desc')
+            .get()
+            .then(querySnapshot => {
+                if (querySnapshot.empty) {
+                    notesIssuesContainer.textContent = 'No notes or issues yet.';
+                    return;
+                }
+    
+                querySnapshot.forEach(doc => {
+                    const entry = doc.data();
+                    const timestamp = entry.timestamp.toDate().toLocaleString();
+    
+                    const noteIssueElement = document.createElement('p');
+                    noteIssueElement.textContent = `${timestamp}: ${entry.content}`;
+                    notesIssuesContainer.appendChild(noteIssueElement);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading notes/issues: ', error);
+            });
+    }
+    function getDependantIdFromUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('id');
+    }    
