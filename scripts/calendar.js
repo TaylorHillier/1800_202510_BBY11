@@ -114,8 +114,6 @@ class CalendarApp {
 
         dayElement.classList.add('selected');
         this.selectedDate = dayElement.dataset.date;
-
-        this.fetchFirebaseData(this.selectedDate);
     }
 
     changeMonth(delta) {

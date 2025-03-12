@@ -1,6 +1,11 @@
 var dependant;
 var globalUserId;
 
+let button = document.getElementById("addMedication");
+if (button) {
+    button.addEventListener("click", createMedicationForm); // Attach the event listener correctly
+}
+
 function getCurrentDependant() {
     const url = new URLSearchParams(window.location.search);
     dependant = url.get('id');
@@ -8,10 +13,7 @@ function getCurrentDependant() {
     firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
             globalUserId = user.uid;
-            let button = document.getElementById("addMedication");
-            if (button) {
-                button.addEventListener("click", createMedicationForm); // Attach the event listener correctly
-            }
+      
             const dependantDoc = await firebase.firestore().collection('users').doc(user.uid).collection('dependants').doc(dependant).get();
 
             if (dependantDoc.exists) {
@@ -74,6 +76,7 @@ function createMedicationForm() {
 
     // Check if form already exists to prevent duplicates
     if (document.getElementById("newMedication-form")) {
+        document.getElementById("newMedication-form").remove();
         return;
     }
 
