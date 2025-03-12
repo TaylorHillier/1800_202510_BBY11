@@ -13,7 +13,7 @@ function getCurrentDependant() {
     firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
             globalUserId = user.uid;
-      
+
             const dependantDoc = await firebase.firestore().collection('users').doc(user.uid).collection('dependants').doc(dependant).get();
 
             if (dependantDoc.exists) {
@@ -105,15 +105,15 @@ function createMedicationForm() {
     endDate.setAttribute("type", "date");
     endDate.setAttribute("name", "end-date");
 
-     // End Date Label and Input
-     var startTimeLabel = document.createElement("label");
-     startTimeLabel.setAttribute("for", "start-time");
-     startTimeLabel.textContent = "Start Time: ";
- 
-     var startTime = document.createElement("input");
-     startTime.setAttribute("id", "start-time");
-     startTime.setAttribute("type", "time");
-     startTime.setAttribute("name", "start-time");
+    // End Date Label and Input
+    var startTimeLabel = document.createElement("label");
+    startTimeLabel.setAttribute("for", "start-time");
+    startTimeLabel.textContent = "Start Time: ";
+
+    var startTime = document.createElement("input");
+    startTime.setAttribute("id", "start-time");
+    startTime.setAttribute("type", "time");
+    startTime.setAttribute("name", "start-time");
 
     // Medication Label and Input
     var medicationLabel = document.createElement("label");
@@ -236,8 +236,8 @@ function addMedication() {
             console.error("Error adding medication:", error);
         });
 
-    }
-    
+}
+
 function saveNoteIssue() {
     const userId = globalUserId;
     const dependantId = dependant;
@@ -268,7 +268,7 @@ function saveNoteIssue() {
             console.error('Error saving note/issue: ', error);
         });
 }
-    
+
 function loadNotesIssues() {
     const userId = globalUserId;
     const notesIssuesContainer = document.getElementById('view-notes-issues');
@@ -301,4 +301,3 @@ function loadNotesIssues() {
             console.error('Error loading notes/issues: ', error);
         });
 }
-
