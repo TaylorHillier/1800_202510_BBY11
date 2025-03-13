@@ -61,7 +61,8 @@ function listDependants() {
             // Display next medication
             if (nextMedication) {
                 const nextMedPara = document.createElement('p');
-                nextMedPara.textContent = `${nextMedication.name} at ${nextMedication.startTime}`;
+                const formattedTime = formatTime(nextMedication.startTime);
+                nextMedPara.textContent = `${nextMedication.name} at ${formattedTime}`;
                 listItem.appendChild(nextMedPara);
             }
 
