@@ -31,39 +31,42 @@ getCurrentDependant();
 function getMedicationList() {
     firebase.auth().onAuthStateChanged(user => {
         if (user) {
-            // Reference to the Dependants collection
-            db.collection("users").doc(user.uid).collection("dependants").get()
-                .then((dependantsSnapshot) => {
-                    // Clear existing list before populating
-                    const medListElement = document.getElementById("med-list");
-                    //medListElement.innerHTML = '';
+            const dependantId = new URLSearchParams(window.location.search).get('id');
 
-                    // Iterate through each dependant
-                    dependantsSnapshot.forEach((dependantDoc) => {
-                        // Access the Meds subcollection for each dependant
-                        //console.log(dependantDoc.data());
-                        dependantDoc.ref.collection("medications").get()
-                            .then((medsSnapshot) => {
-                                // Iterate through medications for this dependant
-                                medsSnapshot.forEach((medDoc) => {
-                                    const medData = medDoc.data();
-                                    //console.log(medData);
-                                    // Create list item with medication details
-                                    const listItem = document.createElement('li');
-                                    listItem.textContent = `${medData.name}: ${medData.frequency}`;
+            if (!dependantId) {
+                console.error("No dependant selected");
+                return;
+            }
 
-                                    // Append to the list
-                                    medListElement.appendChild(listItem);
-                                });
-                            })
-                            .catch((error) => {
-                                console.error(`Error fetching medications for ${dependantDoc.id}:`, error);
-                            });
-                    });
-                })
-                .catch((error) => {
-                    console.error("Error fetching dependants:", error);
+            // Reference to the medications subcollection for the selected dependant
+            const medicationsRef = firebase.firestore()
+                .collection('users')
+                .doc(user.uid)
+                .collection('dependants')
+                .doc(dependantId)
+                .collection('medications');
+
+            // Clear the existing list before populating
+            const medListElement = document.getElementById("med-list");
+            medListElement.innerHTML = '';
+
+            // Set up a real-time listener for the medications subcollection
+            medicationsRef.orderBy('startDate', 'desc').onSnapshot((medsSnapshot) => {
+                // Clear the list before repopulating
+                medListElement.innerHTML = '';
+
+                // Iterate through medications and add them to the list
+                medsSnapshot.forEach((medDoc) => {
+                    const medData = medDoc.data();
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${medData.name}: ${medData.frequency} `;
+
+                    // Append to the list
+                    medListElement.appendChild(listItem);
                 });
+            }, (error) => {
+                console.error("Error fetching medications:", error);
+            });
         } else {
             console.log("No user logged in");
         }
