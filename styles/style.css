@@ -136,6 +136,10 @@
     z-index: 1000;
 }
 
+.navigation p{
+    display: none;
+}
+
 nav {
     width: 100%;
 }
@@ -180,7 +184,11 @@ ul {
     position: relative;
 }
 
-@media(min-width: 768px) {}
+@media(min-width: 480px) {
+    .navigation p{
+        display: block;
+    }
+}
 
 @media(min-width: 1280px) {
     .navigation {

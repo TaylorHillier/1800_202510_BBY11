@@ -1,3 +1,4 @@
+var globalUserId;
 
 class CalendarApp {
 
@@ -133,46 +134,183 @@ class CalendarApp {
     }
 
     updateDependantSchedule() {
-        var dependantDoc;
         const url = new URLSearchParams(window.location.search);
         const dependant = url.get('id');
+    
+        let isSingleDependant = false;
+        let isCareTakerSchedule = false;
+    
+        const pageurl = window.location.href;
+        if (pageurl.indexOf("single_dependant") > -1) {
+            isSingleDependant = true;
+        } else if (pageurl.indexOf("caretaker-schedule") > -1) {
+            isCareTakerSchedule = true;
+        }
+    
         firebase.auth().onAuthStateChanged(async (user) => {
             if (user) {
                 globalUserId = user.uid;
-                let button = document.getElementById("addMedication");
+                const button = document.getElementById("addMedication");
                 if (button) {
-                    button.addEventListener("click", createMedicationForm); // Attach the event listener correctly
+                    button.addEventListener("click", createMedicationForm);
                 }
-                dependantDoc = await firebase.firestore().collection('users').doc(user.uid).collection('dependants').doc(dependant).collection
-                ('medications').get();
-
-                dependantDoc.docs.map(medication => {
-                    const medData = medication.data();
     
-                    const medObject = {
-                        "Medication": {
-                            "Frequency": medData.frequency || "Not specified", 
-                            "StartTime": medData.startTime || "Not specified",
-                            "StartDate": medData.startDate || "Not specified",
-                            "EndDate": medData.endDate || "Not specified"
-                        }
-                    };
-
-                    medObject.Medication.name = medData.name;
-                    medObject.Medication.startTime = medData.startTime;
-                    medObject.Medication.startDate = medData.startDate;
-                    medObject.Medication.endDate = medData.endDate;
-                    
-                    // Add the medication object to your array
-                    this.medications.push(medObject);
-
-                    console.log(medObject);
-                })
+                // Clear any previously loaded medications
+                this.medications = [];
+    
+                if (isSingleDependant) {
+                    // Retrieve medications for the single dependant
+                    const medsSnapshot = await firebase.firestore()
+                        .collection('users')
+                        .doc(user.uid)
+                        .collection('dependants')
+                        .doc(dependant)
+                        .collection('medications')
+                        .get();
+    
+                    medsSnapshot.docs.forEach(doc => {
+                        const medData = doc.data();
+                        const medObject = {
+                            Medication: {
+                                name: medData.name || "Not specified",
+                                frequency: medData.frequency || "Not specified",
+                                startTime: medData.startTime || "Not specified",
+                                startDate: medData.startDate || "Not specified",
+                                endDate: medData.endDate || "Not specified"
+                            },
+                            dependantName: null // No dependant name needed here
+                        };
+                        this.medications.push(medObject);
+                    });
+                } else if (isCareTakerSchedule) {
+                    // Retrieve all dependants for the caretaker
+                    const dependantsSnapshot = await firebase.firestore()
+                        .collection('users')
+                        .doc(user.uid)
+                        .collection('dependants')
+                        .get();
+    
+                    // Loop through each dependant
+                    for (const dependantDoc of dependantsSnapshot.docs) {
+                        const dependantData = dependantDoc.data();
+                        const dependantId = dependantDoc.id;
+                        // Concatenate first and last names if available
+                        const dependantName = (dependantData.firstname && dependantData.lastname)
+                            ? (dependantData.firstname + " " + dependantData.lastname)
+                            : "Unnamed";
+    
+                        // For each dependant, retrieve their medications
+                        const medsSnapshot = await firebase.firestore()
+                            .collection('users')
+                            .doc(user.uid)
+                            .collection('dependants')
+                            .doc(dependantId)
+                            .collection('medications')
+                            .get();
+    
+                        medsSnapshot.docs.forEach(doc => {
+                            const medData = doc.data();
+                            const medObject = {
+                                Medication: {
+                                    name: medData.name || "Not specified",
+                                    frequency: medData.frequency || "Not specified",
+                                    startTime: medData.startTime || "Not specified",
+                                    startDate: medData.startDate || "Not specified",
+                                    endDate: medData.endDate || "Not specified"
+                                },
+                                dependantName: dependantName // attach the dependant's name
+                            };
+                            this.medications.push(medObject);
+                        });
+                    }
+                }
+                // Save flags for use in populateSchedule
+                this.isCareTakerSchedule = isCareTakerSchedule;
+                this.isSingleDependant = isSingleDependant;
+    
+                console.log("populating schedule", this.medications);
+                this.populateSchedule();
             } else {
                 console.log("No user logged in");
             }
         });
     }
+    
+    populateSchedule() {
+        this.medications.forEach(med => {
+            const medData = med.Medication;
+            // Ensure all required data is present
+            if (!medData.startDate || !medData.endDate || !medData.startTime || !medData.frequency) return;
+    
+            const startDate = new Date(medData.startDate);
+            const endDate = new Date(medData.endDate);
+    
+            // Extract the dosing interval in hours from the frequency string (e.g., "Every 4 Hours")
+            let intervalHours = 24; // default to once a day
+            const freqMatch = medData.frequency.match(/\d+/);
+            if (freqMatch) {
+                intervalHours = parseInt(freqMatch[0]);
+            }
+    
+            // Loop over each day from startDate to endDate
+            for (let day = new Date(startDate); day <= endDate; day.setDate(day.getDate() + 1)) {
+                const formattedDay = day.toISOString().split('T')[0];
+                const dayCell = this.container.querySelector(`.calendar-day[data-date="${formattedDay}"]`);
+                if (!dayCell) continue;
+    
+                // For caretaker schedule, try to group by dependant name
+                let entryContainer;
+                if (this.isCareTakerSchedule && med.dependantName) {
+                    // Check if a container for this dependant already exists in the day cell
+                    entryContainer = dayCell.querySelector(`.entry-container[data-dependant="${med.dependantName}"]`);
+                    if (!entryContainer) {
+                        entryContainer = document.createElement('div');
+                        entryContainer.className = 'entry-container';
+                        entryContainer.setAttribute('data-dependant', med.dependantName);
+                        const header = document.createElement('h3');
+                        header.innerText = med.dependantName;
+                        entryContainer.appendChild(header);
+                        dayCell.appendChild(entryContainer);
+                    }
+                } else {
+                    // For single dependant pages, create a new container (no header needed)
+                    entryContainer = document.createElement('div');
+                }
+    
+                let doseTimes = [];
+                // Parse the start time (assumed format "HH:MM")
+                const [startHour, startMinute] = medData.startTime.split(':').map(Number);
+                let doseTime = new Date(day);
+                doseTime.setHours(startHour, startMinute, 0, 0);
+    
+                const bedTimeHour = 22; // cutoff time at 10 PM
+    
+                // Loop to calculate dose times until the bedtime limit
+                while (doseTime.getDate() === day.getDate() && doseTime.getHours() < bedTimeHour) {
+                    doseTimes.push(new Date(doseTime));
+                    doseTime.setHours(doseTime.getHours() + intervalHours);
+                }
+    
+                // Although doseTimes should be in order, sort them to be safe
+                doseTimes.sort((a, b) => a - b);
+    
+                doseTimes.forEach(dt => {
+                    const formattedTime = dt.toTimeString().slice(0, 5); // "HH:MM"
+                    const medEntry = document.createElement('div');
+                    medEntry.className = 'medication-entry';
+                    medEntry.innerText = `${medData.name} at ${formattedTime}`;
+                    entryContainer.appendChild(medEntry);
+                });
+    
+                // For single dependant pages, append the container to the day cell
+                if (!this.isCareTakerSchedule) {
+                    dayCell.appendChild(entryContainer);
+                }
+            }
+        });
+    }
+    
+    
 }
 
 document.head.insertAdjacentHTML('beforeend', calendar);
@@ -180,9 +318,6 @@ document.head.insertAdjacentHTML('beforeend', calendar);
 document.addEventListener('DOMContentLoaded', () => {
     const calendar = new CalendarApp('calendar');
 
-    var url = window.location.href;
-    if(url.indexOf("single_dependant") > -1){
-        calendar.updateDependantSchedule();
-    }
+    calendar.updateDependantSchedule();
 });
 

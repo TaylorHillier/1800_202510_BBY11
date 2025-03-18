@@ -105,15 +105,25 @@ function createMedicationForm() {
     endDate.setAttribute("type", "date");
     endDate.setAttribute("name", "end-date");
 
-     // End Date Label and Input
-     var startTimeLabel = document.createElement("label");
-     startTimeLabel.setAttribute("for", "start-time");
-     startTimeLabel.textContent = "Start Time: ";
- 
-     var startTime = document.createElement("input");
-     startTime.setAttribute("id", "start-time");
-     startTime.setAttribute("type", "time");
-     startTime.setAttribute("name", "start-time");
+    // End Date Label and Input
+    var startTimeLabel = document.createElement("label");
+    startTimeLabel.setAttribute("for", "start-time");
+    startTimeLabel.textContent = "Start Time: ";
+
+    var startTime = document.createElement("input");
+    startTime.setAttribute("id", "start-time");
+    startTime.setAttribute("type", "time");
+    startTime.setAttribute("name", "start-time");
+
+    // End Date Label and Input
+    var numPillsLabel = document.createElement("label");
+    numPillsLabel.setAttribute("for", "num-pills");
+    numPillsLabel.textContent = "Number of pills per day: ";
+
+    var numPills = document.createElement("input");
+    numPills.setAttribute("id", "num-pills");
+    numPills.setAttribute("type", "number");
+    numPills.setAttribute("name", "num-pills");
 
     // Medication Label and Input
     var medicationLabel = document.createElement("label");
@@ -137,10 +147,13 @@ function createMedicationForm() {
 
     // Frequency Options
     var options = [
-        "Twice Daily",
+        "Every 4 Hours",
+        "Every 6 Hours",
+        "Every 8 Hours",
+        "Every 12 Hours",
         "Daily",
-        "Weekly",
-        "Once a Lifetime"];
+        "Weekly"];
+
     options.forEach(optionText => {
         var option = document.createElement("option");
         option.value = optionText;
@@ -171,6 +184,10 @@ function createMedicationForm() {
 
     form.appendChild(startTimeLabel);
     form.appendChild(startTime);
+    form.appendChild(document.createElement("br"));
+
+    form.appendChild(numPillsLabel);
+    form.appendChild(numPills);
     form.appendChild(document.createElement("br"));
 
     form.appendChild(medicationLabel);
@@ -205,6 +222,7 @@ function addMedication() {
     const startDate = document.getElementById("start-date").value.trim();
     const endDate = document.getElementById("end-date").value.trim();
     const startTime = document.getElementById("start-time").value.trim();
+    const numPills = document.getElementById("num-pills").value;
     const medicationName = document.getElementById("medication").value.trim();
     const frequency = document.getElementById("frequency").value;
 
@@ -216,6 +234,7 @@ function addMedication() {
         name: medicationName,
         startDate: startDate,
         endDate: endDate,
+        numPills: numPills,
         startTime: startTime,
         frequency: frequency,
         addedBy: user.uid
