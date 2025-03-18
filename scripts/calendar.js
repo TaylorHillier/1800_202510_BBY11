@@ -237,6 +237,9 @@ class CalendarApp {
     }
     
     populateSchedule() {
+        let medArray = [];
+        let doseTimes = [];
+    
         this.medications.forEach(med => {
             const medData = med.Medication;
             // Ensure all required data is present
@@ -277,7 +280,6 @@ class CalendarApp {
                     entryContainer = document.createElement('div');
                 }
     
-                let doseTimes = [];
                 // Parse the start time (assumed format "HH:MM")
                 const [startHour, startMinute] = medData.startTime.split(':').map(Number);
                 let doseTime = new Date(day);
@@ -287,30 +289,44 @@ class CalendarApp {
     
                 // Loop to calculate dose times until the bedtime limit
                 while (doseTime.getDate() === day.getDate() && doseTime.getHours() < bedTimeHour) {
-                    doseTimes.push(new Date(doseTime));
+                    doseTimes.push({ doseTime: new Date(doseTime), medication: medData.name });
                     doseTime.setHours(doseTime.getHours() + intervalHours);
-                }
-    
-                // Although doseTimes should be in order, sort them to be safe
-                doseTimes.sort((a, b) => a - b);
-    
-                doseTimes.forEach(dt => {
-                    const formattedTime = dt.toTimeString().slice(0, 5); // "HH:MM"
-                    const medEntry = document.createElement('div');
-                    medEntry.className = 'medication-entry';
-                    medEntry.innerText = `${medData.name} at ${formattedTime}`;
-                    entryContainer.appendChild(medEntry);
-                });
-    
-                // For single dependant pages, append the container to the day cell
-                if (!this.isCareTakerSchedule) {
-                    dayCell.appendChild(entryContainer);
                 }
             }
         });
+    
+       // Sort all dose times by time (ascending order) based on the time only
+        doseTimes.sort((a, b) => {
+            // Compare based on the time component only, ignoring the date part
+            const timeA = a.doseTime.getHours() * 60 + a.doseTime.getMinutes();
+            const timeB = b.doseTime.getHours() * 60 + b.doseTime.getMinutes();
+            return timeA - timeB;
+        });
+    
+        
+        // Iterate over sorted dose times and add them to the calendar
+        doseTimes.forEach(doseEntry => {
+            console.log(doseEntry);
+            const formattedTime = doseEntry.doseTime.toTimeString().slice(0, 5); // "HH:MM"
+            const dayCell = this.container.querySelector(`.calendar-day[data-date="${doseEntry.doseTime.toISOString().split('T')[0]}"]`);
+            if (!dayCell) return;
+    
+            let entryContainer = dayCell.querySelector(`.entry-container`);
+            if (!entryContainer) {
+                entryContainer = document.createElement('div');
+            }
+    
+            const medEntry = document.createElement('div');
+            medEntry.className = 'medication-entry';
+            medEntry.innerText = `${doseEntry.medication} at ${formattedTime}`;
+            entryContainer.appendChild(medEntry);
+    
+            // For single dependant pages, append the container to the day cell
+            if (!this.isCareTakerSchedule) {
+                dayCell.appendChild(entryContainer);
+            }
+        });
     }
-    
-    
 }
 
 document.head.insertAdjacentHTML('beforeend', calendar);
