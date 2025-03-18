@@ -13,7 +13,7 @@ function getCurrentDependant() {
     firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
             globalUserId = user.uid;
-      
+
             const dependantDoc = await firebase.firestore().collection('users').doc(user.uid).collection('dependants').doc(dependant).get();
 
             if (dependantDoc.exists) {
@@ -31,39 +31,42 @@ getCurrentDependant();
 function getMedicationList() {
     firebase.auth().onAuthStateChanged(user => {
         if (user) {
-            // Reference to the Dependants collection
-            db.collection("users").doc(user.uid).collection("dependants").get()
-                .then((dependantsSnapshot) => {
-                    // Clear existing list before populating
-                    const medListElement = document.getElementById("med-list");
-                    //medListElement.innerHTML = '';
+            const dependantId = new URLSearchParams(window.location.search).get('id');
 
-                    // Iterate through each dependant
-                    dependantsSnapshot.forEach((dependantDoc) => {
-                        // Access the Meds subcollection for each dependant
-                        //console.log(dependantDoc.data());
-                        dependantDoc.ref.collection("medications").get()
-                            .then((medsSnapshot) => {
-                                // Iterate through medications for this dependant
-                                medsSnapshot.forEach((medDoc) => {
-                                    const medData = medDoc.data();
-                                    //console.log(medData);
-                                    // Create list item with medication details
-                                    const listItem = document.createElement('li');
-                                    listItem.textContent = `${medData.name}: ${medData.frequency}`;
+            if (!dependantId) {
+                console.error("No dependant selected");
+                return;
+            }
 
-                                    // Append to the list
-                                    medListElement.appendChild(listItem);
-                                });
-                            })
-                            .catch((error) => {
-                                console.error(`Error fetching medications for ${dependantDoc.id}:`, error);
-                            });
-                    });
-                })
-                .catch((error) => {
-                    console.error("Error fetching dependants:", error);
+            // Reference to the medications subcollection for the selected dependant
+            const medicationsRef = firebase.firestore()
+                .collection('users')
+                .doc(user.uid)
+                .collection('dependants')
+                .doc(dependantId)
+                .collection('medications');
+
+            // Clear the existing list before populating
+            const medListElement = document.getElementById("med-list");
+            medListElement.innerHTML = '';
+
+            // Set up a real-time listener for the medications subcollection
+            medicationsRef.orderBy('startDate', 'desc').onSnapshot((medsSnapshot) => {
+                // Clear the list before repopulating
+                medListElement.innerHTML = '';
+
+                // Iterate through medications and add them to the list
+                medsSnapshot.forEach((medDoc) => {
+                    const medData = medDoc.data();
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${medData.name}: ${medData.frequency} `;
+
+                    // Append to the list
+                    medListElement.appendChild(listItem);
                 });
+            }, (error) => {
+                console.error("Error fetching medications:", error);
+            });
         } else {
             console.log("No user logged in");
         }
@@ -105,6 +108,15 @@ function createMedicationForm() {
     endDate.setAttribute("type", "date");
     endDate.setAttribute("name", "end-date");
 
+    // End Date Label and Input
+    var startTimeLabel = document.createElement("label");
+    startTimeLabel.setAttribute("for", "start-time");
+    startTimeLabel.textContent = "Start Time: ";
+
+    var startTime = document.createElement("input");
+    startTime.setAttribute("id", "start-time");
+    startTime.setAttribute("type", "time");
+    startTime.setAttribute("name", "start-time");
     // End Date Label and Input
     var startTimeLabel = document.createElement("label");
     startTimeLabel.setAttribute("for", "start-time");
@@ -255,8 +267,8 @@ function addMedication() {
             console.error("Error adding medication:", error);
         });
 
-    }
-    
+}
+
 function saveNoteIssue() {
     const userId = globalUserId;
     const dependantId = dependant;
@@ -287,7 +299,7 @@ function saveNoteIssue() {
             console.error('Error saving note/issue: ', error);
         });
 }
-    
+
 function loadNotesIssues() {
     const userId = globalUserId;
     const notesIssuesContainer = document.getElementById('view-notes-issues');
@@ -320,4 +332,3 @@ function loadNotesIssues() {
             console.error('Error loading notes/issues: ', error);
         });
 }
-
