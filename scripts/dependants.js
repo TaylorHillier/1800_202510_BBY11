@@ -92,5 +92,82 @@ function addDependant() {
         .catch((error) => {
             console.error("Error adding dependant: ", error);
         });
+    }
+function loadDependants() {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        console.error("No user signed in");
+        return;
+    }
+        
+    const dependantsList = document.getElementById("dependants-list");
+    dependantsList.innerHTML = ""; // Clear the list before reloading
+        
+    firebase.firestore()
+        .collection("users")
+        .doc(user.uid)
+        .collection("dependants")
+        .get()
+        .then(querySnapshot => {
+            if (querySnapshot.empty) {
+                dependantsList.innerHTML = "<p>No dependants found.</p>";
+                return;
+            }
+        
+            querySnapshot.forEach(doc => {
+                const dependant = doc.data();
+                const li = document.createElement("li");
+        
+                li.innerHTML = `${dependant.firstname} ${dependant.lastname} `;
+        
+                // Create Remove button
+                const removeBtn = document.createElement("button");
+                removeBtn.textContent = "Remove";
+                removeBtn.setAttribute("data-id", doc.id);
+                removeBtn.style.marginLeft = "10px"; // Space between name & button
+                removeBtn.style.backgroundColor = "red";
+                removeBtn.style.color = "white";
+                removeBtn.style.border = "none";
+                removeBtn.style.padding = "5px 10px";
+                removeBtn.style.cursor = "pointer";
+                removeBtn.addEventListener("click", removeDependant);
+        
+                li.appendChild(removeBtn);
+                dependantsList.appendChild(li);
+            });
+        })
+        .catch(error => {
+            console.error("Error loading dependants: ", error);
+        });
+    }
+        
+function removeDependant(event) {
+    const user = firebase.auth().currentUser;
+    const dependantId = event.target.getAttribute("data-id");
+        
+    if (!user) {
+        console.error("No user signed in");
+        return;
+    }
+        
+    firebase.firestore()
+        .collection("users")
+        .doc(user.uid)
+        .collection("dependants")
+        .doc(dependantId)
+        .delete()
+        .then(() => {
+            console.log("Dependant removed");
+            loadDependants(); // Refresh the list
+        })
+        .catch(error => {
+            console.error("Error removing dependant: ", error);
+        });
 }
-
+        
+        // Load dependants after authentication
+firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+        loadDependants();
+    }
+});
