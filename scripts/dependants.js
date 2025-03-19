@@ -13,7 +13,6 @@ function getCurrentUser() {
         }
     });
 }
-getCurrentUser();
 
 function createForm() {
     var form = document.createElement("form");
@@ -96,23 +95,75 @@ function addDependant() {
     });
 }
 
+
+let removeMode = false; // Tracks if we're in "Remove Mode"
+
+    document.addEventListener("DOMContentLoaded", function () {
+        firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+                setupButtons();
+                loadDependants(); // Load dependants once on page load
+            } else {
+                console.log("No user logged in.");
+            }
+        });
+    });
+    
+function setupButtons() {
+        let addButton = document.getElementById("add-dependant");
+        let removeButton = document.getElementById("toggle-remove-mode");
+    
+        if (addButton && !addButton.dataset.listenerAdded) {
+            addButton.addEventListener("click", createForm);
+            addButton.dataset.listenerAdded = "true"; // Prevent duplicate listener
+        }
+        
+        if (removeButton && !removeButton.dataset.listenerAdded) {
+            removeButton.addEventListener("click", toggleRemoveMode);
+            removeButton.dataset.listenerAdded = "true"; // Prevent duplicate listener
+        }
+    }
+    
+function toggleRemoveMode() {
+        removeMode = !removeMode;
+        loadDependants(); // Refresh the list to show/hide ❌ buttons
+    }
+    
 function loadDependants() {
     const user = firebase.auth().currentUser;
     if (!user) {
         console.error("No user signed in");
         return;
     }
-        
+    
     const dependantsList = document.getElementById("dependants-list");
-    dependantsList.innerHTML = ""; // Clear the list before reloading
-        
+    dependantsList.innerHTML = ""; // Clear the list before loading
+    
     firebase.firestore()
         .collection("users")
         .doc(user.uid)
         .collection("dependants")
         .get()
         .then(querySnapshot => {
-            if (querySnapshot.empty) {
+            let dependants = []; // Store unique dependants
+            querySnapshot.forEach(doc => {
+                const dependant = doc.data();
+                dependants.push({ ...dependant, id: doc.id });
+            });
+    
+                // Remove duplicates based on firstname + lastname
+            let uniqueDependants = [];
+            let seenNames = new Set();
+            dependants.forEach(dep => {
+                let fullName = `${dep.firstname} ${dep.lastname}`;
+                if (!seenNames.has(fullName)) {
+                    seenNames.add(fullName);
+                    uniqueDependants.push(dep);
+                }
+            });
+    
+                // Show dependants in the list
+            if (uniqueDependants.length === 0) {
                 dependantsList.innerHTML = "<p>No dependants found.</p>";
                 return;
             }
@@ -144,17 +195,17 @@ function loadDependants() {
         .catch(error => {
             console.error("Error loading dependants: ", error);
         });
-    }
-        
+}
+    
 function removeDependant(event) {
     const user = firebase.auth().currentUser;
     const dependantId = event.target.getAttribute("data-id");
-        
+    
     if (!user) {
         console.error("No user signed in");
         return;
     }
-        
+    
     firebase.firestore()
         .collection("users")
         .doc(user.uid)
@@ -163,7 +214,7 @@ function removeDependant(event) {
         .delete()
         .then(() => {
             console.log("Dependant removed");
-            loadDependants(); // Refresh the list
+            loadDependants(); 
         })
         .catch(error => {
             console.error("Error removing dependant: ", error);
