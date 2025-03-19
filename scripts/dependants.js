@@ -1,3 +1,5 @@
+var dependantQuant;
+
 function getCurrentUser() {
     firebase.auth().onAuthStateChanged(user => {
         if (user) {
@@ -89,10 +91,11 @@ function addDependant() {
         console.log(firstname + lastname);
 
     })
-        .catch((error) => {
-            console.error("Error adding dependant: ", error);
-        });
-    }
+    .catch((error) => {
+        console.error("Error adding dependant: ", error);
+    });
+}
+
 function loadDependants() {
     const user = firebase.auth().currentUser;
     if (!user) {
@@ -114,6 +117,8 @@ function loadDependants() {
                 return;
             }
         
+            dependantQuant = querySnapshot.length;
+            console.log(dependantQuant);
             querySnapshot.forEach(doc => {
                 const dependant = doc.data();
                 const li = document.createElement("li");
@@ -133,7 +138,7 @@ function loadDependants() {
                 removeBtn.addEventListener("click", removeDependant);
         
                 li.appendChild(removeBtn);
-                dependantsList.appendChild(li);
+                //dependantsList.appendChild(li);
             });
         })
         .catch(error => {
@@ -165,9 +170,15 @@ function removeDependant(event) {
         });
 }
         
-        // Load dependants after authentication
 firebase.auth().onAuthStateChanged(user => {
     if (user) {
         loadDependants();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            var welcome = document.getElementById("dependants-welcome");
+            const userName = user.displayName.split(" ")[0];
+
+            welcome.innerText = "Hello " + userName + ". You have " + dependantQuant + " dependants.";
+        });
     }
 });

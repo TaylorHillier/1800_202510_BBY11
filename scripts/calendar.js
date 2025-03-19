@@ -123,6 +123,12 @@ class CalendarApp {
   changeMonth(delta) {
     this.currentDate.setMonth(this.currentDate.getMonth() + delta);
     this.renderCalendar();
+    this
+    .updateDependantSchedule()
+    .then(() => {
+      calendar.renderSchedule();
+    })
+    .catch(err => console.error(err));
     // For large screens, re-render the schedule on the calendar.
     if (window.innerWidth >= 768) {
       this.renderScheduleOnCalendar();
@@ -362,6 +368,7 @@ class CalendarApp {
  // Renders the schedule below the calendar (for smaller screens).
 renderScheduleBelowCalendar() {
     let container = document.getElementById('daily-schedule-container');
+
     if (!container) {
       container = document.createElement('div');
       container.id = 'daily-schedule-container';
@@ -390,16 +397,20 @@ renderScheduleBelowCalendar() {
     // For caretaker schedule, group by dependant name.
     if (this.isCareTakerSchedule) {
       let groups = {};
+
       entriesToRender.forEach(entry => {
         let name = entry.dependantName || 'Unknown';
         if (!groups[name]) groups[name] = [];
         groups[name].push(entry);
       });
+
       for (let name in groups) {
         let groupContainer = document.createElement('div');
         groupContainer.className = 'entry-container';
+
         let header = document.createElement('h3');
         header.innerText = name;
+
         groupContainer.appendChild(header);
         groups[name].forEach(entry => {
           let medEntry = document.createElement('div');
@@ -408,15 +419,19 @@ renderScheduleBelowCalendar() {
           medEntry.innerText = `${entry.medication} at ${formattedTime}`;
           groupContainer.appendChild(medEntry);
         });
+
         container.appendChild(groupContainer);
       }
     } else {
       // For single dependant pages.
       entriesToRender.forEach(entry => {
+
         let medEntry = document.createElement('div');
         medEntry.className = 'medication-entry';
+
         let formattedTime = entry.doseTime.toTimeString().slice(0, 5);
         medEntry.innerText = `${entry.medication} at ${formattedTime}`;
+
         container.appendChild(medEntry);
       });
     }
