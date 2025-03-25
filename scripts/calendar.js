@@ -131,19 +131,20 @@ class CalendarApp {
         this.renderScheduleBelowCalendar();
       }).catch(
         err => console.error(err));
-      
+    } else {
+      this.renderSideBar();
     }
   }
 
   changeMonth(delta) {
     this.currentDate.setMonth(this.currentDate.getMonth() + delta);
     this.renderCalendar();
-    this
-    .updateDependantSchedule()
-    .then(() => {
-      calendar.renderSchedule();
-    })
-    .catch(err => console.error(err));
+    // this
+    // .updateDependantSchedule()
+    // .then(() => {
+    //   calendar.renderSchedule();
+    // })
+    // .catch(err => console.error(err));
     // For large screens, re-render the schedule on the calendar.
     if (window.innerWidth >= 768) {
       this.renderScheduleOnCalendar();
@@ -389,7 +390,7 @@ class CalendarApp {
             container.setAttribute('data-dependant', dependant);
             
             // Create a header with the dependant's name.
-            const header = document.createElement('h3');
+            const header = document.createElement('h5');
             header.innerText = dependant;
             container.appendChild(header);
             dayCell.appendChild(container);
@@ -419,6 +420,7 @@ class CalendarApp {
       }
     }
   }
+
  // Renders the schedule below the calendar (for smaller screens).
   renderScheduleBelowCalendar() {
     let container = document.getElementById('daily-schedule-container');
@@ -463,7 +465,7 @@ class CalendarApp {
         let groupContainer = document.createElement('div');
         groupContainer.className = 'entry-container';
 
-        let header = document.createElement('h3');
+        let header = document.createElement('h5');
         header.innerText = name;
 
         groupContainer.appendChild(header);
@@ -499,6 +501,46 @@ class CalendarApp {
     if(!sideBar){
       sideBar = document.createElement("aside");
       sideBar.id = "calendar-sidebar";
+    }
+    sideBar.innerHTML = "";
+
+    // Filter for entries that match the selected day.
+    let groups = {};
+
+    if (!this.selectedDate) {
+      this.selectedDate = new Date().toLocaleDateString('en-CA').split('T')[0];
+    }
+
+    // Filter for entries that match the selected day.
+    let entriesToRender = this.sortedSchedule.filter(
+      entry =>entry.doseTime.toLocaleDateString('en-CA') === this.selectedDate
+    );
+
+    entriesToRender.forEach(entry => {
+      let name = entry.dependantName || 'Unknown';
+
+      if (!groups[name]) groups[name] = [];
+      
+      groups[name].push(entry);
+    });
+
+    for (let name in groups) {
+      let groupContainer = document.createElement('ul');
+      groupContainer.className = 'sidebar-ul';
+
+      let header = document.createElement('h5');
+      header.innerText = name;
+
+      groupContainer.appendChild(header);
+      groups[name].forEach(entry => {
+        let medEntry = document.createElement('li');
+        medEntry.className = 'medication-entry-sidebar';
+        let formattedTime = entry.doseTime.toTimeString().slice(0, 5);
+        medEntry.innerText = `${entry.medication} at ${formattedTime}`;
+        groupContainer.appendChild(medEntry);
+      });
+
+      sideBar.appendChild(groupContainer);
     }
 
     this.container.appendChild(sideBar);

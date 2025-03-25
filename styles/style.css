@@ -713,3 +713,13 @@ footer {
 #dependants{
 
 }
+
+/* ==================================================== */
+/*               Calendar Styling                       */
+/* ==================================================== */
+@media(min-width: 768px) {
+    #calendar {
+        display: grid;
+        grid-template-columns: 3fr 1fr;
+    }
+}
