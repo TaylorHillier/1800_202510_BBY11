@@ -1,12 +1,42 @@
+/* ================================================== */
+/*                ROOT VARIABLES & GLOBAL           */
+/* ================================================== */
 :root {
-    --link: #757575
+    --link: #757575;
+    --primary-color: #3b82f6;
+    --secondary-color: #6366f1;
+    --text-color: #1f2937;
+    --background-color: #f9fafb;
 }
 
-/* Harshaan */
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    height: 100%;
+}
+
+/* ================================================== */
+/*                    MAIN LAYOUT                   */
+/* ================================================== */
+.main-layout {
+    display: flex;
+}
+
+/* ================================================== */
+/*                    HERO SECTION                  */
+/* ================================================== */
 .hero-section {
     padding: 2rem 0;
 }
-
 
 .hero {
     position: relative;
@@ -37,7 +67,9 @@
     padding: 20px;
 }
 
-
+/* ================================================== */
+/*                   CTA CONTAINER                  */
+/* ================================================== */
 .cta-container {
     background-image: url('/images/DSC_2360.jpg');
     background-size: cover;
@@ -101,6 +133,9 @@
     transform: translateY(-2px);
 }
 
+/* ================================================== */
+/*              RESPONSIVE STYLES (MOBILE)          */
+/* ================================================== */
 @media (max-width: 768px) {
     .cta-container {
         width: 90%;
@@ -121,10 +156,16 @@
     }
 }
 
+/* ================================================== */
+/*                VISIBILITY UTILITIES              */
+/* ================================================== */
 .hero-section.hidden {
     display: none;
 }
 
+/* ================================================== */
+/*                    NAVIGATION                    */
+/* ================================================== */
 .navigation {
     position: fixed;
     bottom: 0;
@@ -136,7 +177,7 @@
     z-index: 1000;
 }
 
-.navigation p{
+.navigation p {
     display: none;
 }
 
@@ -164,8 +205,8 @@ ul {
     display: flex;
     align-items: center;
     justify-content: space-evenly;
-    list-style: none;
     padding: 0;
+    gap: 20px;
 }
 
 .nav-link {
@@ -175,7 +216,6 @@ ul {
     align-items: center;
 }
 
-
 .nav-item {
     text-align: center;
     display: flex;
@@ -184,13 +224,13 @@ ul {
     position: relative;
 }
 
-@media(min-width: 480px) {
-    .navigation p{
+@media (min-width: 480px) {
+    .navigation p {
         display: block;
     }
 }
 
-@media(min-width: 1280px) {
+@media (min-width: 1280px) {
     .navigation {
         position: relative;
         display: flex;
@@ -202,41 +242,21 @@ ul {
         display: none;
     }
 
-    nav {
-        width: auto;
-        top: 0;
-        bottom: unset !important;
-    }
-
     .hidden-mobile {
         display: flex;
     }
 
     .nav-list {
-        display: flex;
-        justify-content: space-evenly;
-        width: 100%;
         gap: 2rem;
     }
 }
 
-/* General Styles */
+/* ================================================== */
+/*                GENERAL ELEMENT STYLES            */
+/* ================================================== */
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
     background-color: #f4f4f4;
-    /* Light background for contrast */
     color: #333;
-}
-
-.nav-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    justify-content: center;
-    gap: 20px;
 }
 
 .nav-item a {
@@ -250,7 +270,9 @@ body {
     text-decoration: underline;
 }
 
-/* Section Box Styling */
+/* ================================================== */
+/*              SECTION BOX STYLING                 */
+/* ================================================== */
 .about-section,
 .how-it-works,
 .testimonials,
@@ -261,14 +283,10 @@ body {
     padding: 25px;
     text-align: center;
     background: white;
-    /* Box background */
     border-radius: 12px;
-    /* Rounded corners */
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-    /* Soft shadow */
 }
 
-/* Add spacing between sections */
 .how-it-works,
 .testimonials,
 .security-privacy,
@@ -276,7 +294,7 @@ body {
     margin-top: 30px;
 }
 
-/* Headings */
+/* Headings and Paragraphs */
 h1,
 h2 {
     font-size: 2em;
@@ -286,7 +304,9 @@ p {
     color: #111827;
 }
 
-/* How It Works - Ordered List */
+/* ================================================== */
+/*                HOW IT WORKS SECTION              */
+/* ================================================== */
 .how-it-works ol {
     text-align: left;
     margin: 20px auto;
@@ -298,7 +318,9 @@ p {
     margin-bottom: 10px;
 }
 
-/* Testimonials */
+/* ================================================== */
+/*                  TESTIMONIALS                    */
+/* ================================================== */
 .testimonials blockquote {
     font-style: italic;
     background: #f9f9f9;
@@ -309,7 +331,9 @@ p {
     max-width: 600px;
 }
 
-/* Contact Info */
+/* ================================================== */
+/*                  CONTACT INFO                    */
+/* ================================================== */
 .contact-info ul {
     list-style-type: none;
     padding: 0;
@@ -328,7 +352,9 @@ p {
     text-decoration: underline;
 }
 
-/* Key Features Section */
+/* ================================================== */
+/*              KEY FEATURES SECTION              */
+/* ================================================== */
 .key-features {
     padding: 50px 0;
     text-align: center;
@@ -379,10 +405,20 @@ p {
     line-height: 1.6;
 }
 
-/* Responsive Grid Layout */
+/* ================================================== */
+/*             RESPONSIVE GRID LAYOUT               */
+/* ================================================== */
 @media (min-width: 768px) {
     .feature-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .navigation {
+        position: sticky;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 1000;
     }
 }
 
@@ -392,41 +428,12 @@ p {
     }
 }
 
-/* Son */
-/* Reset and Base Styles */
-/* Reset and Base Styles */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+/* ================================================== */
+/*                      SON SECTION                 */
+/* ================================================== */
+/* (This section repeats some of the above for specific elements) */
 
-:root {
-    --primary-color: #3b82f6;
-    --secondary-color: #6366f1;
-    --text-color: #1f2937;
-    --background-color: #f9fafb;
-}
-
-body {
-    font-family: 'Inter', sans-serif;
-    line-height: 1.6;
-    color: var(--text-color);
-    background-color: var(--background-color);
-    height: 100%;
-}
-
-/* Navigation Styles */
-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background-color: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-}
-
+/* Navigation Container (SON) */
 .nav-container {
     display: flex;
     justify-content: space-between;
@@ -479,7 +486,9 @@ nav {
     margin: 2px 0;
 }
 
-/* Hero Section */
+/* ================================================== */
+/*                  HERO SECTION (SON)              */
+/* ================================================== */
 .hero {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     color: white;
@@ -532,7 +541,9 @@ nav {
     opacity: 0.9;
 }
 
-/* Features Section */
+/* ================================================== */
+/*              FEATURES SECTION (SON)              */
+/* ================================================== */
 .features {
     background-color: white;
     padding: 4rem 2rem;
@@ -579,7 +590,9 @@ nav {
     color: white;
 }
 
-/* Footer */
+/* ================================================== */
+/*                 FOOTER SECTION (SON)             */
+/* ================================================== */
 footer {
     background-color: #111827;
     color: white;
@@ -621,7 +634,9 @@ footer {
     color: #9ca3af;
 }
 
-/* Responsive Design */
+/* ================================================== */
+/*             RESPONSIVE DESIGN (SON)              */
+/* ================================================== */
 @media screen and (max-width: 768px) {
     .nav-links {
         display: none;
@@ -648,34 +663,18 @@ footer {
     }
 }
 
-.nav-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 1rem 2rem;
-}
-
-.welcomeButtons button:hover {
-    background-color: rgb(123, 134, 140);
-    transform: scale(1.02);
-    transition: background-color 0.3s, transform 0.2s;
-}
-
-
-/* main html */
+/* ================================================== */
+/*         ADDITIONAL SPECIFIC ELEMENT STYLES         */
+/* ================================================== */
 #dependants,
 #welcome_message {
     margin-left: 1%;
 }
 
-/* dependant html */
 #dependant-main {
     margin: 1%;
 }
 
-/* single_dependant html */
 #calendar {
     margin: 1%;
 }
