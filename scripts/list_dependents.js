@@ -14,12 +14,18 @@ function listDependants() {
 
         await Promise.all(snapshot.docs.map(async doc => {
             const listItem = document.createElement('li');
+            listItem.className = "dependant-item";
             const dependant = doc.data();
             
-            // Name display
-            const nameSpan = document.createElement('span');
-            nameSpan.textContent = `${dependant.firstname} ${dependant.lastname}`;
-            listItem.appendChild(nameSpan);
+            // Create container for link and button
+            const container = document.createElement('div');
+            container.className = "dependant-container";
+            
+            // Create clickable name link
+            const nameLink = document.createElement('a');
+            nameLink.href = `single_dependant.html?id=${doc.id}`;
+            nameLink.textContent = `${dependant.firstname} ${dependant.lastname}`;
+            nameLink.className = "dependant-name";
 
             // Remove button
             const removeBtn = document.createElement("button");
@@ -39,6 +45,7 @@ function listDependants() {
             `;
 
             removeBtn.addEventListener("click", async (e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 if (confirm(`Remove ${dependant.firstname} ${dependant.lastname}?`)) {
                     await firebase.firestore()
@@ -51,20 +58,20 @@ function listDependants() {
                 }
             });
 
-            listItem.appendChild(removeBtn);
+            container.appendChild(nameLink);
+            container.appendChild(removeBtn);
+            listItem.appendChild(container);
             dependantsList.appendChild(listItem);
-        }));
+        });
     });
 }
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    // Create global removeMode if it doesn't exist
     window.removeMode = window.removeMode || false;
     listDependants();
 });
 
-// format in AM PM
 function formatTime(timeString) {
     const time = new Date(`1970-01-01T${timeString}`);
     const formatter = new Intl.DateTimeFormat('en-US', {
@@ -74,5 +81,3 @@ function formatTime(timeString) {
     });
     return formatter.format(time);
 }
-
-listDependants();

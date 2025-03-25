@@ -186,11 +186,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 querySnapshot.forEach(doc => {
                     const dependant = doc.data();
                     const li = document.createElement("li");
+                    li.className = "dependant-item";
                     
-                    // Create and append name span
-                    const nameSpan = document.createElement("span");
-                    nameSpan.textContent = `${dependant.firstname} ${dependant.lastname}`;
-                    li.appendChild(nameSpan);
+                    // Create container for link and button
+                    const container = document.createElement("div");
+                    container.className = "dependant-container";
+                    
+                    // Create clickable name link
+                    const nameLink = document.createElement("a");
+                    nameLink.href = `single_dependant.html?id=${doc.id}`;
+                    nameLink.textContent = `${dependant.firstname} ${dependant.lastname}`;
+                    nameLink.className = "dependant-name";
     
                     // Create remove button
                     const removeBtn = document.createElement("button");
@@ -210,19 +216,17 @@ document.addEventListener("DOMContentLoaded", function () {
                         transition: background-color 0.2s;
                     `;
     
-                    // Button hover effects
-                    removeBtn.onmouseover = () => removeBtn.style.backgroundColor = "#cc0000";
-                    removeBtn.onmouseout = () => removeBtn.style.backgroundColor = "#ff4444";
-    
-                    // Click handler
                     removeBtn.addEventListener("click", (e) => {
+                        e.preventDefault();
                         e.stopPropagation();
                         if (confirm(`Remove ${dependant.firstname} ${dependant.lastname}?`)) {
                             removeDependant({ target: { getAttribute: () => doc.id } });
                         }
                     });
     
-                    li.appendChild(removeBtn);
+                    container.appendChild(nameLink);
+                    container.appendChild(removeBtn);
+                    li.appendChild(container);
                     dependantsList.appendChild(li);
                 });
             })
