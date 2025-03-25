@@ -1,4 +1,5 @@
 var dependantQuant;
+let RemoveMode = false; // Tracks if we're in "Remove Mode"
 
 function getCurrentUser() {
     firebase.auth().onAuthStateChanged(user => {
@@ -13,7 +14,6 @@ function getCurrentUser() {
         }
     });
 }
-getCurrentUser();
 
 function createForm() {
     var form = document.createElement("form");
@@ -96,15 +96,142 @@ function addDependant() {
     });
 }
 
-function removeDependant(event) {
-    const user = firebase.auth().currentUser;
-    const dependantId = event.target.getAttribute("data-id");
+
+let removeMode = false; // Tracks if we're in "Remove Mode"
+
+    document.addEventListener("DOMContentLoaded", function () {
+        firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+                setupButtons();
+                loadDependants(); // Load dependants once on page load
+            } else {
+                console.log("No user logged in.");
+            }
+        });
+    });
+    
+function setupButtons() {
+        let addButton = document.getElementById("add-dependant");
+        let removeButton = document.getElementById("toggle-remove-mode");
+    
+        if (addButton && !addButton.dataset.listenerAdded) {
+            addButton.addEventListener("click", createForm);
+            addButton.dataset.listenerAdded = "true"; // Prevent duplicate listener
+        }
         
+        if (removeButton && !removeButton.dataset.listenerAdded) {
+            removeButton.addEventListener("click", toggleRemoveMode);
+            removeButton.dataset.listenerAdded = "true"; // Prevent duplicate listener
+        }
+    }
+    
+    function toggleRemoveMode() {
+        removeMode = !removeMode;
+        const deleteButtons = document.querySelectorAll('.delete-dependant');
+        
+        deleteButtons.forEach(button => {
+            button.style.display = removeMode ? 'inline-block' : 'none';
+        });
+    
+        // Update button text
+        const toggleBtn = document.getElementById('removeModeBtn');
+        if (toggleBtn) {
+            toggleBtn.textContent = removeMode ? 'Exit Remove Mode' : 'Remove Dependants';
+        }
+    }
+    
+function loadDependants() {
+    const user = firebase.auth().currentUser;
     if (!user) {
         console.error("No user signed in");
         return;
     }
+    
+    const dependantsList = document.getElementById("dependants-list");
+    dependantsList.innerHTML = ""; // Clear the list before loading
+    
+    firebase.firestore()
+        .collection("users")
+        .doc(user.uid)
+        .collection("dependants")
+        .get()
+        .then(querySnapshot => {
+            let dependants = []; // Store unique dependants
+            querySnapshot.forEach(doc => {
+                const dependant = doc.data();
+                dependants.push({ ...dependant, id: doc.id });
+            });
+    
+                // Remove duplicates based on firstname + lastname
+            let uniqueDependants = [];
+            let seenNames = new Set();
+            dependants.forEach(dep => {
+                let fullName = `${dep.firstname} ${dep.lastname}`;
+                if (!seenNames.has(fullName)) {
+                    seenNames.add(fullName);
+                    uniqueDependants.push(dep);
+                }
+            });
+    
+                // Show dependants in the list
+            if (uniqueDependants.length === 0) {
+                dependantsList.innerHTML = "<p>No dependants found.</p>";
+                return;
+            }
         
+            dependantQuant = querySnapshot.length;
+            console.log(dependantQuant);
+            querySnapshot.forEach(doc => {
+                const dependant = doc.data();
+                const li = document.createElement("li");
+                const removeBtn = document.createElement("button");
+                removeBtn.textContent = "×";
+                removeBtn.className = "delete-dependant";
+                removeBtn.setAttribute("data-id", doc.id);
+
+                removeBtn.style.cssText = `
+                    display: none; /* Hidden by default */
+                    margin-left: 10px;
+                    background-color: #ff4444;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    padding: 3px 8px;
+                    cursor: pointer;
+                    font-size: 14px;
+                    transition: background-color 0.2s;
+`               ;
+
+                removeBtn.onmouseover = () => removeBtn.style.backgroundColor = "#cc0000";
+                removeBtn.onmouseout = () => removeBtn.style.backgroundColor = "#ff4444";
+
+                removeBtn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    if (confirm(`Remove ${dependant.firstname} ${dependant.lastname}?`)) {
+                        removeDependant({ target: { getAttribute: () => doc.id } });
+                    }
+                });
+
+                li.appendChild(removeBtn);
+                dependantsList.appendChild(li);
+            });
+        })
+        .catch(error => {
+            console.error("Error loading dependants: ", error);
+        });
+}
+    
+
+
+function removeDependant(event) {
+    const user = firebase.auth().currentUser;
+    const dependantId = event.target.getAttribute("data-id");
+    
+    if (!user) {
+        console.error("No user signed in");
+        return;
+    }
+    
     firebase.firestore()
         .collection("users")
         .doc(user.uid)
@@ -113,7 +240,7 @@ function removeDependant(event) {
         .delete()
         .then(() => {
             console.log("Dependant removed");
-            loadDependants(); // Refresh the list
+            loadDependants(); 
         })
         .catch(error => {
             console.error("Error removing dependant: ", error);
