@@ -116,7 +116,11 @@ class CalendarApp {
     this.selectedDate = dayElement.dataset.date;
     // On small screens, render schedule for the selected day below the calendar.
     if (window.innerWidth < 768) {
-      this.renderScheduleBelowCalendar();
+      this.updateDependantSchedule().then(() => {
+        this.renderScheduleBelowCalendar();
+      }).catch(
+        err => console.error(err));
+      
     }
   }
 
@@ -156,6 +160,7 @@ class CalendarApp {
       let isSingleDependant = false;
       let isCareTakerSchedule = false;
       const pageurl = window.location.href;
+
       if (pageurl.indexOf('single_dependant') > -1) {
         isSingleDependant = true;
       } else if (pageurl.indexOf('caretaker-schedule') > -1) {
@@ -182,8 +187,10 @@ class CalendarApp {
               .doc(dependant)
               .collection('medications')
               .get();
+
             medsSnapshot.docs.forEach(doc => {
               const medData = doc.data();
+
               const medObject = {
                 Medication: {
                   name: medData.name || 'Not specified',
@@ -194,6 +201,7 @@ class CalendarApp {
                 },
                 dependantName: null
               };
+
               this.medications.push(medObject);
             });
           } else if (isCareTakerSchedule) {
@@ -204,13 +212,17 @@ class CalendarApp {
               .doc(user.uid)
               .collection('dependants')
               .get();
+
             for (const dependantDoc of dependantsSnapshot.docs) {
+
               const dependantData = dependantDoc.data();
               const dependantId = dependantDoc.id;
+
               const dependantName =
                 dependantData.firstname && dependantData.lastname
                   ? dependantData.firstname + ' ' + dependantData.lastname
                   : 'Unnamed';
+
               const medsSnapshot = await firebase
                 .firestore()
                 .collection('users')
@@ -219,6 +231,7 @@ class CalendarApp {
                 .doc(dependantId)
                 .collection('medications')
                 .get();
+
               medsSnapshot.docs.forEach(doc => {
                 const medData = doc.data();
                 const medObject = {
@@ -237,7 +250,6 @@ class CalendarApp {
           }
           this.isCareTakerSchedule = isCareTakerSchedule;
           this.isSingleDependant = isSingleDependant;
-          console.log('Medications retrieved:', this.medications);
           // Once all medications are retrieved, sort the schedule.
           this.sortSchedule();
           resolve();
@@ -315,35 +327,34 @@ class CalendarApp {
   // Renders the schedule inside each calendar cell (for larger screens).
   renderScheduleOnCalendar() {
     // Clear any previous schedule entries from calendar cells.
-    this.container
-      .querySelectorAll('.calendar-day')
-      .forEach(cell => (cell.innerHTML = cell.innerText));
-    this.sortedSchedule.forEach(entry => {
-      const formattedDate = entry.doseTime
-        .toISOString()
-        .split('T')[0];
-      const dayCell = this.container.querySelector(
-        `.calendar-day[data-date="${formattedDate}"]`
-      );
-      if (!dayCell) return;
+    this.container.querySelectorAll('.calendar-day').forEach(cell => (cell.innerHTML = cell.innerText));
+
+    for (let i = 0; i < this.sortedSchedule.length; i++) {
+      const entry = this.sortedSchedule[i];
+
+      const formattedDate = entry.doseTime.toLocaleDateString('en-CA');
+
+      const dayCell = this.container.querySelector(`.calendar-day[data-date="${formattedDate}"]`);
+      if (!dayCell) continue;
+    
       if (this.isCareTakerSchedule && entry.dependantName) {
-        let container = dayCell.querySelector(
-          `.entry-container[data-dependant="${entry.dependantName}"]`
-        );
+        let container = dayCell.querySelector(`.entry-container[data-dependant="${entry.dependantName}"]`);
+
         if (!container) {
           container = document.createElement('div');
           container.className = 'entry-container';
           container.setAttribute('data-dependant', entry.dependantName);
+    
           const header = document.createElement('h3');
           header.innerText = entry.dependantName;
+    
           container.appendChild(header);
           dayCell.appendChild(container);
         }
+
         const medEntry = document.createElement('div');
         medEntry.className = 'medication-entry';
-        const formattedTime = entry.doseTime
-          .toTimeString()
-          .slice(0, 5);
+        const formattedTime = entry.doseTime.toTimeString().slice(0, 5);
         medEntry.innerText = `${entry.medication} at ${formattedTime}`;
         container.appendChild(medEntry);
       } else {
@@ -356,17 +367,15 @@ class CalendarApp {
         }
         const medEntry = document.createElement('div');
         medEntry.className = 'medication-entry';
-        const formattedTime = entry.doseTime
-          .toTimeString()
-          .slice(0, 5);
+        const formattedTime = entry.doseTime.toTimeString().slice(0, 5);
         medEntry.innerText = `${entry.medication} at ${formattedTime}`;
         container.appendChild(medEntry);
       }
-    });
+    }
   }
 
  // Renders the schedule below the calendar (for smaller screens).
-renderScheduleBelowCalendar() {
+  renderScheduleBelowCalendar() {
     let container = document.getElementById('daily-schedule-container');
 
     if (!container) {
@@ -380,20 +389,19 @@ renderScheduleBelowCalendar() {
     
     // Only render entries if a day is selected.
     if (!this.selectedDate) {
-      container.innerText = "Select a day to view the schedule.";
-      return;
+      this.selectedDate = new Date().toLocaleDateString('en-CA').split('T')[0];
     }
-    
+
     // Filter for entries that match the selected day.
     let entriesToRender = this.sortedSchedule.filter(
-      entry => entry.doseTime.toISOString().split('T')[0] === this.selectedDate
+      entry =>entry.doseTime.toLocaleDateString('en-CA') === this.selectedDate
     );
   
     if (entriesToRender.length === 0) {
       container.innerText = "No scheduled medications for this day.";
       return;
     }
-    
+
     // For caretaker schedule, group by dependant name.
     if (this.isCareTakerSchedule) {
       let groups = {};
@@ -422,10 +430,11 @@ renderScheduleBelowCalendar() {
 
         container.appendChild(groupContainer);
       }
-    } else {
+    } else if(this.isSingleDependant) {
+    
       // For single dependant pages.
       entriesToRender.forEach(entry => {
-
+      
         let medEntry = document.createElement('div');
         medEntry.className = 'medication-entry';
 

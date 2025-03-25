@@ -105,7 +105,7 @@ function loadDependants() {
         
     const dependantsList = document.getElementById("dependants-list");
     dependantsList.innerHTML = ""; // Clear the list before reloading
-        
+
     firebase.firestore()
         .collection("users")
         .doc(user.uid)
