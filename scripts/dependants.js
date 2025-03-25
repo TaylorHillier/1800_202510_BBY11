@@ -96,56 +96,6 @@ function addDependant() {
     });
 }
 
-function loadDependants() {
-    const user = firebase.auth().currentUser;
-    if (!user) {
-        console.error("No user signed in");
-        return;
-    }
-        
-    const dependantsList = document.getElementById("dependants-list");
-    dependantsList.innerHTML = ""; // Clear the list before reloading
-
-    firebase.firestore()
-        .collection("users")
-        .doc(user.uid)
-        .collection("dependants")
-        .get()
-        .then(querySnapshot => {
-            if (querySnapshot.empty) {
-                dependantsList.innerHTML = "<p>No dependants found.</p>";
-                return;
-            }
-        
-            dependantQuant = querySnapshot.length;
-            console.log(dependantQuant);
-            querySnapshot.forEach(doc => {
-                const dependant = doc.data();
-                const li = document.createElement("li");
-        
-                li.innerHTML = `${dependant.firstname} ${dependant.lastname} `;
-        
-                // Create Remove button
-                const removeBtn = document.createElement("button");
-                removeBtn.textContent = "Remove";
-                removeBtn.setAttribute("data-id", doc.id);
-                removeBtn.style.marginLeft = "10px"; // Space between name & button
-                removeBtn.style.backgroundColor = "red";
-                removeBtn.style.color = "white";
-                removeBtn.style.border = "none";
-                removeBtn.style.padding = "5px 10px";
-                removeBtn.style.cursor = "pointer";
-                removeBtn.addEventListener("click", removeDependant);
-        
-                li.appendChild(removeBtn);
-                //dependantsList.appendChild(li);
-            });
-        })
-        .catch(error => {
-            console.error("Error loading dependants: ", error);
-        });
-    }
-        
 function removeDependant(event) {
     const user = firebase.auth().currentUser;
     const dependantId = event.target.getAttribute("data-id");
@@ -172,8 +122,6 @@ function removeDependant(event) {
         
 firebase.auth().onAuthStateChanged(user => {
     if (user) {
-        loadDependants();
-
         document.addEventListener('DOMContentLoaded', () => {
             var welcome = document.getElementById("dependants-welcome");
             const userName = user.displayName.split(" ")[0];

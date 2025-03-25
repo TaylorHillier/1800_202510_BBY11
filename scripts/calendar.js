@@ -2,7 +2,10 @@ var globalUserId;
 
 class CalendarApp {
   constructor(containerId) {
+
     this.container = document.getElementById(containerId);
+    this.calenderContainer = document.getElementById(containerId + "-container");
+    
     this.currentDate = new Date();
     this.selectedDate = null;
     this.medications = []; // Raw medications from firebase
@@ -13,12 +16,20 @@ class CalendarApp {
   }
 
   init() {
+   
+    if(this.calenderContainer == null) {
+      let calCont = document.createElement('div');
+      calCont.id = 'calendar-container';
+      this.container.appendChild(calCont);
+      this.calenderContainer = calCont;  // Set the property so it's not null
+    }
     this.renderNavigation();
     this.renderCalendar();
   }
 
   renderNavigation() {
-    const existingNav = this.container.querySelector('.calendar-navigation');
+
+    const existingNav = this.calenderContainer.querySelector('.calendar-navigation');
     if (existingNav) {
       existingNav.remove();
     }
@@ -41,12 +52,12 @@ class CalendarApp {
     navContainer.appendChild(monthYearDisplay);
     navContainer.appendChild(nextButton);
 
-    this.container.appendChild(navContainer);
+    this.calenderContainer.appendChild(navContainer);
   }
 
   renderCalendar() {
     // Clear previous calendar
-    const existingCalendar = this.container.querySelector('.calendar-grid');
+    const existingCalendar = this.calenderContainer.querySelector('.calendar-grid');
     if (existingCalendar) {
       existingCalendar.remove();
     }
@@ -103,12 +114,12 @@ class CalendarApp {
       calendarGrid.appendChild(dayElement);
     }
 
-    this.container.appendChild(calendarGrid);
+    this.calenderContainer.appendChild(calendarGrid);
     this.updateMonthDisplay();
   }
 
   selectDate(dayElement) {
-    const previousSelected = this.container.querySelector('.selected');
+    const previousSelected = this.calenderContainer.querySelector('.selected');
     if (previousSelected) {
       previousSelected.classList.remove('selected');
     }
@@ -144,7 +155,7 @@ class CalendarApp {
   }
 
   updateMonthDisplay() {
-    const monthDisplay = this.container.querySelector('#month-year-display');
+    const monthDisplay = this.calenderContainer.querySelector('#month-year-display');
     if (monthDisplay) {
       monthDisplay.innerText = this.formatMonthYear(this.currentDate);
     }
@@ -272,8 +283,8 @@ class CalendarApp {
         !medData.endDate ||
         !medData.startTime ||
         !medData.frequency
-      )
-        return;
+      ) return;
+      
       const startDate = new Date(medData.startDate);
       const endDate = new Date(medData.endDate);
       // Extract the dosing interval in hours.
@@ -319,61 +330,95 @@ class CalendarApp {
   renderSchedule() {
     if (window.innerWidth >= 768) {
       this.renderScheduleOnCalendar();
+      this.renderSideBar();
     } else {
       this.renderScheduleBelowCalendar();
     }
   }
 
-  // Renders the schedule inside each calendar cell (for larger screens).
   renderScheduleOnCalendar() {
     // Clear any previous schedule entries from calendar cells.
-    this.container.querySelectorAll('.calendar-day').forEach(cell => (cell.innerHTML = cell.innerText));
-
+    this.calenderContainer.querySelectorAll('.calendar-day').forEach(cell => {
+      // Preserve the day number (cell.innerText) while clearing extra entries.
+      cell.innerHTML = cell.innerText;
+    });
+  
+    // Group events by date, then by dependant (if caretaker schedule)
+    let groupedEntries = {};
+  
     for (let i = 0; i < this.sortedSchedule.length; i++) {
       const entry = this.sortedSchedule[i];
-
+      // Use local date so it matches your calendar cell's data-date.
       const formattedDate = entry.doseTime.toLocaleDateString('en-CA');
-
-      const dayCell = this.container.querySelector(`.calendar-day[data-date="${formattedDate}"]`);
-      if (!dayCell) continue;
-    
-      if (this.isCareTakerSchedule && entry.dependantName) {
-        let container = dayCell.querySelector(`.entry-container[data-dependant="${entry.dependantName}"]`);
-
-        if (!container) {
-          container = document.createElement('div');
-          container.className = 'entry-container';
-          container.setAttribute('data-dependant', entry.dependantName);
-    
-          const header = document.createElement('h3');
-          header.innerText = entry.dependantName;
-    
-          container.appendChild(header);
-          dayCell.appendChild(container);
+      
+      // Initialize the day group if needed.
+      if (!groupedEntries[formattedDate]) {
+        groupedEntries[formattedDate] = {};
+        // For single dependant pages, use a default group.
+        if (!this.isCareTakerSchedule) {
+          groupedEntries[formattedDate]['default'] = [];
         }
-
-        const medEntry = document.createElement('div');
-        medEntry.className = 'medication-entry';
-        const formattedTime = entry.doseTime.toTimeString().slice(0, 5);
-        medEntry.innerText = `${entry.medication} at ${formattedTime}`;
-        container.appendChild(medEntry);
+      }
+      
+      if (this.isCareTakerSchedule && entry.dependantName) {
+        if (!groupedEntries[formattedDate][entry.dependantName]) {
+          groupedEntries[formattedDate][entry.dependantName] = [];
+        }
+        groupedEntries[formattedDate][entry.dependantName].push(entry);
       } else {
         // For single dependant pages.
+        groupedEntries[formattedDate]['default'].push(entry);
+      }
+    }
+  
+    // Now loop over the grouped data to render a summary in each day cell.
+    for (const date in groupedEntries) {
+      const dayCell = this.calenderContainer.querySelector(`.calendar-day[data-date="${date}"]`);
+      if (!dayCell) continue;
+      
+      if (this.isCareTakerSchedule) {
+        // For each dependant, create a summary entry.
+        for (const dependant in groupedEntries[date]) {
+          const events = groupedEntries[date][dependant];
+          
+          // Check if a container for this dependant already exists.
+          let container = dayCell.querySelector(`.entry-container[data-dependant="${dependant}"]`);
+          if (!container) {
+            container = document.createElement('div');
+            container.className = 'entry-container';
+            container.setAttribute('data-dependant', dependant);
+            
+            // Create a header with the dependant's name.
+            const header = document.createElement('h3');
+            header.innerText = dependant;
+            container.appendChild(header);
+            dayCell.appendChild(container);
+          }
+          
+          // Create a summary element to show the number of events.
+          const summary = document.createElement('div');
+          summary.className = 'medication-summary';
+          summary.innerText = `${events.length} event${events.length === 1 ? '' : 's'}`;
+          container.appendChild(summary);
+        }
+      } else {
+        // Single dependant page – use the default group.
+        const events = groupedEntries[date]['default'];
+        
         let container = dayCell.querySelector('.entry-container');
         if (!container) {
           container = document.createElement('div');
           container.className = 'entry-container';
           dayCell.appendChild(container);
         }
-        const medEntry = document.createElement('div');
-        medEntry.className = 'medication-entry';
-        const formattedTime = entry.doseTime.toTimeString().slice(0, 5);
-        medEntry.innerText = `${entry.medication} at ${formattedTime}`;
-        container.appendChild(medEntry);
+        
+        const summary = document.createElement('div');
+        summary.className = 'medication-summary';
+        summary.innerText = `${events.length} event${events.length === 1 ? '' : 's'}`;
+        container.appendChild(summary);
       }
     }
   }
-
  // Renders the schedule below the calendar (for smaller screens).
   renderScheduleBelowCalendar() {
     let container = document.getElementById('daily-schedule-container');
@@ -383,7 +428,7 @@ class CalendarApp {
       container.id = 'daily-schedule-container';
       container.style.marginTop = '20px';
       // Append it below the calendar.
-      this.container.parentElement.appendChild(container);
+      this.container.appendChild(container);
     }
     container.innerHTML = "";
     
@@ -408,7 +453,9 @@ class CalendarApp {
 
       entriesToRender.forEach(entry => {
         let name = entry.dependantName || 'Unknown';
+
         if (!groups[name]) groups[name] = [];
+        
         groups[name].push(entry);
       });
 
@@ -445,9 +492,18 @@ class CalendarApp {
       });
     }
   }
-}
 
-document.head.insertAdjacentHTML('beforeend', calendar);
+  renderSideBar() {
+    let sideBar = document.getElementById("calendar-sidebar");
+
+    if(!sideBar){
+      sideBar = document.createElement("aside");
+      sideBar.id = "calendar-sidebar";
+    }
+
+    this.container.appendChild(sideBar);
+  }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   const calendar = new CalendarApp('calendar');

@@ -27,8 +27,11 @@ body {
 /* ================================================== */
 /*                    MAIN LAYOUT                   */
 /* ================================================== */
-.main-layout {
-    display: flex;
+
+@media(min-width:768px){
+    .main-layout {
+        display: flex;
+    }
 }
 
 /* ================================================== */
@@ -238,9 +241,9 @@ ul {
         justify-content: space-between;
     }
 
-    .nav-link svg {
+    /* .nav-link svg {
         display: none;
-    }
+    } */
 
     .hidden-mobile {
         display: flex;
@@ -248,6 +251,49 @@ ul {
 
     .nav-list {
         gap: 2rem;
+    }
+}
+
+/* ================================================== */
+/*             RESPONSIVE GRID LAYOUT FOR NAV         */
+/* ================================================== */
+@media (min-width: 768px) {
+    .feature-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .navigation {
+        position: sticky;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 1000;
+        height: 100%;
+        padding: 1rem 1rem;
+    }
+
+    .nav-item{
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .nav-item a{
+        flex-direction: row;
+        gap: 1rem;
+        text-align: left;
+        width: 100%;
+        justify-content: inherit;
+    }
+
+    .nav-list{
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+@media (min-width: 1024px) {
+    .feature-grid {
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 
@@ -403,29 +449,6 @@ p {
 .feature-card p {
     color: #777;
     line-height: 1.6;
-}
-
-/* ================================================== */
-/*             RESPONSIVE GRID LAYOUT               */
-/* ================================================== */
-@media (min-width: 768px) {
-    .feature-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .navigation {
-        position: sticky;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        z-index: 1000;
-    }
-}
-
-@media (min-width: 1024px) {
-    .feature-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
 }
 
 /* ================================================== */
@@ -677,4 +700,16 @@ footer {
 
 #calendar {
     margin: 1%;
+}
+
+/* ==================================================== */
+/*               Main.html Dependants                   */
+/* ==================================================== */
+
+.dependant{
+
+}
+
+#dependants{
+
 }
