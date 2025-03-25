@@ -16,51 +16,51 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
 </head>
 <body>
-    <header id="navigation" class="navigation">
+    <div class="main-layout">
+        <header id="navigation" class="navigation">
 
-    </header>
-    <main>
-        <section id="medications">
-            <h1 id="dependant-info"></h1>
-            <div id="summary">
-                <h2>Dependant Summary</h2>
-                <textarea id="summary-text" placeholder="Write a summary for your dependant..."></textarea>
-                <button id="save-summary">Save Summary</button> 
-                <p id="summary-feedback" style="color: blue; display: none";>Summary successfully saved!</p>
-            </div>
-            Here are your medications for the day:
-            <ul id="med-list">
-              
-            </ul>
-            <div>
-                <button id="addMedication">Add a Medication</button>
-            </div>
-        </section>
-        <section id="calendar">
-        
-        </section>
-    </main>
+        </header>
+        <main>
+            <section id="medications">
+                <h1 id="dependant-info"></h1>
+                <div id="summary">
+                    <h2>Dependant Summary</h2>
+                    <textarea id="summary-text" placeholder="Write a summary for your dependant..."></textarea>
+                    <button id="save-summary">Save Summary</button> 
+                    <p id="summary-feedback" style="color: blue; display: none";>Summary successfully saved!</p>
+                </div>
+                Here are your medications for the day:
+                <ul id="med-list">
+                
+                </ul>
+                <div>
+                    <button id="addMedication">Add a Medication</button>
+                </div>
+            </section>
+            <section id="calendar">
+            
+            </section>
 
-<section id="notes-issues">
-    <h2>Notes and Issues</h2>
-    <div id="view-notes-issues"></div>
-
-    <div>
-        <label for="new-note-issue">Add a new note or issue:</label><br>
-        <textarea id="new-note-issue"></textarea>
-        <button onclick="saveNoteIssue()">Save</button>
+            <section id="notes-issues">
+                <h2>Notes and Issues</h2>
+                <div id="view-notes-issues"></div>
+            
+                <div>
+                    <label for="new-note-issue">Add a new note or issue:</label><br>
+                    <textarea id="new-note-issue"></textarea>
+                    <button onclick="saveNoteIssue()">Save</button>
+                </div>
+            </section>
+        </main>
     </div>
-</section>
 
 <script src="./scripts/FIREBASE_API.js"></script>
 <script src="./scripts/script.js"></script>
-<script src="./scripts/dependants.js"></script>
 <script src="./scripts/calendar.js"></script>
 <script src="./scripts/single_dependant.js"></script>
 <script src="./scripts/summary.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const calendar = new CalendarApp('calendar');
         loadNotesIssues(); 
     });
 </script>

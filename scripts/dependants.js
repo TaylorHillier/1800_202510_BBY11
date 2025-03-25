@@ -197,6 +197,8 @@ function loadDependants() {
         });
 }
     
+}
+
 function removeDependant(event) {
     const user = firebase.auth().currentUser;
     const dependantId = event.target.getAttribute("data-id");
@@ -223,8 +225,6 @@ function removeDependant(event) {
         
 firebase.auth().onAuthStateChanged(user => {
     if (user) {
-        loadDependants();
-
         document.addEventListener('DOMContentLoaded', () => {
             var welcome = document.getElementById("dependants-welcome");
             const userName = user.displayName.split(" ")[0];

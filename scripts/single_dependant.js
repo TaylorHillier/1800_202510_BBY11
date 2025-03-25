@@ -10,6 +10,7 @@ function getCurrentDependant() {
     const url = new URLSearchParams(window.location.search);
     dependant = url.get('id');
 
+    console.log(dependant);
     firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
             globalUserId = user.uid;
