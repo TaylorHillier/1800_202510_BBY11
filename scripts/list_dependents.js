@@ -1,43 +1,68 @@
 function listDependants() {
     firebase.auth().onAuthStateChanged(async user => {
-        if (!user) {
-            console.log("Must be logged in!");
-            return;
-        }
+        if (!user) return;
 
-        const snapshot = await firebase.firestore().collection('users').doc(user.uid).collection('dependants').get();
+        const snapshot = await firebase.firestore()
+            .collection('users')
+            .doc(user.uid)
+            .collection('dependants')
+            .get();
 
-        // Use Promise.all to handle asynchronous operations inside .map
+        // Clear existing list first
+        const dependantsList = document.getElementById("dependants-list");
+        dependantsList.innerHTML = "";
+
         await Promise.all(snapshot.docs.map(async doc => {
-            var listItem = document.createElement('li');
-            var link = document.createElement('a');
-            listItem.className = "dependant";
+            const listItem = document.createElement('li');
+            const dependant = doc.data();
+            
+            // Name display
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = `${dependant.firstname} ${dependant.lastname}`;
+            listItem.appendChild(nameSpan);
 
-            var firstname = doc.data().firstname;
-            var lastname = doc.data().lastname;
+            // Remove button
+            const removeBtn = document.createElement("button");
+            removeBtn.textContent = "×";
+            removeBtn.className = "delete-dependant";
+            removeBtn.dataset.id = doc.id;
+            removeBtn.style.cssText = `
+                display: ${window.removeMode ? 'inline-block' : 'none'};
+                margin-left: 10px;
+                background-color: #ff4444;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 3px 8px;
+                cursor: pointer;
+                font-size: 14px;
+            `;
 
-            link.innerHTML = firstname + " " + lastname;
-            link.href = `single_dependant.html?id=${doc.id}`;
-            listItem.appendChild(link);
+            removeBtn.addEventListener("click", async (e) => {
+                e.stopPropagation();
+                if (confirm(`Remove ${dependant.firstname} ${dependant.lastname}?`)) {
+                    await firebase.firestore()
+                        .collection('users')
+                        .doc(user.uid)
+                        .collection('dependants')
+                        .doc(doc.id)
+                        .delete();
+                    listDependants(); // Refresh the list
+                }
+            });
 
-             // Create Remove button
-             const removeBtn = document.createElement("button");
-             removeBtn.textContent = "Remove";
-             removeBtn.setAttribute("data-id", doc.id);
-             removeBtn.style.marginLeft = "10px"; // Space between name & button
-             removeBtn.style.backgroundColor = "red";
-             removeBtn.style.color = "white";
-             removeBtn.style.border = "none";
-             removeBtn.style.padding = "5px 10px";
-             removeBtn.style.cursor = "pointer";
-             removeBtn.addEventListener("click", removeDependant);
-     
-             listItem.appendChild(removeBtn);
-
-            document.getElementById("dependants-list").appendChild(listItem);
+            listItem.appendChild(removeBtn);
+            dependantsList.appendChild(listItem);
         }));
     });
 }
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    // Create global removeMode if it doesn't exist
+    window.removeMode = window.removeMode || false;
+    listDependants();
+});
 
 // format in AM PM
 function formatTime(timeString) {
