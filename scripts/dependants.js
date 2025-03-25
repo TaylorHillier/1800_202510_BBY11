@@ -1,4 +1,5 @@
 var dependantQuant;
+let RemoveMode = false; // Tracks if we're in "Remove Mode"
 
 function getCurrentUser() {
     firebase.auth().onAuthStateChanged(user => {
@@ -124,9 +125,19 @@ function setupButtons() {
         }
     }
     
-function toggleRemoveMode() {
+    function toggleRemoveMode() {
         removeMode = !removeMode;
-        loadDependants(); // Refresh the list to show/hide ❌ buttons
+        const deleteButtons = document.querySelectorAll('.delete-dependant');
+        
+        deleteButtons.forEach(button => {
+            button.style.display = removeMode ? 'inline-block' : 'none';
+        });
+    
+        // Update button text
+        const toggleBtn = document.getElementById('removeModeBtn');
+        if (toggleBtn) {
+            toggleBtn.textContent = removeMode ? 'Exit Remove Mode' : 'Remove Dependants';
+        }
     }
     
 function loadDependants() {
@@ -173,23 +184,36 @@ function loadDependants() {
             querySnapshot.forEach(doc => {
                 const dependant = doc.data();
                 const li = document.createElement("li");
-        
-                li.innerHTML = `${dependant.firstname} ${dependant.lastname} `;
-        
-                // Create Remove button
                 const removeBtn = document.createElement("button");
-                removeBtn.textContent = "Remove";
+                removeBtn.textContent = "×";
+                removeBtn.className = "delete-dependant";
                 removeBtn.setAttribute("data-id", doc.id);
-                removeBtn.style.marginLeft = "10px"; // Space between name & button
-                removeBtn.style.backgroundColor = "red";
-                removeBtn.style.color = "white";
-                removeBtn.style.border = "none";
-                removeBtn.style.padding = "5px 10px";
-                removeBtn.style.cursor = "pointer";
-                removeBtn.addEventListener("click", removeDependant);
-        
+
+                removeBtn.style.cssText = `
+                    display: none; /* Hidden by default */
+                    margin-left: 10px;
+                    background-color: #ff4444;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    padding: 3px 8px;
+                    cursor: pointer;
+                    font-size: 14px;
+                    transition: background-color 0.2s;
+`               ;
+
+                removeBtn.onmouseover = () => removeBtn.style.backgroundColor = "#cc0000";
+                removeBtn.onmouseout = () => removeBtn.style.backgroundColor = "#ff4444";
+
+                removeBtn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    if (confirm(`Remove ${dependant.firstname} ${dependant.lastname}?`)) {
+                        removeDependant({ target: { getAttribute: () => doc.id } });
+                    }
+                });
+
                 li.appendChild(removeBtn);
-                //dependantsList.appendChild(li);
+                dependantsList.appendChild(li);
             });
         })
         .catch(error => {
@@ -197,7 +221,7 @@ function loadDependants() {
         });
 }
     
-}
+
 
 function removeDependant(event) {
     const user = firebase.auth().currentUser;
