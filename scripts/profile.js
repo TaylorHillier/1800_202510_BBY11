@@ -334,23 +334,139 @@ async function handleProfileUpdate(e) {
     }
 }
 
+let passwordFormOpen = false;
+
 function showChangePasswordForm() {
-    // Implementation for password change form
-    const newPassword = prompt("Enter your new password:");
-    if (newPassword && newPassword.length >= 6) {
-        changeUserPassword(newPassword);
-    } else if (newPassword) {
-        alert("Password must be at least 6 characters");
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    // If form is already open, close it
+    const existingModal = document.getElementById('change-password-modal');
+    if (existingModal) {
+        existingModal.remove();
+        passwordFormOpen = false;
+        return;
     }
+
+    // Create password change modal
+    const formHTML = `
+        <div class="modal" id="change-password-modal">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h3>Change Password</h3>
+                <form id="password-change-form">
+                    <div class="form-group">
+                        <label>Current Password:</label>
+                        <input type="password" id="current-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label>New Password:</label>
+                        <input type="password" id="new-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm New Password:</label>
+                        <input type="password" id="confirm-password" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit">Update Password</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+
+    // Add to DOM
+    document.body.insertAdjacentHTML('beforeend', formHTML);
+    passwordFormOpen = true;
+
+    // Set up event listeners
+    document.getElementById('password-change-form').addEventListener('submit', handlePasswordChange);
+
+    // Close when clicking X
+    document.querySelector('#change-password-modal .close-modal').addEventListener('click', () => {
+        closePasswordForm();
+    });
+
+    // Close when clicking outside modal
+    document.getElementById('change-password-modal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('change-password-modal')) {
+            closePasswordForm();
+        }
+    });
+
+    // Prevent clicks inside modal from closing it
+    document.querySelector('#change-password-modal .modal-content').addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
 }
 
 async function changeUserPassword(newPassword) {
     try {
         const user = firebase.auth().currentUser;
         await user.updatePassword(newPassword);
-        alert("Password changed successfully!");
+        console.log("Password changed successfully!");
     } catch (error) {
         console.error("Error changing password:", error);
         alert("Error changing password: " + error.message);
+    }
+}
+
+async function handlePasswordChange(e) {
+    e.preventDefault();
+
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    const currentPassword = document.getElementById('current-password').value;
+    const newPassword = document.getElementById('new-password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+
+    // Only validation - passwords must match
+    if (newPassword !== confirmPassword) {
+        alert("New passwords don't match!");
+        return;
+    }
+
+    try {
+        // Reauthenticate user
+        const credential = firebase.auth.EmailAuthProvider.credential(
+            user.email,
+            currentPassword
+        );
+        await user.reauthenticateWithCredential(credential);
+
+        // Update password (Firebase may still enforce some basic requirements)
+        await user.updatePassword(newPassword);
+
+        await firebase.firestore()
+            .collection('users')
+            .doc(user.uid)
+            .update({
+                lastPasswordUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        // Close modal and show success
+        document.getElementById('change-password-modal').remove();
+        closePasswordForm();
+        alert("Password updated successfully!");
+
+    } catch (error) {
+        console.error("Error changing password:", error);
+        let message = "Error changing password: ";
+
+        if (error.code === 'auth/wrong-password') {
+            message += "Incorrect current password";
+        } else {
+            message += error.message;
+        }
+
+        alert(message);
+    }
+}
+
+function closePasswordForm() {
+    const modal = document.getElementById('change-password-modal');
+    if (modal) {
+        modal.remove();
+        passwordFormOpen = false;
     }
 }
