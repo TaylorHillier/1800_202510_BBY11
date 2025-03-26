@@ -270,70 +270,138 @@ function addMedication() {
         });
 
 }
-
-function saveNoteIssue() {
-    const userId = globalUserId;
-    const dependantId = dependant;
-    const newNoteIssue = document.getElementById('new-note-issue').value;
-
-    if (newNoteIssue.trim() === '') {
-        alert('Please enter a note or issue.');
+function initNotesIssues() {
+    if (!globalUserId || !dependant) {
+        setTimeout(initNotesIssues, 100);
         return;
     }
 
-    const newEntry = {
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        content: newNoteIssue
-    };
+    const notesSection = document.getElementById('notes-issues-section');
+    if (notesSection) notesSection.style.display = 'block';
 
-    firebase.firestore()
-        .collection('users')
-        .doc(userId)
-        .collection('dependants')
-        .doc(dependantId)
-        .collection('notes-issues')
-        .add(newEntry)
-        .then(() => {
-            document.getElementById('new-note-issue').value = '';
-            loadNotesIssues();
-        })
-        .catch(error => {
-            console.error('Error saving note/issue: ', error);
-        });
+    loadNotesIssues();
+
+    const saveBtn = document.getElementById('save-note-issue');
+    if (saveBtn) saveBtn.addEventListener('click', saveNoteIssue);
 }
 
 function loadNotesIssues() {
-    const userId = globalUserId;
-    const notesIssuesContainer = document.getElementById('view-notes-issues');
-    notesIssuesContainer.innerHTML = '';
+    const container = document.getElementById('view-notes-issues');
+    if (!container) return;
+    
+    container.innerHTML = '<p>Loading notes/issues...</p>';
 
     firebase.firestore()
         .collection('users')
-        .doc(userId)
+        .doc(globalUserId)
         .collection('dependants')
         .doc(dependant)
         .collection('notes-issues')
         .orderBy('timestamp', 'desc')
-        .get()
-        .then(querySnapshot => {
-            if (querySnapshot.empty) {
-                notesIssuesContainer.textContent = 'No notes or issues yet.';
+        .onSnapshot(snapshot => {
+            container.innerHTML = '';
+            
+            if (snapshot.empty) {
+                container.innerHTML = '<p class="no-entries">No notes or issues yet.</p>';
                 return;
             }
 
-            querySnapshot.forEach(doc => {
+            snapshot.forEach(doc => {
                 const entry = doc.data();
-                const timestamp = entry.timestamp.toDate().toLocaleString();
-
-                const noteIssueElement = document.createElement('p');
-                noteIssueElement.textContent = `${timestamp}: ${entry.content}`;
-                notesIssuesContainer.appendChild(noteIssueElement);
+                const entryElement = createNoteIssueElement(entry, doc.id);
+                container.appendChild(entryElement);
             });
-        })
-        .catch(error => {
-            console.error('Error loading notes/issues: ', error);
+        }, error => {
+            console.error("Error loading notes/issues:", error);
+            container.innerHTML = '<p class="error-msg">Error loading notes/issues</p>';
         });
 }
+
+function createNoteIssueElement(entry, docId) {
+    const element = document.createElement('div');
+    element.className = 'note-issue-entry';
+    element.dataset.id = docId;
+    
+    const timestamp = entry.timestamp?.toDate().toLocaleString() || 'Just now';
+    element.innerHTML = `
+        <div class="entry-header">
+            <span class="timestamp">${timestamp}</span>
+            <button class="delete-entry" data-id="${docId}">×</button>
+        </div>
+        <div class="entry-content">${entry.content}</div>
+    `;
+    
+    element.querySelector('.delete-entry').addEventListener('click', deleteNoteIssue);
+    return element;
+}
+
+function saveNoteIssue() {
+    const input = document.getElementById('new-note-issue');
+    if (!input) return;
+    
+    const content = input.value.trim();
+    if (!content) {
+        showNotesFeedback('Please enter a note or issue.', true);
+        return;
+    }
+
+    firebase.firestore()
+        .collection('users')
+        .doc(globalUserId)
+        .collection('dependants')
+        .doc(dependant)
+        .collection('notes-issues')
+        .add({
+            content: content,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            createdBy: globalUserId,
+            type: 'note'
+        })
+        .then(() => {
+            input.value = '';
+            showNotesFeedback('Note/issue saved successfully!');
+        })
+        .catch(error => {
+            console.error("Error saving note/issue:", error);
+            showNotesFeedback('Failed to save note/issue', true);
+        });
+}
+
+function deleteNoteIssue(event) {
+    const docId = event.target.dataset.id;
+    if (!docId || !confirm("Delete this entry?")) return;
+    
+    firebase.firestore()
+        .collection('users')
+        .doc(globalUserId)
+        .collection('dependants')
+        .doc(dependant)
+        .collection('notes-issues')
+        .doc(docId)
+        .delete()
+        .catch(error => {
+            console.error("Error deleting note/issue:", error);
+            showNotesFeedback('Failed to delete entry', true);
+        });
+}
+
+function showNotesFeedback(message, isError = false) {
+    const feedback = document.getElementById('notes-feedback');
+    if (!feedback) return;
+    
+    feedback.textContent = message;
+    feedback.className = isError ? 'error' : 'success';
+    feedback.style.display = 'block';
+    setTimeout(() => feedback.style.display = 'none', 3000);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    getCurrentDependant();
+    setTimeout(() => {
+        initSummary();
+        initNotesIssues();
+    }, 300);
+});
 function initSummary() {
     if (!globalUserId || !dependant) {
         setTimeout(initSummary, 100); 
