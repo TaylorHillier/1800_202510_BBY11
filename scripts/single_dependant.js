@@ -1,5 +1,6 @@
 var dependant;
 var globalUserId;
+let currentSummaryId = null; 
 
 let button = document.getElementById("addMedication");
 if (button) {
@@ -333,3 +334,109 @@ function loadNotesIssues() {
             console.error('Error loading notes/issues: ', error);
         });
 }
+function initSummary() {
+    if (!globalUserId || !dependant) {
+        setTimeout(initSummary, 100); 
+        return;
+    }
+
+    const summarySection = document.getElementById('summary-section');
+    if (summarySection) {
+        summarySection.style.display = 'block'; 
+    }
+
+    loadSummary();
+
+    const saveBtn = document.getElementById('save-summary');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', saveSummary);
+    }
+}
+
+function loadSummary() {
+    const summaryTextarea = document.getElementById('summary-text');
+    if (!summaryTextarea) return;
+    
+    summaryTextarea.value = 'Loading summary...';
+    summaryTextarea.disabled = true;
+
+    firebase.firestore()
+        .collection('users')
+        .doc(globalUserId)
+        .collection('dependants')
+        .doc(dependant)
+        .collection('summary')
+        .limit(1)
+        .get()
+        .then(snapshot => {
+            summaryTextarea.disabled = false;
+            
+            if (!snapshot.empty) {
+                const doc = snapshot.docs[0];
+                currentSummaryId = doc.id;
+                summaryTextarea.value = doc.data().content || '';
+            } else {
+                currentSummaryId = null;
+                summaryTextarea.value = '';
+            }
+        })
+        .catch(error => {
+            console.error("Error loading summary:", error);
+            summaryTextarea.value = 'Error loading summary';
+            summaryTextarea.disabled = false;
+        });
+}
+
+function saveSummary() {
+    const summaryTextarea = document.getElementById('summary-text');
+    if (!summaryTextarea) return;
+    
+    const summaryText = summaryTextarea.value.trim();
+    if (!summaryText) {
+        showFeedback('Please enter a summary before saving.', true);
+        return;
+    }
+
+    const summaryRef = firebase.firestore()
+        .collection('users')
+        .doc(globalUserId)
+        .collection('dependants')
+        .doc(dependant)
+        .collection('summary');
+
+    const summaryData = {
+        content: summaryText,
+        lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedBy: globalUserId
+    };
+
+    const saveOperation = currentSummaryId 
+        ? summaryRef.doc(currentSummaryId).set(summaryData)
+        : summaryRef.add(summaryData);
+
+    saveOperation
+        .then((docRef) => {
+            if (!currentSummaryId) currentSummaryId = docRef.id;
+            showFeedback('Summary saved successfully!');
+        })
+        .catch(error => {
+            console.error('Error saving summary:', error);
+            showFeedback('Failed to save summary', true);
+        });
+}
+
+function showFeedback(message, isError = false) {
+    const feedback = document.getElementById('summary-feedback');
+    if (!feedback) return;
+    
+    feedback.textContent = message;
+    feedback.className = isError ? 'error' : 'success';
+    feedback.style.display = 'block';
+    setTimeout(() => feedback.style.display = 'none', 3000);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    getCurrentDependant();
+    
+    setTimeout(initSummary, 300);
+});
