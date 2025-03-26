@@ -62,7 +62,7 @@ function listDependants() {
             container.appendChild(removeBtn);
             listItem.appendChild(container);
             dependantsList.appendChild(listItem);
-        });
+        }));
     });
 }
 

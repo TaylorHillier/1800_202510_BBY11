@@ -1,6 +1,9 @@
+// medicationSchedule.js
+
 function getMedicationSchedule(isSingleDependant, isCareTakerSchedule) {
     return new Promise((resolve, reject) => {
       firebase.auth().onAuthStateChanged(async user => {
+        console.log(user.uid);
         if (!user) {
           return reject("No user logged in");
         }
@@ -22,7 +25,6 @@ function getMedicationSchedule(isSingleDependant, isCareTakerSchedule) {
           medsSnapshot.docs.forEach(doc => {
             const medData = doc.data();
             medications.push({
-              id: doc.id, // Save document ID for later updates
               Medication: {
                 name: medData.name || 'Not specified',
                 frequency: medData.frequency || 'Not specified',
@@ -30,8 +32,8 @@ function getMedicationSchedule(isSingleDependant, isCareTakerSchedule) {
                 startDate: medData.startDate || 'Not specified',
                 endDate: medData.endDate || 'Not specified'
               },
-              dependantId: dependantFromUrl,
-              dependantName: null
+              dependantName: null,
+              dependantId: dependantFromUrl
             });
           });
         } else if (isCareTakerSchedule) {
@@ -48,7 +50,7 @@ function getMedicationSchedule(isSingleDependant, isCareTakerSchedule) {
             const dependantId = dependantDoc.id;
             const dependantName = (dependantData.firstname && dependantData.lastname) ?
               `${dependantData.firstname} ${dependantData.lastname}` : 'Unnamed';
-  
+
             const medsSnapshot = await firebase
               .firestore()
               .collection('users')
@@ -61,7 +63,6 @@ function getMedicationSchedule(isSingleDependant, isCareTakerSchedule) {
             medsSnapshot.docs.forEach(doc => {
               const medData = doc.data();
               medications.push({
-                id: doc.id,
                 Medication: {
                   name: medData.name || 'Not specified',
                   frequency: medData.frequency || 'Not specified',
@@ -72,16 +73,15 @@ function getMedicationSchedule(isSingleDependant, isCareTakerSchedule) {
                 dependantName: dependantName,
                 dependantId: dependantId
               });
+
             });
           }
         }
   
-        // Now, for each medication, compute its schedule and update the document.
-        const updatePromises = [];
-  
+        // Compute the schedule from the retrieved medications
+        let sortedSchedule = [];
         medications.forEach(med => {
           const medData = med.Medication;
-          // Check that all necessary fields exist
           if (!medData.startDate || !medData.endDate || !medData.startTime || !medData.frequency) {
             return;
           }
@@ -92,53 +92,109 @@ function getMedicationSchedule(isSingleDependant, isCareTakerSchedule) {
           if (freqMatch) {
             intervalHours = parseInt(freqMatch[0]);
           }
-  
-          // Compute schedule entries for this medication
-          let scheduleArray = [];
           for (let day = new Date(startDate); day <= endDate; day.setDate(day.getDate() + 1)) {
             const [startHour, startMinute] = medData.startTime.split(':').map(Number);
             let doseTime = new Date(day);
             doseTime.setHours(startHour, startMinute, 0, 0);
-            const bedTimeHour = 22; // cutoff at 10 PM
+            const bedTimeHour = 22;
             while (doseTime.getDate() === day.getDate() && doseTime.getHours() < bedTimeHour) {
-              scheduleArray.push({
-                doseTime: doseTime.toISOString(), // or you can store as a Firestore Timestamp later
+              const entry = {
+                doseTime: new Date(doseTime),
                 medication: medData.name
-                // You can add more fields here if needed
-              });
+              };
+              if (isCareTakerSchedule && med.dependantName) {
+                entry.dependantName = med.dependantName;
+              }
+              entry.dependantId = med.dependantId;
+              sortedSchedule.push(entry);
               doseTime.setHours(doseTime.getHours() + intervalHours);
             }
           }
-          // Optionally sort the schedule array if needed
-          scheduleArray.sort((a, b) => new Date(a.doseTime) - new Date(b.doseTime));
+        });
+        
+        sortedSchedule.sort((a, b) => a.doseTime - b.doseTime);
   
-          // Update the medication document with the computed schedule array
-          const medDocRef = firebase.firestore()
+        const scheduleEntriesByDependant = {};
+  
+        sortedSchedule.forEach(entry => {
+          const depId = entry.dependantId;
+          if (!depId) return;
+          if (!scheduleEntriesByDependant[depId]) {
+            scheduleEntriesByDependant[depId] = [];
+          }
+          scheduleEntriesByDependant[depId].push(entry);
+        });
+  
+        try {
+          // Create an array to store all Firestore write promises
+          const writePromises = [];
+  
+          for (const depId in scheduleEntriesByDependant) {
+            const entries = scheduleEntriesByDependant[depId];
+            
+            firebase.firestore()
             .collection('users')
             .doc(user.uid)
             .collection('dependants')
-            .doc(med.dependantId)
-            .collection('medications')
-            .doc(med.id);
+            .doc(depId)
+            .collection('schedule')
+            .doc('medications').set({name:"medications"});
+
+    
+            firebase.firestore()
+            .collection('users')
+            .doc(user.uid)
+            .collection('dependants')
+            .doc('bbguOhW7WWDyy9Xf9wtR').collection('schedule')
+            .doc('medications').collection('entries')
+            .get()
+            .then(docSnapshot => {
+            docSnapshot.docs.map(doc => {
+                console.log(doc.data());
+            })
+            })
+            .catch(error => {
+            console.error('Error fetching document:', error);
+            });
+
+            // Create the main 'medications' document first
+            const medicationsDocRef = firebase.firestore()
+              .collection('users')
+              .doc(user.uid)
+              .collection('dependants')
+              .doc(depId)
+              .collection('schedule')
+              .doc('medications');
+            
+              
+            // Add the initial document with a flag or metadata
+
+            // Add individual medication entries
+            entries.forEach(entry => {
+              const entryPromise = medicationsDocRef
+                .collection('entries')
+                .add({
+                  doseTime: firebase.firestore.Timestamp.fromDate(entry.doseTime),
+                  medication: entry.medication,
+                  ...(entry.dependantName ? { dependantName: entry.dependantName } : {})
+                });
+              
+              writePromises.push(entryPromise);
+            });
+          }
   
-          const updatePromise = medDocRef.update({ schedule: scheduleArray });
-          updatePromises.push(updatePromise);
-        });
-  
-        // Wait for all updates to complete
-        Promise.all(updatePromises)
-          .then(() => {
-            resolve(medications); // or resolve(schedule if needed)
-            console.log("Successfully updated each medication with its schedule!");
-          })
-          .catch(err => {
-            console.error("Error updating medication schedule: ", err);
-            reject(err);
-          });
+          // Wait for all write operations to complete
+          await Promise.all(writePromises);
+          
+          resolve(sortedSchedule);
+          console.log("Successfully pushed schedule to Firestore!");
+        } catch (err) {
+          console.error("Error creating medication schedule: ", err);
+          reject(err);
+        }
       });
     });
-  }
+}
   
-  // Attach the function to the global window object
-  window.getMedicationSchedule = getMedicationSchedule;
-  
+// Attach the function to the global window object
+window.getMedicationSchedule = getMedicationSchedule;
