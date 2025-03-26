@@ -218,57 +218,95 @@ function createMedicationForm() {
 
 function addMedication() {
     const user = firebase.auth().currentUser;
-
     if (!user) {
-        console.error("No user signed in");
-        return;
+      console.error("No user signed in");
+      return;
     }
-
+  
     const url = new URLSearchParams(window.location.search);
     const dependantId = url.get('id');
-
     if (!dependantId) {
-        console.error("No dependant selected");
-        return;
+      console.error("No dependant selected");
+      return;
     }
-
-    const startDate = document.getElementById("start-date").value.trim();
-    const endDate = document.getElementById("end-date").value.trim();
-    const startTime = document.getElementById("start-time").value.trim();
+  
+    const startDateStr = document.getElementById("start-date").value.trim();
+    const endDateStr = document.getElementById("end-date").value.trim();
+    const startTimeStr = document.getElementById("start-time").value.trim();
     const numPills = document.getElementById("num-pills").value;
     const medicationName = document.getElementById("medication").value.trim();
     const frequency = document.getElementById("frequency").value;
-
-    if (!startDate || !endDate || !medicationName || !frequency) {
-        console.error("Fill in all fields");
-        return;
+  
+    if (!startDateStr || !endDateStr || !medicationName || !frequency) {
+      console.error("Fill in all fields");
+      return;
     }
+  
+    // Create the medication document data
     const medication = {
-        name: medicationName,
-        startDate: startDate,
-        endDate: endDate,
-        numPills: numPills,
-        startTime: startTime,
-        frequency: frequency,
-        addedBy: user.uid
+      name: medicationName,
+      startDate: startDateStr,
+      endDate: endDateStr,
+      numPills: numPills,
+      startTime: startTimeStr,
+      frequency: frequency,
+      addedBy: user.uid
     };
-
-    const medicationRef = firebase.firestore()
-        .collection('users')
-        .doc(user.uid)
-        .collection('dependants')
-        .doc(dependantId)
-        .collection('medications')
-        .add(medication);
-
-    medicationRef.then(() => {
-        console.log("New medication added:", medicationName);
-    })
-        .catch((error) => {
-            console.error("Error adding medication:", error);
-        });
-
-}
+  
+    // Reference to the medications collection
+    const medicationCollectionRef = firebase.firestore()
+      .collection('users')
+      .doc(user.uid)
+      .collection('dependants')
+      .doc(dependantId)
+      .collection('medications');
+  
+    // Add the new medication document
+    medicationCollectionRef.add(medication)
+      .then(docRef => {
+        console.log("New medication added:", medicationName, "ID:", docRef.id);
+  
+        // Compute the schedule for the medication
+        let scheduleArray = [];
+        let start = new Date(startDateStr);
+        let end = new Date(endDateStr);
+        let intervalHours = 24;
+        const freqMatch = frequency.match(/\d+/);
+        if (freqMatch) {
+          intervalHours = parseInt(freqMatch[0]);
+        }
+  
+        // Loop through each day from start to end date
+        for (let day = new Date(start); day <= end; day.setDate(day.getDate() + 1)) {
+          // Set dose time for the current day based on the start time
+          let [hour, minute] = startTimeStr.split(':').map(Number);
+          let doseTime = new Date(day);
+          doseTime.setHours(hour, minute, 0, 0);
+  
+          const bedTimeHour = 22; // cutoff: no doses after 10 PM
+  
+          // While the dose time is on the same day and before the cutoff, add the dose entry
+          while (doseTime.getDate() === day.getDate() && doseTime.getHours() < bedTimeHour) {
+            scheduleArray.push({
+              // Storing as a Firestore Timestamp; you can also use toISOString() if preferred
+              doseTime: firebase.firestore.Timestamp.fromDate(new Date(doseTime)),
+              medication: medicationName
+            });
+            doseTime.setHours(doseTime.getHours() + intervalHours);
+          }
+        }
+  
+        // Update the medication document with the computed schedule
+        return docRef.update({ schedule: scheduleArray });
+      })
+      .then(() => {
+        console.log("Medication updated with schedule");
+      })
+      .catch(error => {
+        console.error("Error adding medication or updating schedule:", error);
+      });
+  }
+  
 
 function saveNoteIssue() {
     const userId = globalUserId;
