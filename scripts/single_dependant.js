@@ -1,144 +1,335 @@
-function getMedicationSchedule(isSingleDependant, isCareTakerSchedule) {
-    return new Promise((resolve, reject) => {
-      firebase.auth().onAuthStateChanged(async user => {
-        if (!user) {
-          return reject("No user logged in");
-        }
-        let medications = [];
-        const urlParams = new URLSearchParams(window.location.search);
-        const dependantFromUrl = urlParams.get('id');
-  
-        if (isSingleDependant) {
-          // For a single dependant, use the dependant from the URL.
-          const medsSnapshot = await firebase
-            .firestore()
-            .collection('users')
-            .doc(user.uid)
-            .collection('dependants')
-            .doc(dependantFromUrl)
-            .collection('medications')
-            .get();
-  
-          medsSnapshot.docs.forEach(doc => {
-            const medData = doc.data();
-            medications.push({
-              id: doc.id, // Save document ID for later updates
-              Medication: {
-                name: medData.name || 'Not specified',
-                frequency: medData.frequency || 'Not specified',
-                startTime: medData.startTime || 'Not specified',
-                startDate: medData.startDate || 'Not specified',
-                endDate: medData.endDate || 'Not specified'
-              },
-              dependantId: dependantFromUrl,
-              dependantName: null
-            });
-          });
-        } else if (isCareTakerSchedule) {
-          // For caretaker schedules, loop through all dependants.
-          const dependantsSnapshot = await firebase
-            .firestore()
-            .collection('users')
-            .doc(user.uid)
-            .collection('dependants')
-            .get();
-  
-          for (const dependantDoc of dependantsSnapshot.docs) {
-            const dependantData = dependantDoc.data();
-            const dependantId = dependantDoc.id;
-            const dependantName = (dependantData.firstname && dependantData.lastname) ?
-              `${dependantData.firstname} ${dependantData.lastname}` : 'Unnamed';
-  
-            const medsSnapshot = await firebase
-              .firestore()
-              .collection('users')
-              .doc(user.uid)
-              .collection('dependants')
-              .doc(dependantId)
-              .collection('medications')
-              .get();
-  
-            medsSnapshot.docs.forEach(doc => {
-              const medData = doc.data();
-              medications.push({
-                id: doc.id,
-                Medication: {
-                  name: medData.name || 'Not specified',
-                  frequency: medData.frequency || 'Not specified',
-                  startTime: medData.startTime || 'Not specified',
-                  startDate: medData.startDate || 'Not specified',
-                  endDate: medData.endDate || 'Not specified'
-                },
-                dependantName: dependantName,
-                dependantId: dependantId
-              });
-            });
-          }
-        }
-  
-        // Now, for each medication, compute its schedule and update the document.
-        const updatePromises = [];
-  
-        medications.forEach(med => {
-          const medData = med.Medication;
-          // Check that all necessary fields exist
-          if (!medData.startDate || !medData.endDate || !medData.startTime || !medData.frequency) {
-            return;
-          }
-          const startDate = new Date(medData.startDate);
-          const endDate = new Date(medData.endDate);
-          let intervalHours = 24;
-          const freqMatch = medData.frequency.match(/\d+/);
-          if (freqMatch) {
-            intervalHours = parseInt(freqMatch[0]);
-          }
-  
-          // Compute schedule entries for this medication
-          let scheduleArray = [];
-          for (let day = new Date(startDate); day <= endDate; day.setDate(day.getDate() + 1)) {
-            const [startHour, startMinute] = medData.startTime.split(':').map(Number);
-            let doseTime = new Date(day);
-            doseTime.setHours(startHour, startMinute, 0, 0);
-            const bedTimeHour = 22; // cutoff at 10 PM
-            while (doseTime.getDate() === day.getDate() && doseTime.getHours() < bedTimeHour) {
-              scheduleArray.push({
-                doseTime: doseTime.toISOString(), // or you can store as a Firestore Timestamp later
-                medication: medData.name
-                // You can add more fields here if needed
-              });
-              doseTime.setHours(doseTime.getHours() + intervalHours);
+var dependant;
+var globalUserId;
+
+let button = document.getElementById("addMedication");
+if (button) {
+    button.addEventListener("click", createMedicationForm); // Attach the event listener correctly
+}
+
+function getCurrentDependant() {
+    const url = new URLSearchParams(window.location.search);
+    dependant = url.get('id');
+
+    console.log(dependant);
+    firebase.auth().onAuthStateChanged(async (user) => {
+        if (user) {
+            globalUserId = user.uid;
+
+            const dependantDoc = await firebase.firestore().collection('users').doc(user.uid).collection('dependants').doc(dependant).get();
+
+            if (dependantDoc.exists) {
+                const data = dependantDoc.data();
+                document.getElementById("dependant-info").innerHTML = data.firstname + " " + data.lastname;
             }
-          }
-          // Optionally sort the schedule array if needed
-          scheduleArray.sort((a, b) => new Date(a.doseTime) - new Date(b.doseTime));
-  
-          // Update the medication document with the computed schedule array
-          const medDocRef = firebase.firestore()
-            .collection('users')
-            .doc(user.uid)
-            .collection('dependants')
-            .doc(med.dependantId)
-            .collection('medications')
-            .doc(med.id);
-  
-          const updatePromise = medDocRef.update({ schedule: scheduleArray });
-          updatePromises.push(updatePromise);
-        });
-  
-        // Wait for all updates to complete
-        Promise.all(updatePromises)
-          .then(() => {
-            resolve(medications); // or resolve(schedule if needed)
-            console.log("Successfully updated each medication with its schedule!");
-          })
-          .catch(err => {
-            console.error("Error updating medication schedule: ", err);
-            reject(err);
-          });
-      });
+        } else {
+            console.log("No user logged in");
+        }
     });
-  }
-  
-  // Attach the function to the global window object
-  window.getMedicationSchedule = getMedicationSchedule;
-  
+}
+getCurrentDependant();
+
+
+function getMedicationList() {
+    firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+            const dependantId = new URLSearchParams(window.location.search).get('id');
+
+            if (!dependantId) {
+                console.error("No dependant selected");
+                return;
+            }
+
+            // Reference to the medications subcollection for the selected dependant
+            const medicationsRef = firebase.firestore()
+                .collection('users')
+                .doc(user.uid)
+                .collection('dependants')
+                .doc(dependantId)
+                .collection('medications');
+
+            // Clear the existing list before populating
+            const medListElement = document.getElementById("med-list");
+            medListElement.innerHTML = '';
+
+            // Set up a real-time listener for the medications subcollection
+            medicationsRef.orderBy('startDate', 'desc').onSnapshot((medsSnapshot) => {
+                // Clear the list before repopulating
+                medListElement.innerHTML = '';
+
+                // Iterate through medications and add them to the list
+                medsSnapshot.forEach((medDoc) => {
+                    const medData = medDoc.data();
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${medData.name}: ${medData.frequency} `;
+
+                    // Append to the list
+                    medListElement.appendChild(listItem);
+                });
+            }, (error) => {
+                console.error("Error fetching medications:", error);
+            });
+        } else {
+            console.log("No user logged in");
+        }
+    });
+}
+getMedicationList();
+
+function createMedicationForm() {
+    let button = document.getElementById("addMedication");
+
+    // Check if form already exists to prevent duplicates
+    if (document.getElementById("newMedication-form")) {
+        document.getElementById("newMedication-form").remove();
+        return;
+    }
+
+    var form = document.createElement("form");
+    form.setAttribute("method", "post");
+    form.setAttribute("action", "addMedication");
+    form.id = "newMedication-form";
+
+    // Start Date Label and Input
+    var startDateLabel = document.createElement("label");
+    startDateLabel.setAttribute("for", "start-date");
+    startDateLabel.textContent = "Start Date: ";
+
+    var startDate = document.createElement("input");
+    startDate.setAttribute("id", "start-date");
+    startDate.setAttribute("type", "date");
+    startDate.setAttribute("name", "start-date");
+
+    // End Date Label and Input
+    var endDateLabel = document.createElement("label");
+    endDateLabel.setAttribute("for", "end-date");
+    endDateLabel.textContent = "End Date: ";
+
+    var endDate = document.createElement("input");
+    endDate.setAttribute("id", "end-date");
+    endDate.setAttribute("type", "date");
+    endDate.setAttribute("name", "end-date");
+
+    // End Date Label and Input
+    var startTimeLabel = document.createElement("label");
+    startTimeLabel.setAttribute("for", "start-time");
+    startTimeLabel.textContent = "Start Time: ";
+
+    var startTime = document.createElement("input");
+    startTime.setAttribute("id", "start-time");
+    startTime.setAttribute("type", "time");
+    startTime.setAttribute("name", "start-time");
+    // End Date Label and Input
+    var startTimeLabel = document.createElement("label");
+    startTimeLabel.setAttribute("for", "start-time");
+    startTimeLabel.textContent = "Start Time: ";
+
+    var startTime = document.createElement("input");
+    startTime.setAttribute("id", "start-time");
+    startTime.setAttribute("type", "time");
+    startTime.setAttribute("name", "start-time");
+
+    // End Date Label and Input
+    var numPillsLabel = document.createElement("label");
+    numPillsLabel.setAttribute("for", "num-pills");
+    numPillsLabel.textContent = "Number of pills per day: ";
+
+    var numPills = document.createElement("input");
+    numPills.setAttribute("id", "num-pills");
+    numPills.setAttribute("type", "number");
+    numPills.setAttribute("name", "num-pills");
+
+    // Medication Label and Input
+    var medicationLabel = document.createElement("label");
+    medicationLabel.setAttribute("for", "medication");
+    medicationLabel.textContent = "Medication Name: ";
+
+    var medication = document.createElement("input");
+    medication.setAttribute("id", "medication");
+    medication.setAttribute("type", "text");
+    medication.setAttribute("name", "medication");
+    medication.setAttribute("placeholder", "Medication");
+
+    // Frequency Label and Select Dropdown
+    var frequencyLabel = document.createElement("label");
+    frequencyLabel.setAttribute("for", "frequency");
+    frequencyLabel.textContent = "Frequency: ";
+
+    var frequency = document.createElement("select");
+    frequency.setAttribute("id", "frequency");
+    frequency.setAttribute("name", "frequency");
+
+    // Frequency Options
+    var options = [
+        "Every 4 Hours",
+        "Every 6 Hours",
+        "Every 8 Hours",
+        "Every 12 Hours",
+        "Daily",
+        "Weekly"];
+
+    options.forEach(optionText => {
+        var option = document.createElement("option");
+        option.value = optionText;
+        option.textContent = optionText;
+        frequency.appendChild(option);
+    });
+
+    // Submit Button
+    var submit = document.createElement("input");
+    submit.setAttribute("type", "submit");
+    submit.setAttribute("value", "Add");
+
+    form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        console.log("Form submitted!");
+        addMedication();
+        form.reset();
+    });
+
+    // Append elements to form
+    form.appendChild(startDateLabel);
+    form.appendChild(startDate);
+    form.appendChild(document.createElement("br"));
+
+    form.appendChild(endDateLabel);
+    form.appendChild(endDate);
+    form.appendChild(document.createElement("br"));
+
+    form.appendChild(startTimeLabel);
+    form.appendChild(startTime);
+    form.appendChild(document.createElement("br"));
+
+    form.appendChild(numPillsLabel);
+    form.appendChild(numPills);
+    form.appendChild(document.createElement("br"));
+
+    form.appendChild(medicationLabel);
+    form.appendChild(medication);
+    form.appendChild(document.createElement("br"));
+
+    form.appendChild(frequencyLabel);
+    form.appendChild(frequency);
+    form.appendChild(document.createElement("br"));
+
+    form.appendChild(submit);
+
+    button.insertAdjacentElement("afterend", form);
+}
+
+function addMedication() {
+    const user = firebase.auth().currentUser;
+
+    if (!user) {
+        console.error("No user signed in");
+        return;
+    }
+
+    const url = new URLSearchParams(window.location.search);
+    const dependantId = url.get('id');
+
+    if (!dependantId) {
+        console.error("No dependant selected");
+        return;
+    }
+
+    const startDate = document.getElementById("start-date").value.trim();
+    const endDate = document.getElementById("end-date").value.trim();
+    const startTime = document.getElementById("start-time").value.trim();
+    const numPills = document.getElementById("num-pills").value;
+    const medicationName = document.getElementById("medication").value.trim();
+    const frequency = document.getElementById("frequency").value;
+
+    if (!startDate || !endDate || !medicationName || !frequency) {
+        console.error("Fill in all fields");
+        return;
+    }
+    const medication = {
+        name: medicationName,
+        startDate: startDate,
+        endDate: endDate,
+        numPills: numPills,
+        startTime: startTime,
+        frequency: frequency,
+        addedBy: user.uid
+    };
+
+    const medicationRef = firebase.firestore()
+        .collection('users')
+        .doc(user.uid)
+        .collection('dependants')
+        .doc(dependantId)
+        .collection('medications')
+        .add(medication);
+
+    medicationRef.then(() => {
+        console.log("New medication added:", medicationName);
+    })
+        .catch((error) => {
+            console.error("Error adding medication:", error);
+        });
+
+}
+
+function saveNoteIssue() {
+    const userId = globalUserId;
+    const dependantId = dependant;
+    const newNoteIssue = document.getElementById('new-note-issue').value;
+
+    if (newNoteIssue.trim() === '') {
+        alert('Please enter a note or issue.');
+        return;
+    }
+
+    const newEntry = {
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        content: newNoteIssue
+    };
+
+    firebase.firestore()
+        .collection('users')
+        .doc(userId)
+        .collection('dependants')
+        .doc(dependantId)
+        .collection('notes-issues')
+        .add(newEntry)
+        .then(() => {
+            document.getElementById('new-note-issue').value = '';
+            loadNotesIssues();
+        })
+        .catch(error => {
+            console.error('Error saving note/issue: ', error);
+        });
+}
+
+function loadNotesIssues() {
+    const userId = globalUserId;
+    const notesIssuesContainer = document.getElementById('view-notes-issues');
+    notesIssuesContainer.innerHTML = '';
+
+    firebase.firestore()
+        .collection('users')
+        .doc(userId)
+        .collection('dependants')
+        .doc(dependant)
+        .collection('notes-issues')
+        .orderBy('timestamp', 'desc')
+        .get()
+        .then(querySnapshot => {
+            if (querySnapshot.empty) {
+                notesIssuesContainer.textContent = 'No notes or issues yet.';
+                return;
+            }
+
+            querySnapshot.forEach(doc => {
+                const entry = doc.data();
+                const timestamp = entry.timestamp.toDate().toLocaleString();
+
+                const noteIssueElement = document.createElement('p');
+                noteIssueElement.textContent = `${timestamp}: ${entry.content}`;
+                notesIssuesContainer.appendChild(noteIssueElement);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading notes/issues: ', error);
+        });
+}

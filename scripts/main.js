@@ -70,7 +70,7 @@ function generateMedicationTimeline(startTime, frequency, numPills) {
 
 function formatTime(hours, minutes) {
     // Adjust hours for 12-hour format
-    const adjustedHours = hours % 12 || 12; // Convert 0 to 12
+    const adjustedHours = hours % 12 || 12;
     const ampm = hours >= 12 ? 'PM' : 'AM';
 
     // Pad with leading zeros
