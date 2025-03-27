@@ -88,7 +88,7 @@ body {
 
 .cta-overlay {
     background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7));
-    color: white;
+    color: rgb(255, 255, 255);
     padding: 2.5rem;
     text-align: center;
 }
@@ -180,10 +180,6 @@ body {
     z-index: 1000;
 }
 
-.navigation p {
-    display: none;
-}
-
 nav {
     width: 100%;
 }
@@ -210,6 +206,15 @@ ul {
     justify-content: space-evenly;
     padding: 0;
     gap: 20px;
+}
+
+.nav-list-unlogged {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    padding: 0;
+    gap: 20px;
+    flex-direction: row;
 }
 
 .nav-link {
@@ -288,6 +293,7 @@ ul {
     .nav-list{
         display: flex;
         flex-direction: column;
+        color: black;
     }
 }
 
@@ -307,7 +313,7 @@ body {
 
 .nav-item a {
     text-decoration: none;
-    color: white;
+    color: rgb(0, 0, 0);
     font-size: 1.2em;
     font-weight: bold;
 }
@@ -346,9 +352,6 @@ h2 {
     font-size: 2em;
 }
 
-p {
-    color: #111827;
-}
 
 /* ================================================== */
 /*                HOW IT WORKS SECTION              */
