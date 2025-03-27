@@ -1,3 +1,5 @@
+var globalUser;
+
 function getNameFromAuth() {
     firebase.auth().onAuthStateChanged(user => {
         if (user) {
@@ -5,12 +7,11 @@ function getNameFromAuth() {
             console.log("User display name:", user.displayName);
             userName = user.displayName.split(" ")[0];
 
+            globalUser = user.uid;
             document.getElementById("user-name").innerText = userName;
 
-            // Delay to ensure DOM is fully loaded
-            setTimeout(() => {
-                getTodayTasks(user);
-            }, 500);
+            getTodayTasks(globalUser);
+           
         } else {
             console.log("No user is logged in");
         }
@@ -81,152 +82,216 @@ function formatTime(hours, minutes) {
 }
 
 
-function getTodayTasks(user) {
-    const today = new Date();
-    const todayFormatted = today.toISOString().split('T')[0];
+/**
+ * Fetches and displays medication tasks scheduled for today for all dependants.
+ * Uses async/await for clarity.
+ * Assumes generateMedicationTimeline(startTime, frequency, numPills) exists and returns an array of time strings (e.g., ['09:00 AM', '05:00 PM']).
+ * Assumes markTaskComplete(userId, taskObject, isChecked) exists.
+ */
+async function getTodayTasks(user) { // Make the function async
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0); // Normalize today's date to midnight for comparison
+
     const todoListElement = document.getElementById("today");
 
     if (!todoListElement) {
-        console.error("Todo list element not found!");
+        console.error("Todo list element (#today) not found!");
         return;
     }
 
-    // Clear existing list
-    todoListElement.innerHTML = '';
+    // Clear existing list before fetching
+    todoListElement.innerHTML = '<li>Loading tasks...</li>'; // Indicate loading
 
-    // Get all dependants for the user
-    firebase.firestore()
-        .collection('users')
-        .doc(user.uid)
-        .collection('dependants')
-        .get()
-        .then(dependantsSnapshot => {
-            // Set to store unique tasks
-            const uniqueTasks = new Set();
+    try {
+        // 1. Get all dependants for the current user
+        const dependantsSnapshot = await firebase.firestore()
+            .collection('users')
+            .doc(globalUser) // <<< Use user.uid consistently
+            .collection('dependants')
+            .get();
 
-            // Promises to track async operations
-            const taskPromises = dependantsSnapshot.docs.map(dependantDoc => {
-                const dependantId = dependantDoc.id;
-                const dependantName = dependantDoc.data().firstname;
-                const dependantLName = dependantDoc.data().lastname;
+        const uniqueTaskKeys = new Set(); // Set to track unique task keys
+        let allTasks = []; // Array to store the actual task objects
 
-                // Fetch medications for each dependant
-                return firebase.firestore()
+        // 2. Create promises to fetch and process medications for each dependant
+        const taskProcessingPromises = dependantsSnapshot.docs.map(async (dependantDoc) => { // Use async here too
+            const dependantId = dependantDoc.id;
+            const dependantData = dependantDoc.data();
+            // Provide default names if missing
+            const dependantName = dependantData.firstname || 'Unknown';
+            const dependantLName = dependantData.lastname || '';
+
+            try {
+                // 3. Fetch medications for this specific dependant
+                const medicationsSnapshot = await firebase.firestore()
                     .collection('users')
-                    .doc(user.uid)
+                    .doc(globalUser) // <<< Use user.uid
                     .collection('dependants')
                     .doc(dependantId)
                     .collection('medications')
-                    .get()
-                    .then(medicationsSnapshot => {
-                        medicationsSnapshot.forEach(medDoc => {
-                            const medData = medDoc.data();
+                    .get();
 
-                            // Check if medication is valid for today
-                            const startDate = new Date(medData.startDate);
-                            const endDate = new Date(medData.endDate);
+                // 4. Process each medication
+                medicationsSnapshot.forEach(medDoc => {
+                    const medData = medDoc.data();
+                    const medName = medData.name || 'Unnamed Medication';
 
-                            if (today >= startDate && today <= endDate) {
-                                // Generate timeline for this medication
+                    // --- Robust Date Parsing and Comparison ---
+                    let medStartDate, medEndDate;
+                    try {
+                        // Handle Firestore Timestamp or Date String (YYYY-MM-DD)
+                        if (medData.startDate?.toDate) { // Is it a Timestamp?
+                            medStartDate = medData.startDate.toDate();
+                        } else if (typeof medData.startDate === 'string') {
+                            // Assume 'YYYY-MM-DD', append time to parse as local midnight
+                            medStartDate = new Date(medData.startDate + 'T00:00:00');
+                        }
+
+                        if (medData.endDate?.toDate) {
+                            medEndDate = medData.endDate.toDate();
+                        } else if (typeof medData.endDate === 'string') {
+                            medEndDate = new Date(medData.endDate + 'T00:00:00');
+                        }
+
+                        // Check if dates are valid before proceeding
+                        if (medStartDate instanceof Date && !isNaN(medStartDate) &&
+                            medEndDate instanceof Date && !isNaN(medEndDate))
+                        {
+                            // Normalize medication dates to midnight for accurate comparison
+                            medStartDate.setHours(0, 0, 0, 0);
+                            // Set end date to end of day for inclusive comparison? Optional.
+                            // Example: medEndDate.setHours(23, 59, 59, 999);
+                            // Or keep as start of day if end date means "up to but not including".
+                            // Current logic assumes end date is inclusive start-of-day.
+                            medEndDate.setHours(0, 0, 0, 0);
+
+                            // Compare date parts only
+                            if (todayStart >= medStartDate && todayStart <= medEndDate) {
+                                // --- Medication is active today, generate times ---
+
+                                // Assuming generateMedicationTimeline exists and works
                                 const medicationTimes = generateMedicationTimeline(
-                                    medData.startTime || '09:00',
+                                    medData.startTime || '09:00', // Default start time if missing
                                     medData.frequency,
-                                    medData.numPills
+                                    medData.numPills // numPills might not be needed by generator? Check its signature.
                                 );
 
-                                // Create tasks for each medication time
+                                // 5. Create and add unique task objects
                                 medicationTimes.forEach(time => {
-                                    // Create a unique task key
-                                    const taskKey = `${dependantId}-${medDoc.id}-${time}-${medData.name}`;
+                                    // Create a unique key for this specific dose instance
+                                    const taskKey = `${dependantId}-${medDoc.id}-${time}-${medName}`;
 
-                                    // Only add if not already in uniqueTasks
-                                    if (!uniqueTasks.has(taskKey)) {
-                                        uniqueTasks.add(taskKey);
+                                    // Check if this exact task instance is already added
+                                    if (!uniqueTaskKeys.has(taskKey)) {
+                                        uniqueTaskKeys.add(taskKey); // Add key to Set
 
                                         const taskObject = {
                                             dependantId: dependantId,
                                             dependantName: dependantName,
                                             dependantLName: dependantLName,
-                                            medicationName: medData.name,
-                                            startTime: time,
-                                            numPills: medData.numPills,
+                                            medicationName: medName,
+                                            startTime: time, // The specific time for this task instance
+                                            numPills: medData.numPills || 1, // Default pills if missing
                                             frequency: medData.frequency,
-                                            medicationDocId: medDoc.id
+                                            medicationDocId: medDoc.id,
+                                            // Add original start/end dates if needed later
+                                            medStartDate: medStartDate,
+                                            medEndDate: medEndDate
                                         };
 
-                                        // Store the task object with the unique key
-                                        uniqueTasks[taskKey] = taskObject;
+                                        allTasks.push(taskObject); // <<< Add the object to the array
                                     }
                                 });
                             }
-                        });
-                    })
-                    .catch(error => {
-                        console.error(`Error fetching medications for ${dependantName} ${dependantLName}:`, error);
-                    });
+                        } else {
+                            console.warn(`Medication '${medName}' for ${dependantName} has invalid or missing start/end dates.`);
+                        }
+                    } catch (dateError) {
+                        console.error(`Error processing dates for med '${medName}', dependant '${dependantName}':`, dateError, medData.startDate, medData.endDate);
+                    }
+                }); // End medicationsSnapshot.forEach
+
+            } catch (medError) {
+                console.error(`Error fetching medications for ${dependantName} ${dependantLName}:`, medError);
+                // Optionally, decide if you want to stop everything if one dependant fails
+                // Or just skip this dependant's tasks. Current logic skips.
+            }
+        }); // End dependantsSnapshot.docs.map
+
+        // 6. Wait for all dependant medication processing to complete
+        await Promise.all(taskProcessingPromises);
+
+        // --- All data fetched and processed, now sort and display ---
+
+        // 7. Sort the collected tasks by time
+        const sortedTasks = allTasks // <<< Use the array containing the objects
+            .sort((a, b) => {
+                // Helper to convert time string (e.g., "09:00 AM") to minutes since midnight
+                const convertToMinutes = (timeStr) => {
+                     try {
+                         const [timePart, period] = timeStr.split(' ');
+                         let [hours, minutes] = timePart.split(':').map(Number);
+
+                         if (period && period.toUpperCase() === 'PM' && hours !== 12) hours += 12;
+                         if (period && period.toUpperCase() === 'AM' && hours === 12) hours = 0; // Midnight case
+
+                         if (isNaN(hours) || isNaN(minutes)) return -1; // Invalid time format
+
+                         return hours * 60 + minutes;
+                     } catch(e){
+                         console.error("Error converting time to minutes:", timeStr, e);
+                         return -1; // Handle potential errors in time format
+                     }
+                };
+                return convertToMinutes(a.startTime) - convertToMinutes(b.startTime);
             });
 
-            // Once all tasks are collected, sort and display
-            Promise.all(taskPromises).then(() => {
-                // Convert unique tasks to an array and sort
-                const sortedTasks = Object.values(uniqueTasks)
-                    .filter(task => task.dependantName) // Ensure it's a valid task
-                    .sort((a, b) => {
-                        // Convert time to 24-hour format for accurate sorting
-                        const convertTo24Hour = (time) => {
-                            const [t, period] = time.split(' ');
-                            let [hours, minutes] = t.split(':').map(Number);
-                            if (period === 'PM' && hours !== 12) hours += 12;
-                            if (period === 'AM' && hours === 12) hours = 0;
-                            return hours * 60 + minutes;
-                        };
+        // 8. Display the sorted tasks or "No tasks" message
+        todoListElement.innerHTML = ''; // Clear "Loading..." message
+        if (sortedTasks.length === 0) {
+            const noTasksItem = document.createElement('li');
+            noTasksItem.textContent = 'No medications scheduled for today';
+            todoListElement.appendChild(noTasksItem);
+        } else {
+            sortedTasks.forEach((task, index) => {
+                const listItem = document.createElement('li');
+                listItem.className = 'todo-item'; // Add class for styling
 
-                        return convertTo24Hour(a.startTime) - convertTo24Hour(b.startTime);
-                    });
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `task-${index}-${task.dependantId}-${task.medicationDocId}`; // More unique ID
+                checkbox.className = 'todo-checkbox';
+                 // TODO: Check if task is already marked complete for today?
+                 // checkbox.checked = checkCompletionStatus(user.uid, task); // Needs implementation
 
-                // Display sorted tasks
-                sortedTasks.forEach((task, index) => {
-                    const listItem = document.createElement('li');
-
-                    // Create checkbox
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.id = `task-${index}`;
-
-                    // Add event listener to handle task completion
-                    checkbox.addEventListener('change', () => {
-                        markTaskComplete(user.uid, task, checkbox.checked);
-                    });
-
-                    // Create label for task details
-                    const label = document.createElement('label');
-                    label.htmlFor = `task-${index}`;
-                    label.innerHTML = `
-                        <strong>${task.dependantName} ${task.dependantLName} </strong><br>
-                        ${task.numPills} ${task.medicationName} 
-                        at ${task.startTime} 
-                    `;
-
-                    // Append checkbox and label to list item
-                    listItem.appendChild(checkbox);
-                    listItem.appendChild(label);
-                    todoListElement.appendChild(listItem);
+                checkbox.addEventListener('change', () => {
+                    // Call function to update completion status in Firestore
+                    markTaskComplete(globalUser, task, checkbox.checked);
+                     // Optional: Add/remove a 'completed' class for styling
+                    listItem.classList.toggle('completed', checkbox.checked);
                 });
 
-                // If no tasks, show a message
-                if (sortedTasks.length === 0) {
-                    const noTasksItem = document.createElement('li');
-                    noTasksItem.textContent = 'No medications scheduled for today';
-                    todoListElement.appendChild(noTasksItem);
-                }
-            })
-                .catch(error => {
-                    console.error("Error processing tasks:", error);
-                });
-        })
-        .catch(error => {
-            console.error("Error fetching dependants:", error);
-        });
+                const label = document.createElement('label');
+                label.htmlFor = checkbox.id;
+                label.className = 'todo-label';
+                // Use innerHTML carefully or create elements individually for safety
+                label.innerHTML = `
+                    <span class="dependant-name">${task.dependantName} ${task.dependantLName}</span><br>
+                    <span class="med-details">${task.numPills} x ${task.medicationName}</span>
+                    <span class="med-time">at ${task.startTime}</span>
+                `;
+
+                listItem.appendChild(checkbox);
+                listItem.appendChild(label);
+                todoListElement.appendChild(listItem);
+            });
+        }
+
+    } catch (error) {
+        console.error("Error fetching data for today's tasks:", error);
+        // Display a general error message to the user
+        todoListElement.innerHTML = `<li style="color: red;">Error loading tasks: ${error.message}</li>`;
+    }
 }
 
 function markTaskComplete(userId, task, isComplete) {
@@ -265,6 +330,9 @@ function markTaskComplete(userId, task, isComplete) {
     }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    getNameFromAuth();
+    getTodayTasks(globalUser);
 
-
-getNameFromAuth(); //run the function
+    
+})
