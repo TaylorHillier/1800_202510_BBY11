@@ -1,0 +1,227 @@
+/* dashboard.css - Modern Caretaker Dashboard */
+:root {
+  /* Color Palette */
+  --slate-blue: #6B8FAF;
+  --soft-blue: #9BB5C9;
+  --slate-green: #7A9A7B;
+  --pale-green: #C4D7C4;
+  --navy: #2C3E50;
+  --white: #FFFFFF;
+  --light-gray: #F5F7FA;
+  --medium-gray: #E0E5EC;
+  --dark-text: #2D3748;
+  --light-text: #4A5568;
+
+  /* Spacing */
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1.25rem;
+  --space-lg: 2rem;
+  --space-xl: 3rem;
+
+  /* Sizes */
+  --nav-height-mobile: 4rem;
+  --nav-width-desktop: 220px;
+  --border-radius: 8px;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Base Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background-color: var(--light-gray);
+  color: var(--dark-text);
+  line-height: 1.5;
+}
+
+/* Layout Structure */
+.main-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Main Content Area */
+main {
+  flex: 1;
+  padding: var(--space-lg);
+  margin-bottom: var(--nav-height-mobile); /* Space for mobile nav */
+}
+
+/* Cards */
+.card {
+  background: var(--white);
+  border-radius: var(--border-radius);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-lg);
+  box-shadow: var(--shadow);
+}
+
+.welcome-card {
+  border-left: 4px solid var(--slate-blue);
+}
+
+.todo-card {
+  border-left: 4px solid var(--slate-green);
+}
+
+/* Navigation */
+.navigation {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--nav-height-mobile);
+  background-color: var(--navy);
+  display: flex;
+  align-items: center;
+  z-index: 1000;
+}
+
+.nav-list {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  list-style: none;
+  padding: 0 var(--space-sm);
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.nav-link {
+  color: var(--white);
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.8rem;
+  gap: var(--space-xs);
+  padding: var(--space-xs);
+}
+
+.nav-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* Desktop Styles */
+@media (min-width: 768px) {
+  .main-layout {
+    flex-direction: row;
+  }
+
+  .navigation {
+    position: sticky;
+    top: 0;
+    width: var(--nav-width-desktop);
+    height: 100vh;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding-top: var(--space-lg);
+  }
+
+  .nav-list {
+    flex-direction: column;
+    gap: var(--space-md);
+    padding: 0 var(--space-md);
+  }
+
+  .nav-item {
+    width: 100%;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: var(--space-sm);
+  }
+
+  .nav-link {
+    flex-direction: row;
+    font-size: 1rem;
+  }
+
+  main {
+    flex: 1;
+    margin-bottom: 0;
+    margin-left: var(--nav-width-desktop);
+  }
+}
+
+/* Typography */
+h1, h2, h3 {
+  color: var(--dark-text);
+  margin-bottom: var(--space-sm);
+}
+
+h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+h2 {
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+/* Welcome Section */
+#welcome_message h1 {
+  color: var(--slate-blue);
+}
+
+/* To-Do List */
+#todo_list h2 {
+  color: var(--slate-green);
+  border-bottom: 1px solid var(--medium-gray);
+  padding-bottom: var(--space-sm);
+}
+
+#today {
+  list-style: none;
+}
+
+#today li {
+  padding: var(--space-sm);
+  margin-bottom: var(--space-xs);
+  background-color: var(--light-gray);
+  border-radius: var(--border-radius);
+}
+
+/* Links & Buttons */
+a {
+  color: var(--slate-blue);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--soft-blue);
+  text-decoration: underline;
+}
+
+/* Empty States */
+#today:empty::before {
+  content: "No medications scheduled for today";
+  color: var(--light-text);
+  font-style: italic;
+}
+
+/* Responsive Grid */
+@media (min-width: 768px) {
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
+  }
+  
+  .welcome-card {
+    grid-column: 1 / -1;
+  }
+}
