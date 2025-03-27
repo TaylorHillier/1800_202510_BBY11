@@ -396,7 +396,13 @@ function formatTimeDifference(diffMinutes) {
     if (absoluteMinutes <= 1) {
         return "Due now";
     }
-    else if(absoluteMinutes > 60) {
+    else if(diffMinutes > 60) {
+        let hours = Math.floor(absoluteMinutes / 60);
+        console.log(hours + 'hours');
+        let minutes = absoluteMinutes - (hours * 60);
+        console.log(minutes);
+        return `Due ${hours} hours and ${minutes} minutes ago`
+    }else if(diffMinutes < -60) {
         let hours = Math.floor(absoluteMinutes / 60);
         console.log(hours + 'hours');
         let minutes = absoluteMinutes - (hours * 60);
