@@ -196,8 +196,11 @@ async function getTodayTasks(user) { // Make the function async
                                             medicationDocId: medDoc.id,
                                             // Add original start/end dates if needed later
                                             medStartDate: medStartDate,
-                                            medEndDate: medEndDate
+                                            medEndDate: medEndDate,
+                                            startTimeDate: medData.startDate
                                         };
+
+                                        console.log(taskObject.startTimeDate + " " +  time);
 
                                         allTasks.push(taskObject); // <<< Add the object to the array
                                     }
@@ -253,44 +256,158 @@ async function getTodayTasks(user) { // Make the function async
             noTasksItem.textContent = 'No medications scheduled for today';
             todoListElement.appendChild(noTasksItem);
         } else {
-            sortedTasks.forEach((task, index) => {
-                const listItem = document.createElement('li');
-                listItem.className = 'todo-item'; // Add class for styling
+           // Inside your sortedTasks.forEach loop:
 
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.id = `task-${index}-${task.dependantId}-${task.medicationDocId}`; // More unique ID
-                checkbox.className = 'todo-checkbox';
-                 // TODO: Check if task is already marked complete for today?
-                 // checkbox.checked = checkCompletionStatus(user.uid, task); // Needs implementation
+        sortedTasks.forEach((task, index) => {
+            const listItem = document.createElement('li');
+            listItem.className = 'todo-item';
+            // ... (checkbox setup) ...
 
-                checkbox.addEventListener('change', () => {
-                    // Call function to update completion status in Firestore
-                    markTaskComplete(globalUser, task, checkbox.checked);
-                     // Optional: Add/remove a 'completed' class for styling
-                    listItem.classList.toggle('completed', checkbox.checked);
-                });
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `task-${index}-${task.dependantId}-${task.medicationDocId}`; // More unique ID
+            checkbox.className = 'todo-checkbox';
 
-                const label = document.createElement('label');
-                label.htmlFor = checkbox.id;
-                label.className = 'todo-label';
-                // Use innerHTML carefully or create elements individually for safety
-                label.innerHTML = `
-                    <span class="dependant-name">${task.dependantName} ${task.dependantLName}</span><br>
-                    <span class="med-details">${task.numPills} x ${task.medicationName}</span>
-                    <span class="med-time">at ${task.startTime}</span>
-                `;
+            const label = document.createElement('label');
+            label.htmlFor = checkbox.id;
+            label.className = 'todo-label';
 
-                listItem.appendChild(checkbox);
-                listItem.appendChild(label);
-                todoListElement.appendChild(listItem);
-            });
+            // --- Calculate Due Time Reliably ---
+            let dueTimeString = '';
+            const now = new Date(); // Current time
+
+            // Use the helper function to create the Date object for the task's time *today*
+            const taskDateTime = getTaskDateTimeForToday(task.startTime); // e.g., gets Date for March 27, 2025 7:48:00 AM
+
+            if (taskDateTime) {
+                // Calculate difference in milliseconds
+                const diffMilliseconds = now.getTime() - taskDateTime.getTime();
+
+                // Convert to minutes
+                const diffMinutes = Math.round(diffMilliseconds / (1000 * 60));
+
+                // Format the user-friendly string
+                dueTimeString = formatTimeDifference(diffMinutes);
+            } else {
+                dueTimeString = '(Invalid Time)'; // Handle cases where task.startTime couldn't be parsed
+            }
+            // --- End Calculation ---
+
+
+            // Populate the label, including the calculated due time
+            label.innerHTML = `
+                <span class="dependant-name">${task.dependantName} ${task.dependantLName}</span><br>
+                <span class="med-details">${task.numPills} x ${task.medicationName}</span>
+                <span class="med-time">at ${task.startTime}</span>
+                <span class="due-time">${dueTimeString}</span>
+            `;
+
+            listItem.appendChild(checkbox);
+            listItem.appendChild(label);
+            todoListElement.appendChild(listItem);
+
+            // Optional styling based on due status
+            if (dueTimeString.includes("Overdue")) {
+                listItem.classList.add("overdue");
+            } else if (dueTimeString.includes("Due now")) {
+                listItem.classList.add("due-now");
+            }
+        });
         }
 
     } catch (error) {
         console.error("Error fetching data for today's tasks:", error);
         // Display a general error message to the user
         todoListElement.innerHTML = `<li style="color: red;">Error loading tasks: ${error.message}</li>`;
+    }
+}
+
+// *** Add these helper functions somewhere accessible ***
+
+/**
+ * Parses a time string (e.g., "09:00 AM", "17:30") into hours and minutes.
+ * @param {string} timeStr - The time string.
+ * @returns {{hours: number, minutes: number} | null} - Object with hours (0-23) and minutes, or null on error.
+ */
+function parseTimeString(timeStr) {
+    try {
+        const timePart = timeStr.split(' ')[0]; // Get "HH:MM" part
+        const period = timeStr.split(' ')[1];   // Get "AM/PM" part, if exists
+        let [hours, minutes] = timePart.split(':').map(Number);
+
+        if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+             // Basic validation if AM/PM is missing but format is like HH:MM
+             if (period) throw new Error("Invalid time format parts");
+        }
+
+        // Convert to 24-hour format if AM/PM is present
+        if (period) {
+            const upperPeriod = period.toUpperCase();
+            if (upperPeriod === 'PM' && hours !== 12) hours += 12;
+            if (upperPeriod === 'AM' && hours === 12) hours = 0; // Handle midnight
+             // Validate resulting hours again
+             if(hours < 0 || hours > 23) throw new Error("Invalid hour after AM/PM conversion");
+        }
+
+        return { hours, minutes };
+    } catch (e) {
+        console.error("Error parsing time string:", timeStr, e);
+        return null; // Indicate failure
+    }
+}
+
+/**
+ * Creates a Date object for today's date but with the time set
+ * based on the provided time string.
+ * @param {string} taskTimeString - e.g., "09:00 AM" or "14:30".
+ * @returns {Date | null} - The Date object for today at the specified time, or null on error.
+ */
+function getTaskDateTimeForToday(taskTimeString) {
+    const parsedTime = parseTimeString(taskTimeString);
+    if (!parsedTime) {
+        return null; // Parsing failed
+    }
+
+    const now = new Date(); // Get current date context
+    // Create new Date object for today, applying parsed hours/minutes
+    const taskDateTime = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        parsedTime.hours,
+        parsedTime.minutes,
+        0, // Seconds
+        0  // Milliseconds
+    );
+    return taskDateTime;
+}
+
+/**
+ * Formats the difference in minutes into a user-friendly string.
+ * @param {number} diffMinutes - The difference in minutes (positive if past, negative if future).
+ * @returns {string} - Formatted string like "Due now", "Due in X min", "Overdue by X min".
+ */
+function formatTimeDifference(diffMinutes) {
+    const absoluteMinutes = Math.abs(diffMinutes);
+
+    console.log(absoluteMinutes);
+    // Use a small threshold around zero for "Due now"
+    if (absoluteMinutes <= 1) {
+        return "Due now";
+    }
+    else if(absoluteMinutes > 60) {
+        let hours = Math.floor(absoluteMinutes / 60);
+        console.log(hours + 'hours');
+        let minutes = absoluteMinutes - (hours * 60);
+        console.log(minutes);
+        return `Due in ${hours} hours and ${minutes} minutes`
+    } else if (diffMinutes < 0) {
+        // Task is in the future
+        return `Due in ${absoluteMinutes} min`;
+    } else {
+        // Task is in the past (overdue)
+        return `Overdue by ${diffMinutes} min`;
     }
 }
 
