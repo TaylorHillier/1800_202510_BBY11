@@ -51,7 +51,8 @@ body {
 main {
   flex: 1;
   padding: var(--space-lg);
-  margin-bottom: var(--nav-height-mobile); /* Space for mobile nav */
+  margin-bottom: var(--nav-height-mobile);
+  /* Space for mobile nav */
 }
 
 /* Cards */
@@ -79,7 +80,6 @@ main {
   right: 0;
   height: var(--nav-height-mobile);
   background-color: var(--navy);
-  display: flex;
   align-items: center;
   z-index: 1000;
 }
@@ -156,7 +156,9 @@ main {
 }
 
 /* Typography */
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   color: var(--dark-text);
   margin-bottom: var(--space-sm);
 }
@@ -220,7 +222,7 @@ a:hover {
     grid-template-columns: repeat(2, 1fr);
     gap: var(--space-lg);
   }
-  
+
   .welcome-card {
     grid-column: 1 / -1;
   }
