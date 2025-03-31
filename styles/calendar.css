@@ -86,7 +86,7 @@
     margin: 0;
   }
   
-  li {
+  li:not('.nav-item'){
     padding: var(--space-sm) 0;
     border-bottom: 1px solid var(--medium-gray);
   }

@@ -170,24 +170,6 @@ main{
     display: none;
 }
 
-/* ================================================== */
-/*                    NAVIGATION                    */
-/* ================================================== */
-.navigation {
-    position: fixed;
-    bottom: 0;
-    right: 0;
-    left: 0;
-    height: 4rem;
-    display: flex;
-    align-items: center;
-    z-index: 1000;
-}
-
-nav {
-    width: 100%;
-}
-
 .hidden-mobile {
     display: none;
 }
@@ -204,65 +186,6 @@ ul {
     padding: 0;
 }
 
-.nav-list {
-    display: flex;
-    align-items: center;
-    justify-content: space-evenly;
-    padding: 0;
-    gap: 20px;
-}
-
-.nav-list-unlogged {
-    display: flex;
-    align-items: center;
-    justify-content: space-evenly;
-    padding: 0;
-    gap: 20px;
-    flex-direction: row;
-}
-
-.nav-link {
-    flex-direction: column;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.nav-item {
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-}
-
-@media (min-width: 480px) {
-    .navigation p {
-        display: block;
-    }
-}
-
-@media (min-width: 1280px) {
-    .navigation {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    /* .nav-link svg {
-        display: none;
-    } */
-
-    .hidden-mobile {
-        display: flex;
-    }
-
-    .nav-list {
-        gap: 2rem;
-    }
-}
-
 /* ================================================== */
 /*             RESPONSIVE GRID LAYOUT FOR NAV         */
 /* ================================================== */
@@ -271,34 +194,8 @@ ul {
         grid-template-columns: repeat(2, 1fr);
     }
 
-    .navigation {
-        position: sticky;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        z-index: 1000;
-        height: 100%;
-        padding: 1rem 1rem;
-    }
 
-    .nav-item{
-        width: 100%;
-        justify-content: flex-start;
-    }
 
-    .nav-item a{
-        flex-direction: row;
-        gap: 1rem;
-        text-align: left;
-        width: 100%;
-        justify-content: inherit;
-    }
-
-    .nav-list{
-        display: flex;
-        flex-direction: column;
-        color: black;
-    }
 }
 
 @media (min-width: 1024px) {
@@ -313,17 +210,6 @@ ul {
 body {
     background-color: #f4f4f4;
     color: #333;
-}
-
-.nav-item a {
-    text-decoration: none;
-    color: rgb(0, 0, 0);
-    font-size: 1.2em;
-    font-weight: bold;
-}
-
-.nav-item a:hover {
-    text-decoration: underline;
 }
 
 /* ================================================== */
@@ -462,46 +348,6 @@ h2 {
 /*                      SON SECTION                 */
 /* ================================================== */
 /* (This section repeats some of the above for specific elements) */
-
-/* Navigation Container (SON) */
-.nav-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 1rem 2rem;
-}
-
-.logo {
-    display: flex;
-    align-items: center;
-}
-
-.logo img {
-    width: 50px;
-    margin-right: 1rem;
-}
-
-.nav-links {
-    display: flex;
-    list-style: none;
-}
-
-.nav-links li {
-    margin-left: 1.5rem;
-}
-
-.nav-links a {
-    text-decoration: none;
-    color: var(--text-color);
-    font-weight: 500;
-    transition: color 0.3s ease;
-}
-
-.nav-links a:hover {
-    color: var(--primary-color);
-}
 
 .mobile-menu-toggle {
     display: none;
@@ -668,9 +514,6 @@ footer {
 /*             RESPONSIVE DESIGN (SON)              */
 /* ================================================== */
 @media screen and (max-width: 768px) {
-    .nav-links {
-        display: none;
-    }
 
     .mobile-menu-toggle {
         display: flex;
@@ -819,11 +662,7 @@ body {
     padding: 0;
   }
   
-  .main-layout {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-  
+
   /* Cards */
   .card {
     background: white;

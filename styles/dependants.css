@@ -40,21 +40,6 @@
     line-height: 1.6;
   }
   
-  /* Main Layout */
-  .main-layout {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-  }
-  
-  /* Header / Navigation */
-  header.navigation {
-    background-color: var(--navy);
-    color: var(--white);
-    padding: var(--space-md);
-    text-align: center;
-  }
-  
   /* Main Content */
   main {
     flex: 1;
