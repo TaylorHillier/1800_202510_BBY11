@@ -500,7 +500,7 @@ renderScheduleOnCalendar() {
 
             const summary = document.createElement('div');
             summary.className = 'medication-summary';
-            summary.innerHTML = `<div id='event-quant' class='event-quant'>${sum} events</div>`;
+            summary.innerHTML = `<div id='event-quant' class='event-quant'>${sum}</div>`;
 
             groupContainer.appendChild(summary);
             mainEntryContainer.appendChild(groupContainer);
