@@ -191,9 +191,9 @@ class CalendarApp {
     this.loadMedicationSchedules().then(() => {
       this.renderCalendar();
   
-      if (window.innerWidth >= 768) {
+  
         this.renderScheduleOnCalendar();
-      }
+      
   
       const previousSelected = this.calenderContainer?.querySelector('.selected');
       if (previousSelected) previousSelected.classList.remove('selected');
@@ -511,7 +511,7 @@ class CalendarApp {
               dayCell.appendChild(mainEntryContainer);
           }
 
-
+          let sum  = 0;
           for (const groupKey in dateGroups) {
               const events = dateGroups[groupKey];
               //if (events.length === 0) continue; // Skip empty groups
@@ -521,33 +521,75 @@ class CalendarApp {
                 groupContainer.className = 'entry-container'; // General class for styling
                 groupContainer.setAttribute('data-group', groupKey); // Store group key
 
+                let header = document.createElement('div'); // Use div instead of h5 for smaller text
+              // Add header for caretaker viewj
 
-              // Add header for caretaker view
-              if (this.isCareTakerSchedule && groupKey !== 'default') {
-                  const header = document.createElement('div'); // Use div instead of h5 for smaller text
-                  header.className = 'entry-header-small';
-                  // Show only first name or a short indicator
-                  header.innerText = groupKey.split(' ')[0];
-                  groupContainer.appendChild(header);
-              }
+                if(window.innerWidth > 768) {
 
-              // Add summary text (e.g., "2 events")
-              const summary = document.createElement('div');
-              summary.className = 'medication-summary';
+                    if (this.isCareTakerSchedule && groupKey !== 'default') {
+                        header.className = 'entry-header-small';
+                        // Show only first name or a short indicator
+                        header.innerText = groupKey.split(' ')[0];
+                        groupContainer.appendChild(header);
+                    }
+                    
+        
+                    const summary = document.createElement('div');
+                    summary.className = 'medication-summary';
 
-              if(window.innerWidth > 768){
-                summary.innerText = events.length > 0 ? `${events.length} event${events.length === 1 ? '' : 's'}` : `${events.length} events`;
-              } else {
-                summary.innerHTML = "<span id='mobile-events'></span>";
-              }
-              groupContainer.appendChild(summary);
+                    summary.innerText = events.length;
+                    summary.innerHTML = `<div id='event-quant' class='event-quant'>${events.length}</div>`;
+                    if(this.isCareTakerSchedule){
+                        header.appendChild(summary);
+                    } else {
+                        groupContainer.appendChild(summary);
+                    }
 
-              // Append this group's container to the main wrapper in the day cell
-              mainEntryContainer.appendChild(groupContainer);
-          }
-      }
+                    mainEntryContainer.appendChild(groupContainer);
+                } else {
+        
+                    sum += events.length;
+
+                    if(this.isSingleDependant){
+                        // Add summary text (e.g., "2 events")
+                        const summary = document.createElement('div');
+                        summary.className = 'medication-summary';
+
+
+                        summary.innerHTML = `<div id='event-quant' class='event-quant'>${events.length}</div>`;
+                        
+
+                        groupContainer.appendChild(summary);
+                    
+
+                        // Append this group's container to the main wrapper in the day cell
+                        mainEntryContainer.appendChild(groupContainer);
+                    }
+                }
+            }
+
+            if(this.isCareTakerSchedule && sum!= 0) {
+
+                const groupContainer = document.createElement('div');
+                groupContainer.className = 'entry-container'; // General class for styling
+
+                // Add summary text (e.g., "2 events")
+                const summary = document.createElement('div');
+                summary.className = 'medication-summary';
+
+
+                summary.innerHTML = `<div id='event-quant' class='event-quant'>${sum}</div>`;
+                
+
+                groupContainer.appendChild(summary);
+            
+
+                // Append this group's container to the main wrapper in the day cell
+                mainEntryContainer.appendChild(groupContainer);
+           }
+        }
         console.log("Finished rendering schedule summaries.");
-  }
+     }
 
 
   /**
@@ -782,9 +824,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 calendar.renderCalendar(); // Render the calendar grid structure
 
-                if (window.innerWidth >= 768) {
-                    calendar.renderScheduleOnCalendar(); // Add summaries to cells
-                }
+      
+                calendar.renderScheduleOnCalendar(); // Add summaries to cells
+                
 
                 const todayElement = calendar.calenderContainer?.querySelector('.calendar-day.today');
                 if (todayElement) {

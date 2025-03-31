@@ -1,0 +1,125 @@
+:root {
+    /* Color Palette */
+    --slate-blue: #6B8FAF;
+    --soft-blue: #9BB5C9;
+    --slate-green: #7A9A7B;
+    --pale-green: #C4D7C4;
+    --navy: #2C3E50;
+    --white: #FFFFFF;
+    --light-gray: #F5F7FA;
+    --medium-gray: #E0E5EC;
+    --dark-text: #2D3748;
+    --light-text: #4A5568;
+  
+    /* Spacing */
+    --space-xs: 0.5rem;
+    --space-sm: 0.75rem;
+    --space-md: 1.25rem;
+    --space-lg: 2rem;
+    --space-xl: 3rem;
+  
+    /* Sizes */
+    --nav-height-mobile: 4rem;
+    --nav-width-desktop: 220px;
+    --border-radius: 8px;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Global Styles */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+  
+  body {
+    margin: 0;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--light-gray);
+    color: var(--dark-text);
+    line-height: 1.6;
+  }
+  
+  /* Main Layout */
+  .main-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  
+  /* Header / Navigation */
+  header.navigation {
+    background-color: var(--navy);
+    color: var(--white);
+    padding: var(--space-md);
+    text-align: center;
+  }
+  
+  /* Main Content */
+  main {
+    flex: 1;
+    padding: var(--space-md);
+  }
+  
+  /* Section Styling */
+  section {
+    background-color: var(--white);
+    padding: var(--space-md);
+    margin-bottom: var(--space-lg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+  }
+  
+  /* Headings */
+  h2 {
+    margin-top: 0;
+    color: var(--navy);
+  }
+  
+  /* Dependants Welcome */
+  #dependants-welcome {
+    font-weight: bold;
+  }
+  
+  /* Dependants List */
+  #dependants-list {
+    list-style: none;
+    padding: 0;
+    margin: var(--space-sm) 0;
+  }
+  
+  #dependants-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-sm);
+    border-bottom: 1px solid var(--medium-gray);
+  }
+  
+  #dependants-list li:last-child {
+    border-bottom: none;
+  }
+  
+  /* Buttons */
+  button {
+    background-color: var(--slate-blue);
+    color: var(--white);
+    border: none;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin: var(--space-sm) 0;
+  }
+  
+  button:hover {
+    background-color: var(--soft-blue);
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 767px) {
+    main {
+      padding: var(--space-sm);
+    }
+  }
+  
