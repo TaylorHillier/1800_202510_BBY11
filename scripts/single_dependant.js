@@ -61,7 +61,7 @@ function getMedicationList() {
                 medsSnapshot.forEach((medDoc) => {
                     const medData = medDoc.data();
                     const listItem = document.createElement('li');
-                    listItem.textContent = `${medData.name}: ${medData.frequency} `;
+                    listItem.textContent = `${medData.name}: ${medData.numPillsPerDose} times today `;
 
                     // Append to the list
                     medListElement.appendChild(listItem);
@@ -79,7 +79,7 @@ getMedicationList();
 function createMedicationForm() {
     let button = document.getElementById("addMedication");
 
-    // Check if form already exists to prevent duplicates
+    // Prevent duplicate forms
     if (document.getElementById("newMedication-form")) {
         document.getElementById("newMedication-form").remove();
         return;
@@ -90,7 +90,16 @@ function createMedicationForm() {
     form.setAttribute("action", "addMedication");
     form.id = "newMedication-form";
 
-    // Start Date Label and Input
+    // Get today's date (YYYY-MM-DD) for min attributes
+    const now = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(now.getDate() + 1);
+    const today = tomorrow.toISOString().split("T")[0];
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const time = `${hours}:${minutes}`; // format: "HH:MM"
+
+    // Start Date
     var startDateLabel = document.createElement("label");
     startDateLabel.setAttribute("for", "start-date");
     startDateLabel.textContent = "Start Date: ";
@@ -99,8 +108,10 @@ function createMedicationForm() {
     startDate.setAttribute("id", "start-date");
     startDate.setAttribute("type", "date");
     startDate.setAttribute("name", "start-date");
+    startDate.setAttribute("value", today);
+    startDate.setAttribute("min", today);
 
-    // End Date Label and Input
+    // End Date
     var endDateLabel = document.createElement("label");
     endDateLabel.setAttribute("for", "end-date");
     endDateLabel.textContent = "End Date: ";
@@ -109,8 +120,9 @@ function createMedicationForm() {
     endDate.setAttribute("id", "end-date");
     endDate.setAttribute("type", "date");
     endDate.setAttribute("name", "end-date");
+    endDate.setAttribute("min", today);
 
-    // End Date Label and Input
+    // Start Time
     var startTimeLabel = document.createElement("label");
     startTimeLabel.setAttribute("for", "start-time");
     startTimeLabel.textContent = "Start Time: ";
@@ -119,27 +131,30 @@ function createMedicationForm() {
     startTime.setAttribute("id", "start-time");
     startTime.setAttribute("type", "time");
     startTime.setAttribute("name", "start-time");
-    // End Date Label and Input
-    var startTimeLabel = document.createElement("label");
-    startTimeLabel.setAttribute("for", "start-time");
-    startTimeLabel.textContent = "Start Time: ";
+    startTime.setAttribute("value", "08:00"); // now it's set correctly
 
-    var startTime = document.createElement("input");
-    startTime.setAttribute("id", "start-time");
-    startTime.setAttribute("type", "time");
-    startTime.setAttribute("name", "start-time");
+    // End Time
+    var endTimeLabel = document.createElement("label");
+    endTimeLabel.setAttribute("for", "end-time");
+    endTimeLabel.textContent = "End Time: ";
 
-    // End Date Label and Input
+    var endTime = document.createElement("input");
+    endTime.setAttribute("id", "end-time");
+    endTime.setAttribute("type", "time");
+    endTime.setAttribute("name", "end-time");
+    endTime.setAttribute("value", "22:00"); // now it's set correctly
+
+    // Number of Pills per Dose
     var numPillsLabel = document.createElement("label");
-    numPillsLabel.setAttribute("for", "num-pills");
-    numPillsLabel.textContent = "Number of pills per day: ";
+    numPillsLabel.setAttribute("for", "numpillsperdose");
+    numPillsLabel.textContent = "Number of pills per dose: ";
 
     var numPills = document.createElement("input");
-    numPills.setAttribute("id", "num-pills");
+    numPills.setAttribute("id", "numpillsperdose");
     numPills.setAttribute("type", "number");
-    numPills.setAttribute("name", "num-pills");
+    numPills.setAttribute("name", "numpillsperdose");
 
-    // Medication Label and Input
+    // Medication Name
     var medicationLabel = document.createElement("label");
     medicationLabel.setAttribute("for", "medication");
     medicationLabel.textContent = "Medication Name: ";
@@ -150,29 +165,36 @@ function createMedicationForm() {
     medication.setAttribute("name", "medication");
     medication.setAttribute("placeholder", "Medication");
 
-    // Frequency Label and Select Dropdown
-    var frequencyLabel = document.createElement("label");
-    frequencyLabel.setAttribute("for", "frequency");
-    frequencyLabel.textContent = "Frequency: ";
+    // Doses per Day (New Field)
+    var dosesLabel = document.createElement("label");
+    dosesLabel.setAttribute("for", "doses-per-day");
+    dosesLabel.textContent = "Doses per day: ";
 
-    var frequency = document.createElement("select");
-    frequency.setAttribute("id", "frequency");
-    frequency.setAttribute("name", "frequency");
+    var dosesPerDay = document.createElement("input");
+    dosesPerDay.setAttribute("id", "doses-per-day");
+    dosesPerDay.setAttribute("type", "number");
+    dosesPerDay.setAttribute("name", "doses-per-day");
+    dosesPerDay.setAttribute("min", "1");
 
-    // Frequency Options
-    var options = [
-        "Every 4 Hours",
-        "Every 6 Hours",
-        "Every 8 Hours",
-        "Every 12 Hours",
-        "Daily",
-        "Weekly"];
+    // Continuous Checkbox
+    var continuousLabel = document.createElement("label");
+    continuousLabel.setAttribute("for", "continuous");
+    continuousLabel.textContent = "Continuous: ";
 
-    options.forEach(optionText => {
-        var option = document.createElement("option");
-        option.value = optionText;
-        option.textContent = optionText;
-        frequency.appendChild(option);
+    var continuous = document.createElement("input");
+    continuous.setAttribute("id", "continuous");
+    continuous.setAttribute("type", "checkbox");
+    continuous.setAttribute("name", "continuous");
+
+    // When continuous is checked, disable end date and end time
+    continuous.addEventListener("change", function () {
+        if (this.checked) {
+            endDate.disabled = true;
+            endTime.disabled = true;
+        } else {
+            endDate.disabled = false;
+            endTime.disabled = false;
+        }
     });
 
     // Submit Button
@@ -200,6 +222,10 @@ function createMedicationForm() {
     form.appendChild(startTime);
     form.appendChild(document.createElement("br"));
 
+    form.appendChild(endTimeLabel);
+    form.appendChild(endTime);
+    form.appendChild(document.createElement("br"));
+
     form.appendChild(numPillsLabel);
     form.appendChild(numPills);
     form.appendChild(document.createElement("br"));
@@ -208,8 +234,12 @@ function createMedicationForm() {
     form.appendChild(medication);
     form.appendChild(document.createElement("br"));
 
-    form.appendChild(frequencyLabel);
-    form.appendChild(frequency);
+    form.appendChild(dosesLabel);
+    form.appendChild(dosesPerDay);
+    form.appendChild(document.createElement("br"));
+
+    form.appendChild(continuousLabel);
+    form.appendChild(continuous);
     form.appendChild(document.createElement("br"));
 
     form.appendChild(submit);
@@ -231,30 +261,75 @@ function addMedication() {
       return;
     }
   
+    // Get form values
     const startDateStr = document.getElementById("start-date").value.trim();
     const endDateStr = document.getElementById("end-date").value.trim();
     const startTimeStr = document.getElementById("start-time").value.trim();
-    const numPills = document.getElementById("num-pills").value;
+    const endTimeStr = document.getElementById("end-time").value.trim();
+    const numPillsPerDose = document.getElementById("numpillsperdose").value;
     const medicationName = document.getElementById("medication").value.trim();
-    const frequency = document.getElementById("frequency").value;
+    const dosesPerDayValue = document.getElementById("doses-per-day").value;
+    const isContinuous = document.getElementById("continuous").checked;
   
-    if (!startDateStr || !endDateStr || !medicationName || !frequency) {
-      console.error("Fill in all fields");
+    // Basic field validation
+    if (!startDateStr || !startTimeStr || !medicationName || !numPillsPerDose || !dosesPerDayValue) {
+      console.error("Fill in all required fields");
       return;
     }
   
-    // Create the medication document data
+    const dosesPerDay = parseInt(dosesPerDayValue);
+    if (isNaN(dosesPerDay) || dosesPerDay <= 0) {
+      console.error("Doses per day must be a positive number");
+      return;
+    }
+  
+    // Check that the start date is not in the past
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const startDateObj = new Date(startDateStr);
+    if (startDateObj < today) {
+      console.error("Start date cannot be in the past");
+      return;
+    }
+  
+    // If not continuous, validate end date and end time
+    if (!isContinuous) {
+      if (!endDateStr || !endTimeStr) {
+        console.error("Fill in end date and end time or select Continuous");
+        return;
+      }
+  
+      const endDateObj = new Date(endDateStr);
+      if (endDateObj < startDateObj) {
+        console.error("End date must be after the start date");
+        return;
+      }
+  
+      // If the start and end dates are the same, ensure the end time is after the start time
+      if (startDateObj.toDateString() === endDateObj.toDateString()) {
+          const [sHour, sMin] = startTimeStr.split(":").map(Number);
+          const [eHour, eMin] = endTimeStr.split(":").map(Number);
+          if (eHour < sHour || (eHour === sHour && eMin <= sMin)) {
+              console.error("End time must be after start time when start and end dates are the same");
+              return;
+          }
+      }
+    }
+  
+    // Build the medication object
     const medication = {
       name: medicationName,
       startDate: startDateStr,
-      endDate: endDateStr,
-      numPills: numPills,
+      endDate: isContinuous ? null : endDateStr,
       startTime: startTimeStr,
-      frequency: frequency,
-      addedBy: user.uid
+      endTime: isContinuous ? null : endTimeStr,
+      numPillsPerDose: numPillsPerDose,
+      dosesPerDay: dosesPerDay,
+      addedBy: user.uid,
+      continuous: isContinuous
     };
   
-    // Reference to the medications collection
+    // Reference to the medications collection for this dependant
     const medicationCollectionRef = firebase.firestore()
       .collection('users')
       .doc(user.uid)
@@ -262,42 +337,65 @@ function addMedication() {
       .doc(dependantId)
       .collection('medications');
   
-    // Add the new medication document
     medicationCollectionRef.add(medication)
       .then(docRef => {
         console.log("New medication added:", medicationName, "ID:", docRef.id);
   
-        // Compute the schedule for the medication
+        // Compute the schedule for the medication using the awake period rather than 24 hours.
         let scheduleArray = [];
-        let start = new Date(startDateStr);
-        let end = new Date(endDateStr);
-        let intervalHours = 24;
-        const freqMatch = frequency.match(/\d+/);
-        if (freqMatch) {
-          intervalHours = parseInt(freqMatch[0]);
+  
+        // For each day, the awake period is defined by the start time and end time.
+        // For non-continuous mode, we use the provided end date.
+        // For continuous mode, we generate a default 7-day schedule and assume awake end at 10:00 PM.
+        let dayStart = new Date(startDateStr);
+        let dayEnd;
+        if (isContinuous) {
+            dayEnd = new Date(dayStart);
+            dayEnd.setDate(dayEnd.getDate() + 6); // 7 days total
+        } else {
+            dayEnd = new Date(endDateStr);
         }
   
-        // Loop through each day from start to end date
-        for (let day = new Date(start); day <= end; day.setDate(day.getDate() + 1)) {
-          // Set dose time for the current day based on the start time
-          let [hour, minute] = startTimeStr.split(':').map(Number);
-          let doseTime = new Date(day);
-          doseTime.setHours(hour, minute, 0, 0);
-  
-          const bedTimeHour = 22; // cutoff: no doses after 10 PM
-  
-          // While the dose time is on the same day and before the cutoff, add the dose entry
-          while (doseTime.getDate() === day.getDate() && doseTime.getHours() < bedTimeHour) {
-            scheduleArray.push({
-              // Storing as a Firestore Timestamp; you can also use toISOString() if preferred
-              doseTime: firebase.firestore.Timestamp.fromDate(new Date(doseTime)),
-              medication: medicationName
-            });
-            doseTime.setHours(doseTime.getHours() + intervalHours);
-          }
+        // Parse the start time.
+        const [startHour, startMinute] = startTimeStr.split(":").map(Number);
+        // For non-continuous, parse provided end time; otherwise, default to 22:00.
+        let endHour, endMinute;
+        if (!isContinuous) {
+            [endHour, endMinute] = endTimeStr.split(":").map(Number);
+        } else {
+            endHour = 22;
+            endMinute = 0;
         }
   
-        // Update the medication document with the computed schedule
+        // Iterate over each day in the scheduling range.
+        for (let day = new Date(dayStart); day <= dayEnd; day.setDate(day.getDate() + 1)) {
+            // Create the awake period for this day.
+            let awakeStart = new Date(day);
+            awakeStart.setHours(startHour, startMinute, 0, 0);
+  
+            let awakeEnd = new Date(day);
+            awakeEnd.setHours(endHour, endMinute, 0, 0);
+  
+            // Calculate the total active minutes.
+            const activeMinutes = (awakeEnd - awakeStart) / (1000 * 60);
+  
+            // If only one dose per day, schedule it at the start of the awake period.
+            let intervalMinutes = 0;
+            if (dosesPerDay > 1) {
+                intervalMinutes = activeMinutes / (dosesPerDay - 1);
+            }
+  
+            // Schedule the doses evenly between awakeStart and awakeEnd.
+            for (let doseIndex = 0; doseIndex < dosesPerDay; doseIndex++) {
+                const doseTime = new Date(awakeStart.getTime() + doseIndex * intervalMinutes * 60000);
+                scheduleArray.push({
+                    doseTime: firebase.firestore.Timestamp.fromDate(doseTime),
+                    medication: medicationName
+                });
+            }
+        }
+  
+        // Update the medication document with the computed schedule.
         return docRef.update({ schedule: scheduleArray });
       })
       .then(() => {
@@ -306,8 +404,8 @@ function addMedication() {
       .catch(error => {
         console.error("Error adding medication or updating schedule:", error);
       });
-  }
-  
+}
+
 
 function saveNoteIssue() {
     const userId = globalUserId;
