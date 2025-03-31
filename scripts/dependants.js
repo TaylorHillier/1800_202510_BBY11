@@ -16,10 +16,23 @@ function getCurrentUser() {
 }
 
 function createForm() {
+    var addDependantSeciton = document.createElement("section");
+    addDependantSeciton.id = "add-dependant-container";
+    addDependantSeciton.className = "add-dependant-container";
+
     var form = document.createElement("form");
     form.setAttribute("method", "post");
     form.setAttribute("action", "addDependant");
     form.id = "dependants-form";
+
+
+    var firstnameLabel = document.createElement("label");
+    firstnameLabel.setAttribute("for", "firstname");
+    firstnameLabel.textContent = "First Name";
+
+    var lastnameLabel = document.createElement("label");
+    lastnameLabel.setAttribute("for", "lastname");
+    lastnameLabel.textContent = "Last Name";
 
     var firstname = document.createElement("input");
     firstname.setAttribute("id", "firstname");
@@ -47,12 +60,15 @@ function createForm() {
     });
 
     // Append inputs to form
+    form.appendChild(firstnameLabel);
     form.appendChild(firstname);
+    form.appendChild(lastnameLabel);
     form.appendChild(lastname);
     form.appendChild(submit);
 
+    addDependantSeciton.appendChild(form);
     if (!document.getElementById("dependants-form")) {
-        document.body.appendChild(form);
+        document.getElementsByTagName('main')[0].appendChild(addDependantSeciton);
     }
 }
 
@@ -112,14 +128,14 @@ document.addEventListener("DOMContentLoaded", function () {
         let addButton = document.getElementById("add-dependant");
         let removeButton = document.getElementById("removeModeBtn"); // Changed to match HTML
         
-        if (addButton && !addButton.dataset.listenerAdded) {
+        if (addButton ) {
             addButton.addEventListener("click", createForm);
-            addButton.dataset.listenerAdded = "true";
+            
         }
         
-        if (removeButton && !removeButton.dataset.listenerAdded) {
+        if (removeButton) {
             removeButton.addEventListener("click", toggleRemoveMode);
-            removeButton.dataset.listenerAdded = "true";
+           
         }
     }
     

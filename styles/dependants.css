@@ -44,6 +44,8 @@
   main {
     flex: 1;
     padding: var(--space-md);
+    position: relative;
+    height: 100vh;
   }
   
   /* Section Styling */
@@ -83,6 +85,24 @@
   
   #dependants-list li:last-child {
     border-bottom: none;
+  }
+
+  .add-dependant-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 80%;
+    left: 0;
+    bottom: 0;
+    height: 80%;
+    margin: 0 auto;
+    background-color: var(--light-gray);
+    border-radius: var(--border-radius);
+  }
+
+  #dependants-form {
+   display: flex;
+   flex-direction: column;
   }
   
   /* Buttons */
