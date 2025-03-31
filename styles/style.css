@@ -262,7 +262,7 @@ ul {
 /* ================================================== */
 /*             RESPONSIVE GRID LAYOUT FOR NAV         */
 /* ================================================== */
-@media (min-width: 768px) {
+@media (min-width: 1268px) {
     .feature-grid {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -826,7 +826,6 @@ body {
   .main-layout {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
   }
   
   /* Cards */
@@ -896,7 +895,7 @@ body {
   }
   
   /* Responsive Layout */
-  @media (min-width: 768px) {
+  @media (min-width: 1268px) {
     main {
       display: grid;
       grid-template-columns: 1fr 1fr;

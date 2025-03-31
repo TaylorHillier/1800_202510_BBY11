@@ -1,0 +1,27 @@
+:root {
+    /* Color Palette */
+    --slate-blue: #6B8FAF;
+    --soft-blue: #9BB5C9;
+    --slate-green: #7A9A7B;
+    --pale-green: #C4D7C4;
+    --navy: #2C3E50;
+    --white: #FFFFFF;
+    --light-gray: #F5F7FA;
+    --medium-gray: #E0E5EC;
+    --dark-text: #2D3748;
+    --light-text: #4A5568;
+  
+    /* Spacing */
+    --space-xs: 0.5rem;
+    --space-sm: 0.75rem;
+    --space-md: 1.25rem;
+    --space-lg: 2rem;
+    --space-xl: 3rem;
+  
+    /* Sizes */
+    --nav-height-mobile: 4rem;
+    --nav-width-desktop: 220px;
+    --border-radius: 8px;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  

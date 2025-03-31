@@ -1,41 +1,27 @@
-/**
- * Calendar Application Script
- *
- * Fetches medication schedules from Firebase Firestore based on user authentication
- * and URL parameters, then displays them in a monthly calendar view with
- * daily details shown below or in a sidebar depending on screen width.
- *
- * Handles two main modes:
- * 1. Caretaker View ('caretaker-schedule' in URL): Shows schedules for all dependants.
- * 2. Single Dependant View ('single_dependant' in URL with 'id' param): Shows schedule for one specific dependant.
- */
-
-// Global variable to store the authenticated user's ID
 var globalUserId;
 
-// --- CalendarApp Class Definition ---
 class CalendarApp {
   constructor(containerId) {
       this.container = document.getElementById(containerId);
-      // Check if the main container element exists in the DOM
+    
       if (!this.container) {
           console.error(`CalendarApp Error: Main container element with ID "${containerId}" not found.`);
-          // Prevent further initialization if the container is missing
+          
           return;
       }
-      // ID for the sub-container that holds the calendar grid and navigation
+  
       this.calenderContainerId = containerId + "-container";
       this.calenderContainer = document.getElementById(this.calenderContainerId);
       this.currentDate = new Date(); // Date object for the currently viewed month
       this.selectedDate = null; // Stores the selected date string ('YYYY-MM-DD')
-      this.sortedSchedule = []; // Array to hold all loaded and sorted medication entries
+      this.sortedSchedule = []; 
 
-      // Determine schedule type based on the current page URL
+  
       const pageurl = window.location.href;
       this.isSingleDependant = pageurl.includes('single_dependant');
       this.isCareTakerSchedule = pageurl.includes('caretaker-schedule');
 
-      // Initialize the calendar structure (navigation, etc.)
+     
       this.init();
   }
 
@@ -63,9 +49,6 @@ class CalendarApp {
 
       // Render the month navigation (prev/next buttons, month display)
       this.renderNavigation();
-
-      // Note: renderCalendar() is now called *after* loadMedicationSchedules finishes
-      // in the main initialization flow.
   }
 
   /**
@@ -104,7 +87,7 @@ class CalendarApp {
    * Includes weekday headers and numbered day cells.
    */
   renderCalendar() {
-      // Ensure the calendar container is valid before proceeding
+     
       if (!this.calenderContainer) {
           console.error("renderCalendar called but calenderContainer is not available.");
           return;
@@ -117,8 +100,13 @@ class CalendarApp {
       const calendarGrid = document.createElement('div');
       calendarGrid.className = 'calendar-grid';
 
+      let weekdays = [];
       // Add weekday headers (Sun, Mon, ...)
-      const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      if(window.innerWidth > 500) {
+       weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      } else {
+        weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+      }
       weekdays.forEach(day => {
           const dayHeader = document.createElement('div');
           dayHeader.className = 'calendar-weekday';
@@ -137,7 +125,7 @@ class CalendarApp {
       // Add empty padding cells for days before the 1st of the month
       for (let i = 0; i < startingDayOfWeek; i++) {
           const paddingDay = document.createElement('div');
-          paddingDay.className = 'calendar-day inactive'; // Style differently
+          paddingDay.className = 'calendar-day inactive'; 
           calendarGrid.appendChild(paddingDay);
       }
 
@@ -186,7 +174,7 @@ class CalendarApp {
       this.selectedDate = dayElement.dataset.date; // Store the selected date string
 
       // Render details based on screen width
-      if (window.innerWidth < 768) { // Example breakpoint for mobile
+      if (window.innerWidth < 768) { 
           this.renderScheduleBelowCalendar();
       } else {
           this.renderSideBar();
@@ -198,31 +186,51 @@ class CalendarApp {
    * @param {number} delta - Change in months (-1 for previous, 1 for next).
    */
   changeMonth(delta) {
-      this.currentDate.setMonth(this.currentDate.getMonth() + delta);
-
-      // Reload schedule data for the new month, then render everything
-      this.loadMedicationSchedules().then(() => {
-          this.renderCalendar(); // Render the grid for the new month
-
-          // After rendering the grid, apply schedule markers/details if needed
-          if (window.innerWidth >= 768) {
-              this.renderScheduleOnCalendar(); // Render dots/summaries on desktop
-          }
-
-          // Clear previous selection and details view when changing month
-          const previousSelected = this.calenderContainer?.querySelector('.selected');
-          if (previousSelected) previousSelected.classList.remove('selected');
-          this.selectedDate = null;
-          this.clearSideBarOrBelow(); // Clear details panel
-
-      }).catch(error => {
-          console.error("Error reloading schedules for new month:", error);
-          // Optionally display error to user
-            if (this.calenderContainer) {
-                this.calenderContainer.innerHTML = "<p>Error loading schedule data for the selected month.</p>";
-            }
-      });
+    this.currentDate.setMonth(this.currentDate.getMonth() + delta);
+  
+    this.loadMedicationSchedules().then(() => {
+      this.renderCalendar();
+  
+      if (window.innerWidth >= 768) {
+        this.renderScheduleOnCalendar();
+      }
+  
+      const previousSelected = this.calenderContainer?.querySelector('.selected');
+      if (previousSelected) previousSelected.classList.remove('selected');
+  
+      // Determine which day to auto-select:
+      const systemDate = new Date();
+      let selectedCell;
+      if (
+        this.currentDate.getMonth() !== systemDate.getMonth() ||
+        this.currentDate.getFullYear() !== systemDate.getFullYear()
+      ) {
+        // New month is not the current month: select the first available day.
+        selectedCell = this.calenderContainer?.querySelector('.calendar-day:not(.inactive)');
+      } else {
+        // New month is the current month: select today's cell.
+        const todayStr = systemDate.toLocaleDateString('en-CA');
+        selectedCell = this.calenderContainer?.querySelector(`.calendar-day[data-date="${todayStr}"]`);
+      }
+      if (selectedCell) this.selectDate(selectedCell);
+  
+      console.log(this.selectedDate);
+  
+      this.clearSideBarOrBelow();
+  
+      if (window.innerWidth < 768) {
+        this.renderScheduleBelowCalendar();
+      } else {
+        this.renderSideBar();
+      }
+    }).catch(error => {
+      console.error("Error reloading schedules for new month:", error);
+      if (this.calenderContainer) {
+        this.calenderContainer.innerHTML = "<p>Error loading schedule data for the selected month.</p>";
+      }
+    });
   }
+  
 
   /**
    * Helper function to clear the content of the sidebar and below-calendar details area.
@@ -233,7 +241,6 @@ class CalendarApp {
       const belowContainer = document.getElementById('daily-schedule-container');
       if (belowContainer) belowContainer.innerHTML = ""; // Clear below-calendar content
   }
-
 
   /**
    * Formats a Date object into a "Month Year" string (e.g., "March 2025").
@@ -507,7 +514,7 @@ class CalendarApp {
 
           for (const groupKey in dateGroups) {
               const events = dateGroups[groupKey];
-              if (events.length === 0) continue; // Skip empty groups
+              //if (events.length === 0) continue; // Skip empty groups
 
                 // Create a container for this specific group (dependant or default)
                 const groupContainer = document.createElement('div');
@@ -527,7 +534,12 @@ class CalendarApp {
               // Add summary text (e.g., "2 events")
               const summary = document.createElement('div');
               summary.className = 'medication-summary';
-              summary.innerText = `${events.length} event${events.length === 1 ? '' : 's'}`;
+
+              if(window.innerWidth > 768){
+                summary.innerText = events.length > 0 ? `${events.length} event${events.length === 1 ? '' : 's'}` : `${events.length} events`;
+              } else {
+                summary.innerHTML = "<span id='mobile-events'></span>";
+              }
               groupContainer.appendChild(summary);
 
               // Append this group's container to the main wrapper in the day cell
@@ -770,17 +782,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 calendar.renderCalendar(); // Render the calendar grid structure
 
-                // Populate schedule details onto the grid (desktop) or select today (mobile)
                 if (window.innerWidth >= 768) {
                     calendar.renderScheduleOnCalendar(); // Add summaries to cells
                 }
 
-                // Optional: Automatically select today's date and show details
-                // This helps show relevant info immediately on load
                 const todayElement = calendar.calenderContainer?.querySelector('.calendar-day.today');
                 if (todayElement) {
                      console.log("Auto-selecting today's date.");
-                    calendar.selectDate(todayElement); // Triggers sidebar/below rendering
+                    calendar.selectDate(todayElement);
                 } else {
                     console.log("Today's date not in current view or not found, no auto-selection.");
                 }
@@ -788,28 +797,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log("Calendar rendering process complete.");
 
             }).catch(error => {
-                // Handle errors during schedule loading or initial rendering
+               
                 console.error("Error during calendar setup (loading/rendering):", error);
                  // Display error within the host element
-                 calendarAppHostElement.innerHTML = ''; // Clear potential partial rendering
+                 calendarAppHostElement.innerHTML = ''; 
                  const errorMsg = document.createElement('p');
                  errorMsg.textContent = `Error loading schedule data: ${error.message || 'Please try again later.'}`;
                  errorMsg.style.color = 'red';
                  calendarAppHostElement.appendChild(errorMsg);
 
             });
-            // --- End Initialize and Load ---
 
         } else {
-            // --- User is Signed Out ---
+ 
             console.log("Firebase Auth: No user signed in.");
-            globalUserId = null; // Clear the global variable
+            globalUserId = null; 
 
-            // Display a message prompting login within the host element
-             calendarAppHostElement.innerHTML = '<p>Please log in to view your medication schedule.</p>';
+            calendarAppHostElement.innerHTML = '<p>Please log in to view your medication schedule.</p>';
 
-            // Also explicitly remove the specific calendar structure if it exists
-            // This prevents showing old calendar structure on logout
             const appSpecificContainer = document.getElementById('calendar-container');
             if (appSpecificContainer) appSpecificContainer.remove();
             const sidebar = document.getElementById('calendar-sidebar');
