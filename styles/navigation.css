@@ -52,6 +52,10 @@ flex-direction: column;
 align-items: center;
 }
 
+.nav-item-unlogged .nav-link {
+    color: var(--dark-text);
+}
+
 .nav-link {
 color: var(--white);
 text-decoration: none;
