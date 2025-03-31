@@ -24,7 +24,7 @@ body {
     height: 100%;
 }
 
-main{
+main {
     width: 100%;
 }
 
@@ -32,7 +32,7 @@ main{
 /*                    MAIN LAYOUT                   */
 /* ================================================== */
 
-@media(min-width:768px){
+@media(min-width:768px) {
     .main-layout {
         display: flex;
     }
@@ -552,18 +552,6 @@ footer {
     margin: 1%;
 }
 
-/* ==================================================== */
-/*               Main.html Dependants                   */
-/* ==================================================== */
-
-.dependant{
-
-}
-
-#dependants{
-
-}
-
 
 /* ================================================== */
 /*                PROFILE STYLES                     */
@@ -574,7 +562,7 @@ footer {
     padding: 2rem;
     background: white;
     border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .profile-header {
@@ -641,11 +629,13 @@ footer {
     border-bottom: 1px solid #eee;
 }
 
-.profile-actions {
+/* .profile-actions {
     display: flex;
     gap: 1rem;
     margin-top: 2rem;
-}
+} */
+
+
 
 @media (max-width: 768px) {
     .profile-header {
@@ -653,6 +643,7 @@ footer {
         text-align: center;
     }
 }
+
 /* Base Styles */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -660,34 +651,32 @@ body {
     color: #2d3748;
     margin: 0;
     padding: 0;
-  }
-  
+}
 
-  /* Cards */
-  .card {
+
+/* Cards */
+.card {
     background: white;
     border-radius: 10px;
     padding: 25px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     margin-bottom: 20px;
-  }
-  
-  .welcome-card {
-    border-left: 5px solid #4a7c59; /* Slate green */
-  }
-  
-  .todo-card {
-    border-left: 5px solid #4c6b95; /* Dark blue */
-  }
-  
-  /* Welcome Section */
-  #welcome_message h1 {
+}
+
+
+.todo-card {
+    border-left: 5px solid #4c6b95;
+    /* Dark blue */
+}
+
+/* Welcome Section */
+#welcome_message h1 {
     color: #2d3748;
     font-size: 2rem;
     margin-bottom: 15px;
-  }
-  
-  .card-button {
+}
+
+.card-button {
     display: inline-block;
     padding: 10px 20px;
     background-color: #4a7c59;
@@ -696,43 +685,46 @@ body {
     border-radius: 5px;
     font-weight: 500;
     transition: background-color 0.3s ease;
-  }
-  
-  .card-button:hover {
+}
+
+.card-button:hover {
     background-color: #3a6a4a;
-  }
-  
-  /* To-Do List */
-  #todo_list h2 {
+}
+
+/* To-Do List */
+#todo_list h2 {
     color: #2d3748;
     font-size: 1.5rem;
     margin-bottom: 15px;
     padding-bottom: 10px;
     border-bottom: 1px solid #e2e8f0;
-  }
-  
-  #today {
+}
+
+#today {
     list-style: none;
     padding: 0;
-  }
-  
-  #today li {
+}
+
+#today li {
     padding: 10px;
     margin-bottom: 8px;
     background-color: #f8fafc;
     border-radius: 5px;
-  }
-  
-  #today:empty::before {
+}
+
+#today:empty::before {
     content: "No medications scheduled for today";
     color: #718096;
     font-style: italic;
-  }
-  
-  /* Responsive Layout */
-  @media (min-width: 1268px) {
-    
-    .welcome-card {
-      grid-column: 1 / -1;
-    }
-  }
+}
+
+.profile-actions button {
+    background-color: var(--slate-blue);
+    color: var(--white);
+    border: none;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin: var(--space-sm) 0;
+}
