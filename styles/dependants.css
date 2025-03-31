@@ -95,7 +95,7 @@
     left: 0;
     bottom: 0;
     height: 80%;
-    margin: 0 auto;
+    margin: auto auto;
     background-color: var(--light-gray);
     border-radius: var(--border-radius);
   }

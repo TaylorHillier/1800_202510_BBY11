@@ -25,6 +25,9 @@ function createForm() {
     form.setAttribute("action", "addDependant");
     form.id = "dependants-form";
 
+    var close = document.createElement("div");
+    close.id = "close-form";
+    close.textContent = "x";
 
     var firstnameLabel = document.createElement("label");
     firstnameLabel.setAttribute("for", "firstname");
@@ -60,11 +63,16 @@ function createForm() {
     });
 
     // Append inputs to form
+    form.appendChild(close);
     form.appendChild(firstnameLabel);
     form.appendChild(firstname);
     form.appendChild(lastnameLabel);
     form.appendChild(lastname);
     form.appendChild(submit);
+
+    close.addEventListener("click", () => {
+        addDependantSeciton.remove();
+    })
 
     addDependantSeciton.appendChild(form);
     if (!document.getElementById("dependants-form")) {
