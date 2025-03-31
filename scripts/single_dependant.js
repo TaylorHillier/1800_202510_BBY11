@@ -10,7 +10,6 @@ function getCurrentDependant() {
     const url = new URLSearchParams(window.location.search);
     dependant = url.get('id');
 
-    console.log(dependant);
     firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
             globalUserId = user.uid;
@@ -21,10 +20,12 @@ function getCurrentDependant() {
                 const data = dependantDoc.data();
                 document.getElementById("dependant-info").innerHTML = data.firstname + " " + data.lastname;
             }
+            loadNotesIssues();
         } else {
             console.log("No user logged in");
         }
     });
+    
 }
 getCurrentDependant();
 
@@ -343,6 +344,8 @@ function loadNotesIssues() {
     const userId = globalUserId;
     const notesIssuesContainer = document.getElementById('view-notes-issues');
     notesIssuesContainer.innerHTML = '';
+
+    console.log("hello");
 
     firebase.firestore()
         .collection('users')
