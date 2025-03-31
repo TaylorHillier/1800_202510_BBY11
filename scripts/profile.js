@@ -21,13 +21,11 @@ function loadUserProfile(user) {
     displayBasicInfo(user);
 
     // 2. Load user stats
-    loadUserStats(user.uid);
+    //loadUserStats(user.uid);
 
     // 3. Load recent activity
-    loadRecentActivity(user.uid);
+    //loadRecentActivity(user.uid);
 
-    // 4. Check and update profile picture
-    updateProfilePicture(user);
 }
 
 function displayBasicInfo(user) {
@@ -45,91 +43,75 @@ function displayBasicInfo(user) {
     document.getElementById('account-created').textContent = `Member since: ${formattedDate}`;
 }
 
-async function loadUserStats(userId) {
-    try {
-        // 1. Load dependants count
-        const depsSnapshot = await firebase.firestore()
-            .collection('users')
-            .doc(userId)
-            .collection('dependants')
-            .get();
-        document.getElementById('dependants-count').textContent = depsSnapshot.size;
+// async function loadUserStats(userId) {
+//     try {
+//         // 1. Load dependants count
+//         const depsSnapshot = await firebase.firestore()
+//             .collection('users')
+//             .doc(userId)
+//             .collection('dependants')
+//             .get();
+//         document.getElementById('dependants-count').textContent = depsSnapshot.size;
 
-        // 2. Load upcoming tasks
-        const now = new Date();
-        const tasksSnapshot = await firebase.firestore()
-            .collection('tasks')
-            .where('caretakerId', '==', userId)
-            .where('dueDate', '>=', now)
-            .get();
-        document.getElementById('upcoming-tasks').textContent = tasksSnapshot.size;
+//         // 2. Load upcoming tasks
+//         const now = new Date();
+//         const tasksSnapshot = await firebase.firestore()
+//             .collection('tasks')
+//             .where('caretakerId', '==', userId)
+//             .where('dueDate', '>=', now)
+//             .get();
+//         document.getElementById('upcoming-tasks').textContent = tasksSnapshot.size;
 
-        // 3. Load completed tasks
-        const completedSnapshot = await firebase.firestore()
-            .collection('tasks')
-            .where('caretakerId', '==', userId)
-            .where('status', '==', 'completed')
-            .get();
-        document.getElementById('completed-tasks').textContent = completedSnapshot.size;
+//         // 3. Load completed tasks
+//         const completedSnapshot = await firebase.firestore()
+//             .collection('tasks')
+//             .where('caretakerId', '==', userId)
+//             .where('status', '==', 'completed')
+//             .get();
+//         document.getElementById('completed-tasks').textContent = completedSnapshot.size;
 
-    } catch (error) {
-        console.error("Error loading user stats:", error);
-    }
-}
+//     } catch (error) {
+//         console.error("Error loading user stats:", error);
+//     }
+// }
 
-async function loadRecentActivity(userId) {
-    const activityList = document.getElementById('activity-list');
-    activityList.innerHTML = '<li>Loading activities...</li>';
+// async function loadRecentActivity(userId) {
+//     const activityList = document.getElementById('activity-list');
+//     activityList.innerHTML = '<li>Loading activities...</li>';
 
-    try {
-        const snapshot = await firebase.firestore()
-            .collection('activity')
-            .where('userId', '==', userId)
-            .orderBy('timestamp', 'desc')
-            .limit(5)
-            .get();
+//     try {
+//         const snapshot = await firebase.firestore()
+//             .collection('activity')
+//             .where('userId', '==', userId)
+//             .orderBy('timestamp', 'desc')
+//             .limit(5)
+//             .get();
 
-        if (snapshot.empty) {
-            activityList.innerHTML = '<li>No recent activity</li>';
-            return;
-        }
+//         if (snapshot.empty) {
+//             activityList.innerHTML = '<li>No recent activity</li>';
+//             return;
+//         }
 
-        activityList.innerHTML = '';
-        snapshot.forEach(doc => {
-            const activity = doc.data();
-            const li = document.createElement('li');
-            li.innerHTML = `
-                <span class="activity-icon">${getActivityIcon(activity.type)}</span>
-                <div>
-                    <span class="activity-text">${activity.message}</span>
-                    <span class="activity-time">${formatActivityTime(activity.timestamp)}</span>
-                </div>
-            `;
-            activityList.appendChild(li);
-        });
-    } catch (error) {
-        activityList.innerHTML = '<li>Error loading activities</li>';
-        console.error("Error loading activity:", error);
-    }
-}
-
-function updateProfilePicture(user) {
-    if (user.photoURL) {
-        document.getElementById('profile-photo').src = user.photoURL;
-        // Also update navbar avatar if exists
-        const navbarAvatar = document.getElementById('navbar-avatar');
-        if (navbarAvatar) navbarAvatar.src = user.photoURL;
-    }
-}
+//         activityList.innerHTML = '';
+//         snapshot.forEach(doc => {
+//             const activity = doc.data();
+//             const li = document.createElement('li');
+//             li.innerHTML = `
+//                 <span class="activity-icon">${getActivityIcon(activity.type)}</span>
+//                 <div>
+//                     <span class="activity-text">${activity.message}</span>
+//                     <span class="activity-time">${formatActivityTime(activity.timestamp)}</span>
+//                 </div>
+//             `;
+//             activityList.appendChild(li);
+//         });
+//     } catch (error) {
+//         activityList.innerHTML = '<li>Error loading activities</li>';
+//         console.error("Error loading activity:", error);
+//     }
+// }
 
 function setupEventListeners() {
-    // Photo upload handler
-    document.getElementById('photo-upload').addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            await uploadProfilePhoto(file);
-        }
-    });
 
     // Edit profile button
     document.getElementById('edit-profile').addEventListener('click', () => {
@@ -147,42 +129,6 @@ function setupEventListeners() {
             window.location.href = 'login.html';
         });
     });
-}
-
-async function uploadProfilePhoto(file) {
-    const user = firebase.auth().currentUser;
-    if (!user) return;
-
-    try {
-        // Show loading state
-        const photoElement = document.getElementById('profile-photo');
-        photoElement.style.opacity = '0.5';
-
-        // Upload to Firebase Storage
-        const storageRef = firebase.storage().ref(`profile_photos/${user.uid}`);
-        const uploadTask = storageRef.put(file);
-
-        await uploadTask;
-        const downloadURL = await storageRef.getDownloadURL();
-
-        // Update user profile
-        await user.updateProfile({
-            photoURL: downloadURL
-        });
-
-        // Update UI
-        photoElement.src = downloadURL;
-        photoElement.style.opacity = '1';
-
-        // Update navbar avatar if exists
-        const navbarAvatar = document.getElementById('navbar-avatar');
-        if (navbarAvatar) navbarAvatar.src = downloadURL;
-
-    } catch (error) {
-        console.error("Error uploading photo:", error);
-        alert("Couldn't update profile photo. Please try again.");
-        document.getElementById('profile-photo').style.opacity = '1';
-    }
 }
 
 // Helper Functions
