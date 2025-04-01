@@ -26,8 +26,15 @@
                 <h1 id="dependant-info"></h1>
                 <div class="summary-section">
                     <h3>Dependant Summary</h3>
-                    <textarea id="summary-text" placeholder="Enter summary..."></textarea>
-                    <button id="save-summary">Save Summary</button>
+                    <div id="summary-view">
+                        <p id="summary-display">Loading summary...</p>
+                        <button id="edit-summary">Edit Summary</button>
+                    </div>
+                    <div id="summary-edit" style="display:none">
+                        <textarea id="summary-text"></textarea>
+                        <button id="save-summary">Save</button>
+                        <button id="cancel-edit">Cancel</button>
+                    </div>
                     <div id="summary-feedback" style="display:none;"></div>
                 </div>
                 Here are your medications for the day:

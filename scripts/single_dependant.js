@@ -1,5 +1,7 @@
 var dependant;
 var globalUserId;
+let editMode = false;
+let currentSummary = "";
 
 let button = document.getElementById("addMedication");
 if (button) {
@@ -14,19 +16,27 @@ function getCurrentDependant() {
         if (user) {
             globalUserId = user.uid;
 
-            const dependantDoc = await firebase.firestore().collection('users').doc(user.uid).collection('dependants').doc(dependant).get();
+            const dependantDoc = await firebase.firestore()
+                .collection('users')
+                .doc(user.uid)
+                .collection('dependants')
+                .doc(dependant)
+                .get();
 
             if (dependantDoc.exists) {
                 const data = dependantDoc.data();
                 document.getElementById("dependant-info").innerHTML = data.firstname + " " + data.lastname;
             }
+            
             loadNotesIssues();
+            initializeSummary(); // Initialize summary after everything else is ready
         } else {
             console.log("No user logged in");
         }
     });
-
 }
+
+
 getCurrentDependant();
 
 // Add this right after getCurrentDependant() call
@@ -630,4 +640,124 @@ function loadNotesIssues() {
         .catch(error => {
             console.error('Error loading notes/issues: ', error);
         });
+}
+function initializeSummary() {
+    // Double-check we have required values
+    if (!globalUserId || !dependant) {
+        console.error("Missing required values for summary initialization");
+        return;
+    }
+    
+    setupSummary();
+    loadSummary();
+}
+
+function setupSummary() {
+    console.log("Setting up summary buttons"); // Debug log
+    
+    const editButton = document.getElementById("edit-summary");
+    const saveButton = document.getElementById("save-summary");
+    const cancelButton = document.getElementById("cancel-edit");
+    
+    if (!editButton || !saveButton || !cancelButton) {
+        console.error("Missing summary UI elements");
+        return;
+    }
+    
+    editButton.addEventListener("click", toggleEditMode);
+    saveButton.addEventListener("click", saveSummary);
+    cancelButton.addEventListener("click", toggleEditMode);
+}
+
+function toggleEditMode() {
+    const summaryView = document.getElementById("summary-view");
+    const summaryEdit = document.getElementById("summary-edit");
+    const summaryText = document.getElementById("summary-text");
+    
+    if (!summaryView || !summaryEdit || !summaryText) {
+        console.error("Missing summary UI elements");
+        return;
+    }
+    
+    if (summaryEdit.style.display === "none" || !summaryEdit.style.display) {
+        summaryView.style.display = "none";
+        summaryEdit.style.display = "block";
+        summaryText.value = currentSummary;
+        summaryText.focus();
+    } else {
+        summaryView.style.display = "block";
+        summaryEdit.style.display = "none";
+    }
+}
+
+function loadSummary() {
+    console.log("Loading summary for", globalUserId, dependant); // Debug log
+    
+    firebase.firestore()
+        .collection("users")
+        .doc(globalUserId)
+        .collection("dependants")
+        .doc(dependant)
+        .get()
+        .then(doc => {
+            if (doc.exists) {
+                currentSummary = doc.data().summary || "No summary yet. Click Edit to add one.";
+                document.getElementById("summary-display").textContent = currentSummary;
+                console.log("Summary loaded:", currentSummary); // Debug log
+            } else {
+                console.log("No summary found for this dependant");
+            }
+        })
+        .catch(error => {
+            console.error("Error loading summary: ", error);
+            document.getElementById("summary-display").textContent = "Error loading summary";
+        });
+}
+
+function saveSummary() {
+    const newSummary = document.getElementById("summary-text").value;
+    const feedback = document.getElementById("summary-feedback");
+    
+    if (!newSummary.trim()) {
+        feedback.textContent = "Please enter a summary";
+        feedback.style.display = "block";
+        feedback.style.color = "red";
+        return;
+    }
+
+    firebase.firestore()
+        .collection("users")
+        .doc(globalUserId)
+        .collection("dependants")
+        .doc(dependant)
+        .update({
+            summary: newSummary,
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        })
+        .then(() => {
+            currentSummary = newSummary;
+            document.getElementById("summary-display").textContent = newSummary;
+            
+            feedback.textContent = "✓ Summary saved";
+            feedback.style.display = "block";
+            feedback.style.color = "green";
+            
+            setTimeout(() => {
+                feedback.style.display = "none";
+            }, 2000);
+            
+            toggleEditMode();
+        })
+        .catch(error => {
+            console.error("Error saving summary: ", error);
+            feedback.textContent = "Error saving summary";
+            feedback.style.display = "block";
+            feedback.style.color = "red";
+        });
+}
+
+// Helper function to get dependant ID from URL
+function getDependantId() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('id');
 }
