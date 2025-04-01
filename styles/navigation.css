@@ -121,4 +121,8 @@
   .nav-item p {
     display: none;
   }
-} 
+
+  .nav-list {
+    margin-top: 2%;
+  }
+}

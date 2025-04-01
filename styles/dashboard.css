@@ -82,7 +82,7 @@ main {
   main {
     flex: 1;
     margin-bottom: 0;
-    margin-left: var(--nav-width-desktop);
+    /* margin-left: var(--nav-width-desktop); */
   }
 }
 
