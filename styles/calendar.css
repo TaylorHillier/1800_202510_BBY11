@@ -1,240 +1,247 @@
 :root {
-    /* Color Palette */
-    --slate-blue: #6B8FAF;
-    --soft-blue: #9BB5C9;
-    --slate-green: #7A9A7B;
-    --pale-green: #C4D7C4;
-    --navy: #2C3E50;
-    --white: #FFFFFF;
-    --light-gray: #F5F7FA;
-    --medium-gray: #E0E5EC;
-    --dark-text: #2D3748;
-    --light-text: #4A5568;
-  
-    /* Spacing */
-    --space-xs: 0.5rem;
-    --space-sm: 0.75rem;
-    --space-md: 1.25rem;
-    --space-lg: 2rem;
-    --space-xl: 3rem;
-  
-    /* Sizes */
-    --nav-height-mobile: 4rem;
-    --nav-width-desktop: 220px;
-    --border-radius: 8px;
-    --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  /* Global Styles */
-  *,
-  *::before,
-  *::after {
-    box-sizing: border-box;
-  }
-  
-  body {
-    margin: 0;
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    background-color: var(--light-gray);
-    color: var(--dark-text);
-    line-height: 1.6;
-  }
+  /* Color Palette */
+  --slate-blue: #6B8FAF;
+  --soft-blue: #9BB5C9;
+  --slate-green: #7A9A7B;
+  --pale-green: #C4D7C4;
+  --navy: #2C3E50;
+  --white: #FFFFFF;
+  --light-gray: #F5F7FA;
+  --medium-gray: #E0E5EC;
+  --dark-text: #2D3748;
+  --light-text: #4A5568;
 
+  /* Spacing */
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1.25rem;
+  --space-lg: 2rem;
+  --space-xl: 3rem;
 
-  
-  section {
-    margin-bottom: var(--space-lg);
-    background-color: var(--white);
-    padding: var(--space-xs);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
-
-  }
-  
-
-  h1, h2, h3 {
-    margin-top: 0;
-    color: var(--navy);
-  }
-  
-  button {
-    background-color: var(--slate-blue);
-    color: var(--white);
-    border: none;
-    padding: var(--space-sm) var(--space-md);
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  
-  button:hover {
-    background-color: var(--soft-blue);
-  }
-  
-  textarea {
-    width: 100%;
-    padding: var(--space-sm);
-    border: 1px solid var(--medium-gray);
-    border-radius: var(--border-radius);
-    resize: vertical;
-  }
-  
-  /* List Styling */
-  ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  
-  li:not('.nav-item'){
-    padding: var(--space-sm) 0;
-    border-bottom: 1px solid var(--medium-gray);
-  }
-  
-  /* Dependants List Styling */
-  #dependants-list li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  /* Calendar Styling */
-  
-  #calendar-container {
-    width: 100%;
-  }
-
-@media(min-width: 768px) {
-    #calendar {
-        display: grid;
-        grid-template-columns: 2fr 1fr;
-    }
+  /* Sizes */
+  --nav-height-mobile: 4rem;
+  --nav-width-desktop: 220px;
+  --border-radius: 8px;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-  /* Navigation */
-  .calendar-navigation {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--space-sm);
-    padding: var(--space-sm);
-    background-color: var(--pale-green);
-    border-radius: var(--border-radius);
-    font-weight: bold;
-  }
-  
-  /* Grid Layout */
-  .calendar-grid {
+/* Global Styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--light-gray);
+  color: var(--dark-text);
+  line-height: 1.6;
+}
+
+
+
+section {
+  margin-bottom: var(--space-lg);
+  background-color: var(--white);
+  padding: var(--space-xs);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+
+}
+
+
+h1,
+h2,
+h3 {
+  margin-top: 0;
+  color: var(--navy);
+}
+
+button {
+  background-color: var(--slate-blue);
+  color: var(--white);
+  border: none;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: var(--soft-blue);
+}
+
+textarea {
+  width: 100%;
+  padding: var(--space-sm);
+  border: 1px solid var(--medium-gray);
+  border-radius: var(--border-radius);
+  resize: vertical;
+}
+
+/* List Styling */
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+li:not('.nav-item') {
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--medium-gray);
+}
+
+/* Dependants List Styling */
+#dependants-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Calendar Styling */
+
+#calendar-container {
+  width: 100%;
+}
+
+@media(min-width: 768px) {
+  #calendar {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: clamp(1px, 0.2rem, var(--space-sm));
-    text-align: center;
-    background-color: var(--white);
-    padding: var(--space-xs);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
+    grid-template-columns: 2fr 1fr;
   }
-  
-  /* Weekday Headers */
-  .calendar-weekday {
-    background-color: var(--medium-gray);
-    color: var(--dark-text);
-    padding: var(--space-xs) 0;
-    border-radius: var(--border-radius);
-    font-weight: bold;
-  }
-  
-  /* Day Cells */
-  .calendar-day {
-    border: 1px solid var(--medium-gray);
-    padding: clamp(0.1rem, 1vw, var(--space-md));
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s;
-    border-radius: var(--border-radius);
-    font-size: clamp(12px, 2vw, 16px);
-  }
-  
-  .calendar-day:hover {
-    background-color: var(--soft-blue);
-    transform: translateY(-2px);
-  }
-  
-  .calendar-day.inactive {
-    color: var(--light-text);
-    background-color: var(--light-gray);
-    cursor: default;
-  }
-  
-  .calendar-day.today {
-    background-color: var(--pale-green);
-    font-weight: bold;
-  }
-  
-  .calendar-day.selected {
-    background-color: var(--slate-blue);
-    color: var(--white);
-  }
-  
-  /* Medication Entry Styling */
-  .medication-entry {
-    background-color: var(--soft-blue);
-    color: var(--white);
-    margin-top: var(--space-xs);
-    padding: var(--space-xs);
-    border-radius: var(--border-radius);
-    font-size: 0.9rem;
-  }
-  
-  .event-quant{
-    background-color: #2C3E50;
-    color: white;
-    border-radius: 100%;
-    padding: 0.2rem;
-    height: 20px;
-    width: 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
+}
 
-  .medication-summary {
-    font-size: 12px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  };
-  
-  /* Entry Container Styling */
-  .entry-container {
-    white-space: nowrap;
-  }
+/* Navigation */
+.calendar-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-sm);
+  padding: var(--space-sm);
+  background-color: var(--pale-green);
+  border-radius: var(--border-radius);
+  font-weight: bold;
+}
 
-  .entry-header-small {
-    display: flex;
-    flex-wrap: nowrap;
-    white-space: nowrap;
-    justify-content: center;
-    gap: 0.5rem;
-  }
-  
-  /* Daily Schedule Container (Mobile) */
-  #daily-schedule-container {
-    background-color: var(--white);
-    padding: var(--space-md);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
-    margin-top: var(--space-lg);
-  }
-  
-  /* Responsive Enhancements */
-  @media (max-width: 767px) {
-    
-    header.navigation {
+/* Grid Layout */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: clamp(1px, 0.2rem, var(--space-sm));
+  text-align: center;
+  background-color: var(--white);
+  padding: var(--space-xs);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+}
+
+/* Weekday Headers */
+.calendar-weekday {
+  background-color: var(--medium-gray);
+  color: var(--dark-text);
+  padding: var(--space-xs) 0;
+  border-radius: var(--border-radius);
+  font-weight: bold;
+}
+
+/* Day Cells */
+.calendar-day {
+  border: 1px solid var(--medium-gray);
+  padding: clamp(0.1rem, 1vw, var(--space-md));
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s;
+  border-radius: var(--border-radius);
+  font-size: clamp(12px, 2vw, 16px);
+}
+
+.calendar-day:hover {
+  background-color: var(--soft-blue);
+  transform: translateY(-2px);
+}
+
+.calendar-day.inactive {
+  color: var(--light-text);
+  background-color: var(--light-gray);
+  cursor: default;
+}
+
+.calendar-day.today {
+  background-color: var(--pale-green);
+  font-weight: bold;
+}
+
+.calendar-day.selected {
+  background-color: var(--slate-blue);
+  color: var(--white);
+}
+
+/* Medication Entry Styling */
+.medication-entry {
+  background-color: var(--soft-blue);
+  color: var(--white);
+  margin-top: var(--space-xs);
+  padding: var(--space-xs);
+  border-radius: var(--border-radius);
+  font-size: 0.9rem;
+}
+
+.event-quant {
+  background-color: #2C3E50;
+  color: white;
+  border-radius: 100%;
+  padding: 0.2rem;
+  height: 20px;
+  width: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.medication-summary {
+  font-size: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+;
+
+/* Entry Container Styling */
+.entry-container {
+  white-space: nowrap;
+}
+
+.entry-header-small {
+  display: flex;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Daily Schedule Container (Mobile) */
+#daily-schedule-container {
+  background-color: var(--white);
+  padding: var(--space-md);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  margin-top: var(--space-lg);
+}
+
+#calendar-sidebar {
+  margin: 2%;
+}
+
+/* Responsive Enhancements */
+@media (max-width: 767px) {
+
+  /* header.navigation {
       padding: var(--space-sm);
-    }
-    
-    button {
-      padding: var(--space-xs) var(--space-sm);
-    }
+    } */
+
+  button {
+    padding: var(--space-xs) var(--space-sm);
   }
-  
+}

@@ -717,7 +717,7 @@ body {
     color: #718096;
     font-style: italic;
 }
-
+/* profile buttons */
 .profile-actions button {
     background-color: var(--slate-blue);
     color: var(--white);
@@ -727,4 +727,32 @@ body {
     cursor: pointer;
     transition: background-color 0.3s ease;
     margin: var(--space-sm) 0;
+}
+
+.profile-actions button:hover {
+    background-color: var(--soft-blue);
+}
+
+
+/* summary buttons */
+#summary-display {
+    min-height: 100px;
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 10px;
+    white-space: pre-wrap;
+    background-color: #f9f9f9;
+}
+
+#summary-edit textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+#summary-edit button, #edit-summary {
+    padding: 5px 15px;
+    margin-right: 10px;
+    cursor: pointer;
 }
