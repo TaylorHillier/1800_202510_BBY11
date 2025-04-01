@@ -131,11 +131,13 @@ async function loadUpcomingTasksCount(userId) {
             .collection('dependants')
             .get();
 
-        let upcomingTasksCount = 0;
+        let totalTasksCount = 0;
+        let completedTasksCount = 0;
 
         for (const dependantDoc of dependantsSnapshot.docs) {
             const dependantId = dependantDoc.id;
             
+            // Count total tasks
             const medicationsSnapshot = await firebase.firestore()
                 .collection('users')
                 .doc(userId)
@@ -158,18 +160,33 @@ async function loadUpcomingTasksCount(userId) {
                         }
 
                         if (doseDate >= todayStart && doseDate < tomorrowStart) {
-                            upcomingTasksCount++;
+                            totalTasksCount++;
                         }
                     });
                 }
             }
+
+            // Count completed tasks
+            const completedTasksSnapshot = await firebase.firestore()
+                .collection('users')
+                .doc(userId)
+                .collection('dependants')
+                .doc(dependantId)
+                .collection('completed-tasks')
+                .where('completedAt', '>=', todayStart)
+                .where('completedAt', '<', tomorrowStart)
+                .get();
+
+            completedTasksCount += completedTasksSnapshot.size;
         }
 
-        document.getElementById('upcoming-tasks').textContent = upcomingTasksCount;
+        const upcomingTasksCount = totalTasksCount - completedTasksCount;
+        
+        document.getElementById('upcoming-tasks').textContent = upcomingTasksCount > 0 ? upcomingTasksCount : 0;
         
         const statCard = document.querySelector('.stat-card[onclick*="caretaker-schedule.html"] h3');
         if (statCard) {
-            statCard.textContent = upcomingTasksCount;
+            statCard.textContent = upcomingTasksCount > 0 ? upcomingTasksCount : 0;
         }
     } catch (error) {
         console.error("Error loading upcoming tasks count:", error);
