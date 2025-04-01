@@ -229,9 +229,9 @@
   /* Responsive Enhancements */
   @media (max-width: 767px) {
     
-    header.navigation {
+    /* header.navigation {
       padding: var(--space-sm);
-    }
+    } */
     
     button {
       padding: var(--space-xs) var(--space-sm);

@@ -717,14 +717,3 @@ body {
     color: #718096;
     font-style: italic;
 }
-
-.profile-actions button {
-    background-color: var(--slate-blue);
-    color: var(--white);
-    border: none;
-    padding: var(--space-sm) var(--space-md);
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    margin: var(--space-sm) 0;
-}

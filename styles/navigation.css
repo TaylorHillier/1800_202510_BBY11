@@ -126,3 +126,8 @@
     margin-top: 2%;
   }
 }
+
+/* For logged-in users */
+.nav-list svg path {
+  fill: white;
+}
