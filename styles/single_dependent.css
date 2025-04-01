@@ -24,4 +24,21 @@
     --border-radius: 8px;
     --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
+
+  .medication-form {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80%;
+    width: 80%;
+    background-color: var(--slate-blue);
+    margin: auto;
+  }
+
+  main{
+    position: relative;
+    flex: 1;
+  }
   

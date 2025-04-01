@@ -133,6 +133,7 @@ function getMedicationList() {
                     // Medication details text
                     const medInfo = document.createElement("span");
                     medInfo.textContent = `${medData.name}: ${medData.numPillsPerDose} times today`;
+                    medInfo.textContent += medData.continuous ? '(continuous)' : '';
                     medInfo.className = "medication-info";
 
                     // Delete button with conditional display
@@ -239,7 +240,12 @@ function checkIfLastMedication() {
 getMedicationList();
 
 function createMedicationForm() {
+    let container = document.createElement('div');
+    container.className = 'medication-form';
+    container.id = 'medication-form';
+
     let button = document.getElementById("addMedication");
+    let anchor = document.getElementsByTagName('main')[0];
 
     // Prevent duplicate forms
     if (document.getElementById("newMedication-form")) {
@@ -255,10 +261,12 @@ function createMedicationForm() {
     // Get today's date (YYYY-MM-DD) for min attributes
     const now = new Date().toLocaleDateString("en-CA");
     
+    console.log(now);
     const today = now.split("T")[0];
+    const time = new Date(Date.now()).toTimeString().slice(0,5);
     const hours = now.padStart(2, '0');
     const minutes = now.padStart(2, '0');
-    const time = `${hours}:${minutes}`; // format: "HH:MM"
+    
 
     // Start Date
     var startDateLabel = document.createElement("label");
@@ -292,7 +300,7 @@ function createMedicationForm() {
     startTime.setAttribute("id", "start-time");
     startTime.setAttribute("type", "time");
     startTime.setAttribute("name", "start-time");
-    startTime.setAttribute("value", "08:00"); // now it's set correctly
+    startTime.setAttribute("value", `${time}`); // now it's set correctly
 
     // End Time
     var endTimeLabel = document.createElement("label");
@@ -340,7 +348,7 @@ function createMedicationForm() {
     // Continuous Checkbox
     var continuousLabel = document.createElement("label");
     continuousLabel.setAttribute("for", "continuous");
-    continuousLabel.textContent = "Continuous: ";
+    continuousLabel.textContent = "Continuous: (Will auto set 3 months)";
 
     var continuous = document.createElement("input");
     continuous.setAttribute("id", "continuous");
@@ -405,7 +413,9 @@ function createMedicationForm() {
 
     form.appendChild(submit);
 
-    button.insertAdjacentElement("afterend", form);
+    container.appendChild(form);
+
+    anchor.insertAdjacentElement("beforeend", container);
 }
 
 function addMedication() {
@@ -424,6 +434,7 @@ function addMedication() {
 
     // Get form values
     const startDateStr = document.getElementById("start-date").value.trim();
+    console.log(startDateStr);
     const endDateStr = document.getElementById("end-date").value.trim();
     const startTimeStr = document.getElementById("start-time").value.trim();
     const endTimeStr = document.getElementById("end-time").value.trim();
@@ -444,11 +455,10 @@ function addMedication() {
         return;
     }
 
-    // Check that the start date is not in the past
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const startDateObj = new Date(startDateStr);
-    if (startDateObj < today) {
+    const startDateObj = new Date(startDateStr).toLocaleDateString('en-CA');
+    console.log(startDateObj);
+    console.log(Date(Date.now()));
+    if (startDateObj < new Date(Date.now())) {
         console.error("Start date cannot be in the past");
         return;
     }
@@ -460,14 +470,14 @@ function addMedication() {
             return;
         }
 
-        const endDateObj = new Date(endDateStr);
+        const endDateObj = new Date(endDateStr).toLocaleDateString('en-CA');
         if (endDateObj < startDateObj) {
             console.error("End date must be after the start date");
             return;
         }
 
         // If the start and end dates are the same, ensure the end time is after the start time
-        if (startDateObj.toDateString() === endDateObj.toDateString()) {
+        if (startDateObj === endDateObj) {
             const [sHour, sMin] = startTimeStr.split(":").map(Number);
             const [eHour, eMin] = endTimeStr.split(":").map(Number);
             if (eHour < sHour || (eHour === sHour && eMin <= sMin)) {
@@ -512,7 +522,7 @@ function addMedication() {
             let dayEnd;
             if (isContinuous) {
                 dayEnd = new Date(dayStart);
-                dayEnd.setDate(dayEnd.getDate() + 6); // 7 days total
+                dayEnd.setDate(dayEnd.getDate() + 90); // 7 days total
             } else {
                 dayEnd = new Date(endDateStr);
             }
@@ -621,9 +631,10 @@ function loadNotesIssues() {
             querySnapshot.forEach(doc => {
                 const entry = doc.data();
                 const timestamp = entry.timestamp.toDate().toLocaleString();
-
+                
                 const noteIssueElement = document.createElement('p');
                 noteIssueElement.textContent = `${timestamp}: ${entry.content}`;
+               
                 notesIssuesContainer.appendChild(noteIssueElement);
             });
         })
