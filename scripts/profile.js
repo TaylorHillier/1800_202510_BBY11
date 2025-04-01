@@ -10,23 +10,235 @@ function initializeProfilePage() {
             loadUserProfile(user);
             setupEventListeners();
         } else {
-            // Redirect to login if not authenticated
             window.location.href = 'login.html';
         }
     });
 }
 
+async function loadRecentActivity(userId) {
+    try {
+        const activityList = document.getElementById('activity-list');
+        activityList.innerHTML = '<li>Loading activity...</li>';
+
+        const dependantsSnapshot = await firebase.firestore()
+            .collection('users')
+            .doc(userId)
+            .collection('dependants')
+            .get();
+
+        let allCompletedTasks = [];
+
+        for (const dependantDoc of dependantsSnapshot.docs) {
+            const dependantId = dependantDoc.id;
+            const dependantData = dependantDoc.data();
+            
+            const completedTasksSnapshot = await firebase.firestore()
+                .collection('users')
+                .doc(userId)
+                .collection('dependants')
+                .doc(dependantId)
+                .collection('completed-tasks')
+                .orderBy('completedAt', 'desc')
+                .limit(3)
+                .get();
+
+            completedTasksSnapshot.forEach(taskDoc => {
+                allCompletedTasks.push({
+                    ...taskDoc.data(),
+                    dependantName: dependantData.firstname || 'Unknown',
+                    dependantLName: dependantData.lastname || '',
+                    id: taskDoc.id,
+                    timestamp: taskDoc.data().completedAt
+                });
+            });
+        }
+
+        allCompletedTasks.sort((a, b) => b.timestamp.toMillis() - a.timestamp.toMillis());
+        
+        const recentTasks = allCompletedTasks.slice(0, 3);
+        
+        displayRecentActivity(recentTasks);
+    } catch (error) {
+        console.error("Error loading recent activity:", error);
+        document.getElementById('activity-list').innerHTML = 
+            '<li>Error loading recent activity</li>';
+    }
+}
+
+function displayRecentActivity(tasks) {
+    const activityList = document.getElementById('activity-list');
+    
+    if (!activityList) {
+        console.error("Activity list element not found");
+        return;
+    }
+
+    if (tasks.length === 0) {
+        activityList.innerHTML = '<li>No recent activity</li>';
+        return;
+    }
+
+    activityList.innerHTML = tasks.map(task => {
+        const date = task.completedAt.toDate();
+        const formattedDate = formatActivityTime(task.completedAt);
+        
+        return `
+            <li class="activity-item">
+                <span class="activity-icon">✓</span>
+                <div class="activity-details">
+                    <span class="activity-text">
+                        Gave ${task.numPills || '1'} ${task.medicationName} to 
+                        ${task.dependantName} ${task.dependantLName}
+                    </span>
+                    <span class="activity-time">${formattedDate}</span>
+                </div>
+            </li>
+        `;
+    }).join('');
+}
+
+async function loadDependantsCount(userId) {
+    try {
+        const dependantsSnapshot = await firebase.firestore()
+            .collection('users')
+            .doc(userId)
+            .collection('dependants')
+            .get();
+
+        const count = dependantsSnapshot.size;
+        document.getElementById('dependants-count').textContent = count;
+        
+        const statCard = document.querySelector('.stat-card[onclick*="dependants.html"] h3');
+        if (statCard) {
+            statCard.textContent = count;
+        }
+    } catch (error) {
+        console.error("Error loading dependants count:", error);
+        document.getElementById('dependants-count').textContent = '0';
+    }
+}
+
+async function loadUpcomingTasksCount(userId) {
+    try {
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const tomorrowStart = new Date(todayStart);
+        tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+
+        const dependantsSnapshot = await firebase.firestore()
+            .collection('users')
+            .doc(userId)
+            .collection('dependants')
+            .get();
+
+        let upcomingTasksCount = 0;
+
+        for (const dependantDoc of dependantsSnapshot.docs) {
+            const dependantId = dependantDoc.id;
+            
+            const medicationsSnapshot = await firebase.firestore()
+                .collection('users')
+                .doc(userId)
+                .collection('dependants')
+                .doc(dependantId)
+                .collection('medications')
+                .get();
+
+            for (const medDoc of medicationsSnapshot.docs) {
+                const medData = medDoc.data();
+                if (medData.schedule && Array.isArray(medData.schedule)) {
+                    medData.schedule.forEach(scheduleItem => {
+                        let doseDate;
+                        if (scheduleItem.doseTime && scheduleItem.doseTime.toDate) {
+                            doseDate = scheduleItem.doseTime.toDate();
+                        } else if (scheduleItem.doseTime) {
+                            doseDate = new Date(scheduleItem.doseTime);
+                        } else {
+                            return;
+                        }
+
+                        if (doseDate >= todayStart && doseDate < tomorrowStart) {
+                            upcomingTasksCount++;
+                        }
+                    });
+                }
+            }
+        }
+
+        document.getElementById('upcoming-tasks').textContent = upcomingTasksCount;
+        
+        const statCard = document.querySelector('.stat-card[onclick*="caretaker-schedule.html"] h3');
+        if (statCard) {
+            statCard.textContent = upcomingTasksCount;
+        }
+    } catch (error) {
+        console.error("Error loading upcoming tasks count:", error);
+        document.getElementById('upcoming-tasks').textContent = '0';
+    }
+}
+
+async function loadCompletedTasksCount(userId) {
+    try {
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const tomorrowStart = new Date(todayStart);
+        tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+
+        const dependantsSnapshot = await firebase.firestore()
+            .collection('users')
+            .doc(userId)
+            .collection('dependants')
+            .get();
+
+        let completedTasksCount = 0;
+
+        for (const dependantDoc of dependantsSnapshot.docs) {
+            const dependantId = dependantDoc.id;
+            
+            const completedTasksSnapshot = await firebase.firestore()
+                .collection('users')
+                .doc(userId)
+                .collection('dependants')
+                .doc(dependantId)
+                .collection('completed-tasks')
+                .where('completedAt', '>=', todayStart)
+                .where('completedAt', '<', tomorrowStart)
+                .get();
+
+            completedTasksCount += completedTasksSnapshot.size;
+        }
+
+        document.getElementById('completed-tasks').textContent = completedTasksCount;
+        
+        const statCard = document.querySelector('.stat-card:not([onclick]) h3');
+        if (statCard) {
+            statCard.textContent = completedTasksCount;
+        }
+    } catch (error) {
+        console.error("Error loading completed tasks count:", error);
+        document.getElementById('completed-tasks').textContent = '0';
+    }
+}
+
+
 function loadUserProfile(user) {
     // 1. Load basic user info
     displayBasicInfo(user);
 
-    // 2. Load user stats
-    //loadUserStats(user.uid);
+    // 2. Load dependants count
+    loadDependantsCount(user.uid);
 
-    // 3. Load recent activity
-    //loadRecentActivity(user.uid);
+    // 3. Load upcoming tasks count
+    loadUpcomingTasksCount(user.uid);
 
+    // 4. Load completed tasks count
+    loadCompletedTasksCount(user.uid);
+
+    // 5. Load recent activity
+    loadRecentActivity(user.uid);
 }
+
+
 
 function displayBasicInfo(user) {
     // Display core user information
@@ -43,73 +255,7 @@ function displayBasicInfo(user) {
     document.getElementById('account-created').textContent = `Member since: ${formattedDate}`;
 }
 
-// async function loadUserStats(userId) {
-//     try {
-//         // 1. Load dependants count
-//         const depsSnapshot = await firebase.firestore()
-//             .collection('users')
-//             .doc(userId)
-//             .collection('dependants')
-//             .get();
-//         document.getElementById('dependants-count').textContent = depsSnapshot.size;
 
-//         // 2. Load upcoming tasks
-//         const now = new Date();
-//         const tasksSnapshot = await firebase.firestore()
-//             .collection('tasks')
-//             .where('caretakerId', '==', userId)
-//             .where('dueDate', '>=', now)
-//             .get();
-//         document.getElementById('upcoming-tasks').textContent = tasksSnapshot.size;
-
-//         // 3. Load completed tasks
-//         const completedSnapshot = await firebase.firestore()
-//             .collection('tasks')
-//             .where('caretakerId', '==', userId)
-//             .where('status', '==', 'completed')
-//             .get();
-//         document.getElementById('completed-tasks').textContent = completedSnapshot.size;
-
-//     } catch (error) {
-//         console.error("Error loading user stats:", error);
-//     }
-// }
-
-// async function loadRecentActivity(userId) {
-//     const activityList = document.getElementById('activity-list');
-//     activityList.innerHTML = '<li>Loading activities...</li>';
-
-//     try {
-//         const snapshot = await firebase.firestore()
-//             .collection('activity')
-//             .where('userId', '==', userId)
-//             .orderBy('timestamp', 'desc')
-//             .limit(5)
-//             .get();
-
-//         if (snapshot.empty) {
-//             activityList.innerHTML = '<li>No recent activity</li>';
-//             return;
-//         }
-
-//         activityList.innerHTML = '';
-//         snapshot.forEach(doc => {
-//             const activity = doc.data();
-//             const li = document.createElement('li');
-//             li.innerHTML = `
-//                 <span class="activity-icon">${getActivityIcon(activity.type)}</span>
-//                 <div>
-//                     <span class="activity-text">${activity.message}</span>
-//                     <span class="activity-time">${formatActivityTime(activity.timestamp)}</span>
-//                 </div>
-//             `;
-//             activityList.appendChild(li);
-//         });
-//     } catch (error) {
-//         activityList.innerHTML = '<li>Error loading activities</li>';
-//         console.error("Error loading activity:", error);
-//     }
-// }
 
 function setupEventListeners() {
 
@@ -203,7 +349,7 @@ async function showEditProfileForm() {
     submit.setAttribute("value", "Save Changes");
 
     // Add event listener to form
-    form.addEventListener("submit", function(e) {
+    form.addEventListener("submit", function (e) {
         e.preventDefault();
         handleProfileUpdate();
     });
@@ -331,7 +477,7 @@ function showChangePasswordForm() {
     submit.setAttribute("value", "Update Password");
 
     // Add event listener to form
-    form.addEventListener("submit", function(e) {
+    form.addEventListener("submit", function (e) {
         e.preventDefault();
         handlePasswordChange();
     });
@@ -387,7 +533,7 @@ async function handlePasswordChange() {
             .update({
                 lastPasswordUpdated: firebase.firestore.FieldValue.serverTimestamp()
             });
-            
+
         // Remove form and show success
         document.getElementById('password-change-form').remove();
         alert("Password updated successfully!");
