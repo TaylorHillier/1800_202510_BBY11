@@ -493,13 +493,13 @@ footer {
 }
 
 .footer-column a {
-    color: #9ca3af;
+    color: white;
     text-decoration: none;
     transition: color 0.3s ease;
 }
 
 .footer-column a:hover {
-    color: white;
+    color: #9ca3af;
 }
 
 .footer-bottom {
@@ -717,6 +717,7 @@ body {
     color: #718096;
     font-style: italic;
 }
+
 /* profile buttons */
 .profile-actions button {
     background-color: var(--slate-blue);
@@ -751,7 +752,8 @@ body {
     margin-bottom: 10px;
 }
 
-#summary-edit button, #edit-summary {
+#summary-edit button,
+#edit-summary {
     padding: 5px 15px;
     margin-right: 10px;
     cursor: pointer;
