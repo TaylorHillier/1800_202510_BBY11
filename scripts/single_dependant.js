@@ -93,8 +93,8 @@ function createMedicationForm() {
     // Get today's date (YYYY-MM-DD) for min attributes
     const now = new Date();
     const tomorrow = new Date();
-    tomorrow.setDate(now.getDate() + 1);
-    const today = tomorrow.toISOString().split("T")[0];
+    
+    const today = now.toISOString().split("T")[0];
     const hours = now.getHours().toString().padStart(2, '0');
     const minutes = now.getMinutes().toString().padStart(2, '0');
     const time = `${hours}:${minutes}`; // format: "HH:MM"
