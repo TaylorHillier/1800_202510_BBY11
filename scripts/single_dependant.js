@@ -187,7 +187,6 @@ function getMedicationList() {
     });
 }
 
-// Delete medication from Firestore
 function removeMedication(medicationId) {
     const user = firebase.auth().currentUser;
     const dependantId = new URLSearchParams(window.location.search).get('id');
@@ -197,6 +196,7 @@ function removeMedication(medicationId) {
         return;
     }
 
+    // Delete the medication document.
     firebase.firestore()
         .collection("users")
         .doc(user.uid)
@@ -212,6 +212,32 @@ function removeMedication(medicationId) {
         })
         .catch(error => {
             console.error("Error removing medication:", error);
+        });
+
+    // Delete any completed task documents whose IDs start with medicationId + "-"
+    const completedTasksRef = firebase.firestore()
+        .collection("users")
+        .doc(user.uid)
+        .collection("dependants")
+        .doc(dependantId)
+        .collection("completed-tasks");
+
+    completedTasksRef.get()
+        .then(snapshot => {
+            const batch = firebase.firestore().batch();
+            snapshot.forEach(doc => {
+                if (doc.id.startsWith(medicationId + "-")) {
+                    batch.delete(doc.ref);
+                }
+            });
+            return batch.commit();
+        })
+        .then(() => {
+            console.log("Related completed tasks removed successfully");
+            checkIfLastMedication();
+        })
+        .catch(error => {
+            console.error("Error removing completed tasks:", error);
         });
 }
 
