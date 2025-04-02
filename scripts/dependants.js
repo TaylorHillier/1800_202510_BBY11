@@ -16,108 +16,251 @@ function getCurrentUser() {
 }
 
 function createForm() {
-    var addDependantSeciton = document.createElement("section");
-    addDependantSeciton.id = "add-dependant-container";
-    addDependantSeciton.className = "add-dependant-container";
+    // Create container
+    var addDependantSection = document.createElement("section");
+    addDependantSection.id = "add-dependant-container";
+    addDependantSection.className = "add-dependant-container";
 
+    // Create form
     var form = document.createElement("form");
-    form.setAttribute("method", "post");
-    form.setAttribute("action", "addDependant");
     form.id = "dependants-form";
+    form.className = "dependent-form";
 
+    // Close button
     var close = document.createElement("div");
     close.id = "close-form";
-    close.textContent = "x";
+    close.className = "close-btn";
+    close.textContent = "×";
 
-    var firstnameLabel = document.createElement("label");
-    firstnameLabel.setAttribute("for", "firstname");
-    firstnameLabel.textContent = "First Name";
+    // Form title
+    var title = document.createElement("h2");
+    title.textContent = "Add New Dependent";
+    form.appendChild(title);
+    form.appendChild(close);
 
-    var lastnameLabel = document.createElement("label");
-    lastnameLabel.setAttribute("for", "lastname");
-    lastnameLabel.textContent = "Last Name";
+    // Create form sections
+    createFormSection(form, "Basic Information", [
+        { type: "text", id: "firstname", label: "First Name", required: true },
+        { type: "text", id: "lastname", label: "Last Name", required: true },
+        { type: "date", id: "birthdate", label: "Birthdate", required: true },
+        { 
+            type: "select", 
+            id: "relationship", 
+            label: "Relationship", 
+            options: ["Child", "Spouse", "Parent", "Sibling", "Other"] 
+        }
+    ]);
 
-    var firstname = document.createElement("input");
-    firstname.setAttribute("id", "firstname");
-    firstname.setAttribute("type", "text");
-    firstname.setAttribute("name", "firstname");
-    firstname.setAttribute("placeholder", "First Name");
-    firstname.style.margin = "0 0 0 1%";
+    createFormSection(form, "Health Summary", [
+        { type: "textarea", id: "health_summary", label: "Health Summary", rows: 4 }
+    ]);
 
-    var lastname = document.createElement("input");
-    lastname.setAttribute("id", "lastname");
-    lastname.setAttribute("type", "text");
-    lastname.setAttribute("name", "lastname");
-    lastname.setAttribute("placeholder", "Last Name");
+    createFormSection(form, "Medical Information", [
+        { type: "textarea", id: "allergies", label: "Allergies", rows: 3 },
+        { type: "textarea", id: "medications", label: "Current Medications", rows: 3 },
+        { type: "textarea", id: "health_history", label: "Health History", rows: 4 }
+    ]);
 
-    var submit = document.createElement("input");
+    createFormSection(form, "Emergency Contacts", [
+        { type: "text", id: "emergency_name1", label: "Primary Contact Name" },
+        { type: "tel", id: "emergency_phone1", label: "Primary Contact Phone" },
+        { type: "text", id: "emergency_relation1", label: "Primary Contact Relationship" },
+        { type: "text", id: "emergency_name2", label: "Secondary Contact Name" },
+        { type: "tel", id: "emergency_phone2", label: "Secondary Contact Phone" },
+        { type: "text", id: "emergency_relation2", label: "Secondary Contact Relationship" }
+    ]);
+
+    createFormSection(form, "Additional Information", [
+        { type: "textarea", id: "additional_notes", label: "Additional Notes", rows: 4 }
+    ]);
+
+    // Submit button
+    var submitDiv = document.createElement("div");
+    submitDiv.className = "form-actions";
+    var submit = document.createElement("button");
     submit.setAttribute("type", "submit");
-    submit.setAttribute("value", "Submit");
+    submit.textContent = "Save Dependent";
+    submitDiv.appendChild(submit);
+    form.appendChild(submitDiv);
 
-    // Prevent form from submitting (optional)
-    form.addEventListener("submit", function (event) {
+    // Form submission
+    form.addEventListener("submit", async function (event) {
         event.preventDefault();
-        console.log("Form submitted!");
-        addDependant();
-        form.reset();
+        try {
+            await addDependant();
+            form.reset();
+            addDependantSection.remove();
+            // Optional: Show success message
+            alert("Dependent added successfully!");
+        } catch (error) {
+            console.error("Error adding dependent: ", error);
+            alert("Error adding dependent: " + error.message);
+        }
     });
 
-    // Append inputs to form
-    form.appendChild(close);
-    form.appendChild(firstnameLabel);
-    form.appendChild(firstname);
-    form.appendChild(lastnameLabel);
-    form.appendChild(lastname);
-    form.appendChild(submit);
-
+    // Close button event
     close.addEventListener("click", () => {
-        addDependantSeciton.remove();
-    })
+        addDependantSection.remove();
+    });
 
-    addDependantSeciton.appendChild(form);
-    if (!document.getElementById("dependants-form")) {
-        document.getElementsByTagName('main')[0].appendChild(addDependantSeciton);
+    // Append form to container
+    addDependantSection.appendChild(form);
+    
+    // Add to DOM if not already present
+    if (!document.getElementById("add-dependant-container")) {
+        document.getElementsByTagName('main')[0].appendChild(addDependantSection);
     }
 }
 
+// Helper function to create form sections
+function createFormSection(form, sectionTitle, fields) {
+    var section = document.createElement("div");
+    section.className = "form-section";
 
-function addDependant() {
+    var title = document.createElement("h3");
+    title.textContent = sectionTitle;
+    section.appendChild(title);
 
-    const user = firebase.auth().currentUser;
-
-    if (!user) {
-        console.error("No user signed in");
-        return;
-    }
-
-    const firstname = document.getElementById("firstname").value.trim();
-    const lastname = document.getElementById("lastname").value.trim();
-
-    if (!firstname || !lastname) {
-        console.error("Fill in all fields");
-        return;
-    }
-
-    const dependant = {
-        firstname: firstname,
-        lastname: lastname,
-        careTaker: user.uid
-    }
-
-    const dependantsRef = firebase.firestore()
-        .collection('users')
-        .doc(user.uid)
-        .collection('dependants')
-        .add(dependant);
-
-    dependantsRef.then((doc) => {
-        console.log("new dependant added");
-        console.log(firstname + lastname);
-
-    })
-    .catch((error) => {
-        console.error("Error adding dependant: ", error);
+    fields.forEach(field => {
+        // Create label
+        var label = document.createElement("label");
+        label.setAttribute("for", field.id);
+        label.textContent = field.label;
+        
+        // Create input
+        var input;
+        if (field.type === "textarea") {
+            input = document.createElement("textarea");
+            input.rows = field.rows || 3;
+        } else if (field.type === "select") {
+            input = document.createElement("select");
+            field.options.forEach(option => {
+                var opt = document.createElement("option");
+                opt.value = option.toLowerCase();
+                opt.textContent = option;
+                input.appendChild(opt);
+            });
+        } else {
+            input = document.createElement("input");
+            input.type = field.type;
+        }
+        
+        input.id = field.id;
+        input.name = field.id;
+        if (field.required) input.required = true;
+        if (field.placeholder) input.placeholder = field.placeholder;
+        
+        // Append to section
+        section.appendChild(label);
+        section.appendChild(input);
     });
+
+    form.appendChild(section);
+}
+
+// Firebase function to add dependent
+async function addDependant() {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        throw new Error("User not authenticated");
+    }
+
+    const form = document.getElementById("dependants-form");
+    const dependentData = {
+        basicInfo: {
+            firstName: form.firstname.value,
+            lastName: form.lastname.value,
+            birthdate: form.birthdate.value,
+            relationship: form.relationship.value,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        },
+        healthSummary: {
+            summary: form.health_summary.value
+        },
+        medicalInfo: {
+            allergies: form.allergies.value,
+            medications: form.medications.value,
+            healthHistory: form.health_history.value
+        },
+        emergencyContacts: {
+            primary: {
+                name: form.emergency_name1.value,
+                phone: form.emergency_phone1.value,
+                relationship: form.emergency_relation1.value
+            },
+            secondary: {
+                name: form.emergency_name2.value,
+                phone: form.emergency_phone2.value,
+                relationship: form.emergency_relation2.value
+            }
+        },
+        additionalInfo: {
+            notes: form.additional_notes.value
+        }
+    };
+
+    // Add to Firestore with the structure: users -> userId -> dependants -> dependantId -> collections
+    const userRef = db.collection("users").doc(user.uid);
+    const dependentRef = await userRef.collection("dependants").add(dependentData.basicInfo);
+    
+    // Add subcollections
+    await dependentRef.collection("healthSummary").add(dependentData.healthSummary);
+    await dependentRef.collection("medicalInfo").add(dependentData.medicalInfo);
+    await dependentRef.collection("emergencyContacts").add(dependentData.emergencyContacts);
+    await dependentRef.collection("additionalInfo").add(dependentData.additionalInfo);
+
+    return dependentRef.id;
+}
+
+
+async function addDependant() {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        throw new Error("User not authenticated");
+    }
+
+    const form = document.getElementById("dependants-form");
+    const dependentData = {
+        firstname: form.firstname.value,
+        lastname: form.lastname.value,
+        birthdate: form.birthdate.value,
+        relationship: form.relationship.value,
+        healthSummary: form.health_summary.value,
+        medicalInfo: {
+            allergies: form.allergies.value,
+            medications: form.medications.value,
+            healthHistory: form.health_history.value
+        },
+        emergencyContacts: {
+            primary: {
+                name: form.emergency_name1.value,
+                phone: form.emergency_phone1.value,
+                relationship: form.emergency_relation1.value
+            },
+            secondary: {
+                name: form.emergency_name2.value,
+                phone: form.emergency_phone2.value,
+                relationship: form.emergency_relation2.value
+            }
+        },
+        additionalInfo: form.additional_notes.value,
+        careTaker: user.uid,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    try {
+        const docRef = await firebase.firestore()
+            .collection('users')
+            .doc(user.uid)
+            .collection('dependants')
+            .add(dependentData);
+        
+        console.log("Dependent added with ID: ", docRef.id);
+        return docRef.id;
+    } catch (error) {
+        console.error("Error adding dependent: ", error);
+        throw error;
+    }
 }
 
 
@@ -293,5 +436,15 @@ firebase.auth().onAuthStateChanged(user => {
 
             welcome.innerText = "Hello " + userName + ". You have " + dependantQuant + " dependants.";
         });
+    }
+});
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const dependentId = urlParams.get('id');
+    
+    if (dependentId) {
+        displayDependentDetails(dependentId);
+    } else {
+        console.log("No dependent ID provided");
     }
 });

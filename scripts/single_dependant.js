@@ -25,11 +25,20 @@ function getCurrentDependant() {
 
             if (dependantDoc.exists) {
                 const data = dependantDoc.data();
-                document.getElementById("dependant-info").innerHTML = data.firstname + " " + data.lastname;
+                // Update this to show all basic info
+                document.getElementById("dependant-info").innerHTML = `
+                    <h2>${data.firstname} ${data.lastname}</h2>
+                    <p><strong>Relationship:</strong> ${data.relationship || "Not specified"}</p>
+                    <p><strong>Birthdate:</strong> ${data.birthdate || "Not specified"}</p>
+                `;
+                
+                // Display all the other sections
+                displayDependentDetails(data);
             }
             
             loadNotesIssues();
-            initializeSummary(); // Initialize summary after everything else is ready
+            initializeSummary();
+            getMedicationList(); // Make sure this is called
         } else {
             console.log("No user logged in");
         }
@@ -760,4 +769,44 @@ function saveSummary() {
 function getDependantId() {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get('id');
+}
+function displayDependentDetails(dependent) {
+    const detailsContainer = document.getElementById("dependent-details");
+    
+    if (!detailsContainer) return;
+    
+    detailsContainer.innerHTML = `
+        <div class="profile-section">
+            <h3>Health Summary</h3>
+            <p>${dependent.healthSummary || "No information provided"}</p>
+        </div>
+
+        <div class="profile-section">
+            <h3>Medical Information</h3>
+            <p><strong>Allergies:</strong> ${dependent.medicalInfo?.allergies || "None"}</p>
+            <p><strong>Medications:</strong> ${dependent.medicalInfo?.medications || "None"}</p>
+            <p><strong>Health History:</strong> ${dependent.medicalInfo?.healthHistory || "No history provided"}</p>
+        </div>
+
+        <div class="profile-section">
+            <h3>Emergency Contacts</h3>
+            <div class="contact-card">
+                <h4>Primary Contact</h4>
+                <p>${dependent.emergencyContacts?.primary?.name || "Not specified"}</p>
+                <p>${dependent.emergencyContacts?.primary?.phone || ""}</p>
+                <p>${dependent.emergencyContacts?.primary?.relationship || ""}</p>
+            </div>
+            <div class="contact-card">
+                <h4>Secondary Contact</h4>
+                <p>${dependent.emergencyContacts?.secondary?.name || "Not specified"}</p>
+                <p>${dependent.emergencyContacts?.secondary?.phone || ""}</p>
+                <p>${dependent.emergencyContacts?.secondary?.relationship || ""}</p>
+            </div>
+        </div>
+
+        <div class="profile-section">
+            <h3>Additional Notes</h3>
+            <p>${dependent.additionalInfo || "No additional notes"}</p>
+        </div>
+    `;
 }
