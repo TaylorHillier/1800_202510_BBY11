@@ -26,19 +26,46 @@
   }
 
   .medication-form {
-    position: absolute;
-    top: 0;
-    bottom: 0;
+    position: fixed;
+    top: 1%;
     left: 0;
     right: 0;
-    height: 80%;
-    width: 80%;
-    background-color: var(--slate-blue);
+    width: 99%;
+    padding: 1rem;
+    margin: 1%;
+    background-color: var(--navy);
     margin: auto;
+    border-radius: var(--border-radius);
+    color: white;
+    overflow-y: scroll;
+    max-height: 90vh;
+  }
+
+  #newMedication-form{
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .medication-form input {
+    width: 100%;
+    border-radius: 4px;
+    border: none;
+    padding: 0.5rem;
   }
 
   main{
     position: relative;
     flex: 1;
+  }
+
+  .med-form-header {
+    display: flex;
+    justify-content: space-between;
+    color: white;
+  }
+  .med-dates-container, .med-times-container{
+   
+
   }
   

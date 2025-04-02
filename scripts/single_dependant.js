@@ -250,9 +250,22 @@ function checkIfLastMedication() {
 getMedicationList();
 
 function createMedicationForm() {
+
     let container = document.createElement('div');
     container.className = 'medication-form';
     container.id = 'medication-form';
+
+    let headerContainer = document.createElement('div');
+    headerContainer.className = 'med-form-header';
+    headerContainer.id = 'med-form-header';
+
+    let datesContainer = document.createElement('div');
+    datesContainer.className = 'med-dates-container';
+    datesContainer.id = 'med-dates-container';
+
+    let timesContainer = document.createElement('div');
+    timesContainer.className = 'med-times-container';
+    timesContainer.id = 'med-times-container';
 
     let button = document.getElementById("addMedication");
     let anchor = document.getElementsByTagName('main')[0];
@@ -271,11 +284,8 @@ function createMedicationForm() {
     // Get today's date (YYYY-MM-DD) for min attributes
     const now = new Date().toLocaleDateString("en-CA");
     
-    console.log(now);
     const today = now.split("T")[0];
     const time = new Date(Date.now()).toTimeString().slice(0,5);
-    const hours = now.padStart(2, '0');
-    const minutes = now.padStart(2, '0');
     
 
     // Start Date
@@ -380,6 +390,7 @@ function createMedicationForm() {
     var submit = document.createElement("input");
     submit.setAttribute("type", "submit");
     submit.setAttribute("value", "Add");
+    submit.id = 'add-medication-button';
 
     form.addEventListener("submit", function (event) {
         event.preventDefault();
@@ -389,43 +400,53 @@ function createMedicationForm() {
     });
 
     // Append elements to form
-    form.appendChild(startDateLabel);
-    form.appendChild(startDate);
-    form.appendChild(document.createElement("br"));
 
-    form.appendChild(endDateLabel);
-    form.appendChild(endDate);
-    form.appendChild(document.createElement("br"));
+    var exit  = document.createElement('button');
+    exit.className = 'med-exit';
+    exit.textContent = 'x';
+    exit.addEventListener('click', () => {
+        document.getElementById('medication-form').remove();
+    });
 
-    form.appendChild(startTimeLabel);
-    form.appendChild(startTime);
-    form.appendChild(document.createElement("br"));
+    var title = document.createElement('h2');
+    title.className = 'med-form-header';
+    title.textContent = 'Add a Medication';
 
-    form.appendChild(endTimeLabel);
-    form.appendChild(endTime);
-    form.appendChild(document.createElement("br"));
+    headerContainer.appendChild(title);
+    headerContainer.appendChild(exit);
+    form.appendChild(headerContainer);
+
+
+    datesContainer.appendChild(startDateLabel);
+    datesContainer.appendChild(startDate);
+    datesContainer.appendChild(endDateLabel);
+    datesContainer.appendChild(endDate);
+    form.appendChild(datesContainer);
+
+    timesContainer.appendChild(startTimeLabel);
+    timesContainer.appendChild(startTime);
+    timesContainer.appendChild(endTimeLabel);
+    timesContainer.appendChild(endTime);
+    form.appendChild(timesContainer);
 
     form.appendChild(numPillsLabel);
     form.appendChild(numPills);
-    form.appendChild(document.createElement("br"));
-
+    
     form.appendChild(medicationLabel);
     form.appendChild(medication);
-    form.appendChild(document.createElement("br"));
-
+    
     form.appendChild(dosesLabel);
     form.appendChild(dosesPerDay);
-    form.appendChild(document.createElement("br"));
-
+    
     form.appendChild(continuousLabel);
     form.appendChild(continuous);
-    form.appendChild(document.createElement("br"));
-
+    
     form.appendChild(submit);
 
     container.appendChild(form);
 
-    anchor.insertAdjacentElement("beforeend", container);
+    anchor.insertAdjacentElement("afterend", container);
+
 }
 
 function addMedication() {
