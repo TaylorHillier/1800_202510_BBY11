@@ -45,7 +45,7 @@
     flex: 1;
     padding: var(--space-md);
     position: relative;
-    height: 100vh;
+
   }
   
   /* Section Styling */
@@ -88,16 +88,18 @@
   }
 
   .add-dependant-container {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 80%;
+    position: fixed;
+    top: 1%;
     left: 0;
+    right: 0;
     bottom: 0;
-    height: 80%;
-    margin: auto auto;
-    background-color: var(--light-gray);
+    width: 99%;
+    padding: 1rem;
+    margin: 1%;
+    background-color: var(--navy);
+    margin: auto;
     border-radius: var(--border-radius);
+    color: white;
   }
 
   #dependants-form {

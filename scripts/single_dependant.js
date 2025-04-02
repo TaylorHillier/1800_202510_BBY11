@@ -152,6 +152,7 @@ function getMedicationList() {
                     // Medication details text
                     const medInfo = document.createElement("span");
                     medInfo.textContent = `${medData.name}: ${medData.numPillsPerDose} times today`;
+                    medInfo.textContent += medData.continuous ? '(continuous)' : '';
                     medInfo.className = "medication-info";
 
                     // Delete button with conditional display
@@ -195,7 +196,6 @@ function getMedicationList() {
     });
 }
 
-// Delete medication from Firestore
 function removeMedication(medicationId) {
     const user = firebase.auth().currentUser;
     const dependantId = new URLSearchParams(window.location.search).get('id');
@@ -205,6 +205,7 @@ function removeMedication(medicationId) {
         return;
     }
 
+    // Delete the medication document.
     firebase.firestore()
         .collection("users")
         .doc(user.uid)
@@ -220,6 +221,32 @@ function removeMedication(medicationId) {
         })
         .catch(error => {
             console.error("Error removing medication:", error);
+        });
+
+    // Delete any completed task documents whose IDs start with medicationId + "-"
+    const completedTasksRef = firebase.firestore()
+        .collection("users")
+        .doc(user.uid)
+        .collection("dependants")
+        .doc(dependantId)
+        .collection("completed-tasks");
+
+    completedTasksRef.get()
+        .then(snapshot => {
+            const batch = firebase.firestore().batch();
+            snapshot.forEach(doc => {
+                if (doc.id.startsWith(medicationId + "-")) {
+                    batch.delete(doc.ref);
+                }
+            });
+            return batch.commit();
+        })
+        .then(() => {
+            console.log("Related completed tasks removed successfully");
+            checkIfLastMedication();
+        })
+        .catch(error => {
+            console.error("Error removing completed tasks:", error);
         });
 }
 
@@ -258,7 +285,25 @@ function checkIfLastMedication() {
 getMedicationList();
 
 function createMedicationForm() {
+
+    let container = document.createElement('div');
+    container.className = 'medication-form';
+    container.id = 'medication-form';
+
+    let headerContainer = document.createElement('div');
+    headerContainer.className = 'med-form-header';
+    headerContainer.id = 'med-form-header';
+
+    let datesContainer = document.createElement('div');
+    datesContainer.className = 'med-dates-container';
+    datesContainer.id = 'med-dates-container';
+
+    let timesContainer = document.createElement('div');
+    timesContainer.className = 'med-times-container';
+    timesContainer.id = 'med-times-container';
+
     let button = document.getElementById("addMedication");
+    let anchor = document.getElementsByTagName('main')[0];
 
     // Prevent duplicate forms
     if (document.getElementById("newMedication-form")) {
@@ -275,9 +320,8 @@ function createMedicationForm() {
     const now = new Date().toLocaleDateString("en-CA");
     
     const today = now.split("T")[0];
-    const hours = now.padStart(2, '0');
-    const minutes = now.padStart(2, '0');
-    const time = `${hours}:${minutes}`; // format: "HH:MM"
+    const time = new Date(Date.now()).toTimeString().slice(0,5);
+    
 
     // Start Date
     var startDateLabel = document.createElement("label");
@@ -311,7 +355,7 @@ function createMedicationForm() {
     startTime.setAttribute("id", "start-time");
     startTime.setAttribute("type", "time");
     startTime.setAttribute("name", "start-time");
-    startTime.setAttribute("value", "08:00"); // now it's set correctly
+    startTime.setAttribute("value", `${time}`); // now it's set correctly
 
     // End Time
     var endTimeLabel = document.createElement("label");
@@ -359,7 +403,7 @@ function createMedicationForm() {
     // Continuous Checkbox
     var continuousLabel = document.createElement("label");
     continuousLabel.setAttribute("for", "continuous");
-    continuousLabel.textContent = "Continuous: ";
+    continuousLabel.textContent = "Continuous: (Will auto set 3 months)";
 
     var continuous = document.createElement("input");
     continuous.setAttribute("id", "continuous");
@@ -381,6 +425,7 @@ function createMedicationForm() {
     var submit = document.createElement("input");
     submit.setAttribute("type", "submit");
     submit.setAttribute("value", "Add");
+    submit.id = 'add-medication-button';
 
     form.addEventListener("submit", function (event) {
         event.preventDefault();
@@ -390,41 +435,53 @@ function createMedicationForm() {
     });
 
     // Append elements to form
-    form.appendChild(startDateLabel);
-    form.appendChild(startDate);
-    form.appendChild(document.createElement("br"));
 
-    form.appendChild(endDateLabel);
-    form.appendChild(endDate);
-    form.appendChild(document.createElement("br"));
+    var exit  = document.createElement('button');
+    exit.className = 'med-exit';
+    exit.textContent = 'x';
+    exit.addEventListener('click', () => {
+        document.getElementById('medication-form').remove();
+    });
 
-    form.appendChild(startTimeLabel);
-    form.appendChild(startTime);
-    form.appendChild(document.createElement("br"));
+    var title = document.createElement('h2');
+    title.className = 'med-form-header';
+    title.textContent = 'Add a Medication';
 
-    form.appendChild(endTimeLabel);
-    form.appendChild(endTime);
-    form.appendChild(document.createElement("br"));
+    headerContainer.appendChild(title);
+    headerContainer.appendChild(exit);
+    form.appendChild(headerContainer);
+
+
+    datesContainer.appendChild(startDateLabel);
+    datesContainer.appendChild(startDate);
+    datesContainer.appendChild(endDateLabel);
+    datesContainer.appendChild(endDate);
+    form.appendChild(datesContainer);
+
+    timesContainer.appendChild(startTimeLabel);
+    timesContainer.appendChild(startTime);
+    timesContainer.appendChild(endTimeLabel);
+    timesContainer.appendChild(endTime);
+    form.appendChild(timesContainer);
 
     form.appendChild(numPillsLabel);
     form.appendChild(numPills);
-    form.appendChild(document.createElement("br"));
-
+    
     form.appendChild(medicationLabel);
     form.appendChild(medication);
-    form.appendChild(document.createElement("br"));
-
+    
     form.appendChild(dosesLabel);
     form.appendChild(dosesPerDay);
-    form.appendChild(document.createElement("br"));
-
+    
     form.appendChild(continuousLabel);
     form.appendChild(continuous);
-    form.appendChild(document.createElement("br"));
-
+    
     form.appendChild(submit);
 
-    button.insertAdjacentElement("afterend", form);
+    container.appendChild(form);
+
+    anchor.insertAdjacentElement("afterend", container);
+
 }
 
 function addMedication() {
@@ -443,6 +500,7 @@ function addMedication() {
 
     // Get form values
     const startDateStr = document.getElementById("start-date").value.trim();
+    console.log(startDateStr);
     const endDateStr = document.getElementById("end-date").value.trim();
     const startTimeStr = document.getElementById("start-time").value.trim();
     const endTimeStr = document.getElementById("end-time").value.trim();
@@ -463,11 +521,10 @@ function addMedication() {
         return;
     }
 
-    // Check that the start date is not in the past
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const startDateObj = new Date(startDateStr);
-    if (startDateObj < today) {
+    const startDateObj = new Date(startDateStr).toLocaleDateString('en-CA');
+    console.log(startDateObj);
+    console.log(Date(Date.now()));
+    if (startDateObj < new Date(Date.now())) {
         console.error("Start date cannot be in the past");
         return;
     }
@@ -479,14 +536,14 @@ function addMedication() {
             return;
         }
 
-        const endDateObj = new Date(endDateStr);
+        const endDateObj = new Date(endDateStr).toLocaleDateString('en-CA');
         if (endDateObj < startDateObj) {
             console.error("End date must be after the start date");
             return;
         }
 
         // If the start and end dates are the same, ensure the end time is after the start time
-        if (startDateObj.toDateString() === endDateObj.toDateString()) {
+        if (startDateObj === endDateObj) {
             const [sHour, sMin] = startTimeStr.split(":").map(Number);
             const [eHour, eMin] = endTimeStr.split(":").map(Number);
             if (eHour < sHour || (eHour === sHour && eMin <= sMin)) {
@@ -531,7 +588,7 @@ function addMedication() {
             let dayEnd;
             if (isContinuous) {
                 dayEnd = new Date(dayStart);
-                dayEnd.setDate(dayEnd.getDate() + 6); // 7 days total
+                dayEnd.setDate(dayEnd.getDate() + 90); // 7 days total
             } else {
                 dayEnd = new Date(endDateStr);
             }
@@ -640,9 +697,10 @@ function loadNotesIssues() {
             querySnapshot.forEach(doc => {
                 const entry = doc.data();
                 const timestamp = entry.timestamp.toDate().toLocaleString();
-
+                
                 const noteIssueElement = document.createElement('p');
                 noteIssueElement.textContent = `${timestamp}: ${entry.content}`;
+               
                 notesIssuesContainer.appendChild(noteIssueElement);
             });
         })
@@ -770,6 +828,7 @@ function getDependantId() {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get('id');
 }
+
 function displayDependentDetails(dependent) {
     const detailsContainer = document.getElementById("dependent-details");
     

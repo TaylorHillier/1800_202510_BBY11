@@ -303,12 +303,15 @@ function markTaskComplete(userId, task, isComplete, listItem) {
             medicationName: task.medicationName,
             completedAt: firebase.firestore.FieldValue.serverTimestamp(),
             startTime: task.startTime,
-            numPills: task.numPillsPerDose,  // Using updated field.
+            numPills: task.numPillsPerDose,
             isCompleted: true
         })
         .then(() => {
             console.log('Task marked as complete');
             if (listItem) listItem.style.textDecoration = "line-through";
+            // Refresh the counts
+            loadUpcomingTasksCount(userId);
+            loadCompletedTasksCount(userId);
         })
         .catch((error) => {
             console.error('Error marking task complete:', error);
@@ -318,6 +321,9 @@ function markTaskComplete(userId, task, isComplete, listItem) {
         .then(() => {
             console.log('Task unmarked');
             if (listItem) listItem.style.textDecoration = "none";
+            // Refresh the counts
+            loadUpcomingTasksCount(userId);
+            loadCompletedTasksCount(userId);
         })
         .catch((error) => {
             console.error('Error unmarking task:', error);

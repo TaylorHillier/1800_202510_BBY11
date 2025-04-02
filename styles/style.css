@@ -7,6 +7,7 @@
     --secondary-color: #6366f1;
     --text-color: #1f2937;
     --background-color: #f9fafb;
+    --nav-height-mobile: 4rem;
 }
 
 /* Reset and Base Styles */
@@ -26,6 +27,7 @@ body {
 
 main {
     width: 100%;
+    margin-bottom: var(--nav-height-mobile);
 }
 
 /* ================================================== */
@@ -493,13 +495,13 @@ footer {
 }
 
 .footer-column a {
-    color: #9ca3af;
+    color: white;
     text-decoration: none;
     transition: color 0.3s ease;
 }
 
 .footer-column a:hover {
-    color: white;
+    color: #9ca3af;
 }
 
 .footer-bottom {
@@ -718,6 +720,7 @@ body {
     font-style: italic;
 }
 
+/* profile buttons */
 .profile-actions button {
     background-color: var(--slate-blue);
     color: var(--white);
@@ -728,13 +731,17 @@ body {
     transition: background-color 0.3s ease;
     margin: var(--space-sm) 0;
 }
+
+.profile-actions button:hover {
+    background-color: var(--soft-blue);
+}
+
+
+/* summary buttons */
 #summary-display {
     min-height: 100px;
-    border: 1px solid #ddd;
-    padding: 10px;
     margin-bottom: 10px;
     white-space: pre-wrap;
-    background-color: #f9f9f9;
 }
 
 #summary-edit textarea {
@@ -744,7 +751,8 @@ body {
     margin-bottom: 10px;
 }
 
-#summary-edit button, #edit-summary {
+#summary-edit button,
+#edit-summary {
     padding: 5px 15px;
     margin-right: 10px;
     cursor: pointer;
