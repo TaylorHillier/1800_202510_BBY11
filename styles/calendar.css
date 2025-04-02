@@ -42,12 +42,10 @@ body {
 
 
 
-section {
+#calendar {
   margin-bottom: var(--space-lg);
   background-color: var(--white);
-  padding: var(--space-xs);
   border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
 
 }
 

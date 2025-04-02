@@ -7,6 +7,7 @@
     --secondary-color: #6366f1;
     --text-color: #1f2937;
     --background-color: #f9fafb;
+    --nav-height-mobile: 4rem;
 }
 
 /* Reset and Base Styles */
@@ -26,6 +27,7 @@ body {
 
 main {
     width: 100%;
+    margin-bottom: var(--nav-height-mobile);
 }
 
 /* ================================================== */
@@ -738,11 +740,8 @@ body {
 /* summary buttons */
 #summary-display {
     min-height: 100px;
-    border: 1px solid #ddd;
-    padding: 10px;
     margin-bottom: 10px;
     white-space: pre-wrap;
-    background-color: #f9f9f9;
 }
 
 #summary-edit textarea {
