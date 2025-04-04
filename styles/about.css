@@ -1,0 +1,168 @@
+/* about.css - Matching MediConnect Dashboard Styling */
+:root {
+    /* Reusing the same color palette */
+    --slate-blue: #6B8FAF;
+    --soft-blue: #9BB5C9;
+    --slate-green: #7A9A7B;
+    --pale-green: #C4D7C4;
+    --navy: #2C3E50;
+    --white: #FFFFFF;
+    --light-gray: #F5F7FA;
+    --medium-gray: #E0E5EC;
+    --dark-text: #2D3748;
+    --light-text: #4A5568;
+  
+    /* Spacing */
+    --space-xs: 0.5rem;
+    --space-sm: 0.75rem;
+    --space-md: 1.25rem;
+    --space-lg: 2rem;
+    --space-xl: 3rem;
+  
+    /* Sizes */
+    --border-radius: 8px;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Base Styles */
+  .unlogged-navigation ul {
+    list-style-type: none;
+    padding-left: 0;
+  }
+  
+  .unlogged-navigation li {
+    list-style: none;
+  }
+
+  body {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background-color: var(--light-gray);
+    color: var(--dark-text);
+    line-height: 1.6;
+    padding: 0;
+    margin: 0;
+  }
+  
+  /* Main Content Structure */
+  .about-section,
+  .how-it-works,
+  .testimonials,
+  .security-privacy,
+  .contact-info {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    padding: var(--space-lg);
+    margin: var(--space-md) auto;
+    max-width: 900px;
+    box-shadow: var(--shadow);
+  }
+  
+  /* Section-specific styling */
+  .about-section {
+    border-left: 4px solid var(--slate-blue);
+    margin-top: var(--space-xl);
+  }
+  
+  .how-it-works {
+    border-left: 4px solid var(--slate-green);
+  }
+  
+  .testimonials {
+    border-left: 4px solid var(--soft-blue);
+  }
+  
+  .security-privacy {
+    border-left: 4px solid var(--pale-green);
+  }
+  
+  .contact-info {
+    border-left: 4px solid var(--navy);
+  }
+  
+  /* Typography */
+  h1, h2 {
+    color: var(--dark-text);
+    margin-bottom: var(--space-md);
+  }
+  
+  h1 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--slate-blue);
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 500;
+  }
+  
+  p {
+    margin-bottom: var(--space-sm);
+  }
+  
+  /* Lists */
+  ol, ul {
+    padding-left: var(--space-md);
+    margin-bottom: var(--space-md);
+  }
+  
+  li {
+    margin-bottom: var(--space-sm);
+  }
+  
+  /* Links */
+  a {
+    color: var(--slate-blue);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  
+  a:hover {
+    color: var(--soft-blue);
+    text-decoration: underline;
+  }
+  
+  /* Testimonials */
+  blockquote {
+    font-style: italic;
+    padding: var(--space-sm);
+    margin: var(--space-md) 0;
+    background-color: var(--light-gray);
+    border-radius: var(--border-radius);
+    position: relative;
+  }
+  
+  blockquote::before {
+    content: '"';
+    font-size: 3rem;
+    color: var(--medium-gray);
+    position: absolute;
+    left: 10px;
+    top: -10px;
+  }
+  
+  blockquote em {
+    display: block;
+    margin-top: var(--space-xs);
+    font-weight: 600;
+    color: var(--slate-blue);
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .about-section,
+    .how-it-works,
+    .testimonials,
+    .security-privacy,
+    .contact-info {
+      margin: var(--space-md) var(--space-md);
+    }
+    
+    h1 {
+      font-size: 1.5rem;
+    }
+    
+    h2 {
+      font-size: 1.25rem;
+    }
+  }
