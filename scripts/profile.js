@@ -31,7 +31,7 @@ async function loadRecentActivity(userId) {
         for (const dependantDoc of dependantsSnapshot.docs) {
             const dependantId = dependantDoc.id;
             const dependantData = dependantDoc.data();
-            
+
             const completedTasksSnapshot = await firebase.firestore()
                 .collection('users')
                 .doc(userId)
@@ -54,20 +54,20 @@ async function loadRecentActivity(userId) {
         }
 
         allCompletedTasks.sort((a, b) => b.timestamp.toMillis() - a.timestamp.toMillis());
-        
+
         const recentTasks = allCompletedTasks.slice(0, 3);
-        
+
         displayRecentActivity(recentTasks);
     } catch (error) {
         console.error("Error loading recent activity:", error);
-        document.getElementById('activity-list').innerHTML = 
+        document.getElementById('activity-list').innerHTML =
             '<li>Error loading recent activity</li>';
     }
 }
 
 function displayRecentActivity(tasks) {
     const activityList = document.getElementById('activity-list');
-    
+
     if (!activityList) {
         console.error("Activity list element not found");
         return;
@@ -81,14 +81,14 @@ function displayRecentActivity(tasks) {
     activityList.innerHTML = tasks.map(task => {
         const date = task.completedAt.toDate();
         const formattedDate = formatActivityTime(task.completedAt);
-        
+
         return `
             <li class="activity-item">
                 <span class="activity-icon">✓</span>
                 <div class="activity-details">
                     <span class="activity-text">
                         Gave ${task.numPills || '1'} ${task.medicationName} to 
-                        ${task.dependantName} ${task.dependantLName}
+                        ${task.dependantName} ${task.dependantLName} at
                     </span>
                     <span class="activity-time">${formattedDate}</span>
                 </div>
@@ -107,7 +107,7 @@ async function loadDependantsCount(userId) {
 
         const count = dependantsSnapshot.size;
         document.getElementById('dependants-count').textContent = count;
-        
+
         const statCard = document.querySelector('.stat-card[onclick*="dependants.html"] h3');
         if (statCard) {
             statCard.textContent = count;
@@ -136,7 +136,7 @@ async function loadUpcomingTasksCount(userId) {
 
         for (const dependantDoc of dependantsSnapshot.docs) {
             const dependantId = dependantDoc.id;
-            
+
             // Count total tasks
             const medicationsSnapshot = await firebase.firestore()
                 .collection('users')
@@ -181,9 +181,9 @@ async function loadUpcomingTasksCount(userId) {
         }
 
         const upcomingTasksCount = totalTasksCount - completedTasksCount;
-        
+
         document.getElementById('upcoming-tasks').textContent = upcomingTasksCount > 0 ? upcomingTasksCount : 0;
-        
+
         const statCard = document.querySelector('.stat-card[onclick*="caretaker-schedule.html"] h3');
         if (statCard) {
             statCard.textContent = upcomingTasksCount > 0 ? upcomingTasksCount : 0;
@@ -211,7 +211,7 @@ async function loadCompletedTasksCount(userId) {
 
         for (const dependantDoc of dependantsSnapshot.docs) {
             const dependantId = dependantDoc.id;
-            
+
             const completedTasksSnapshot = await firebase.firestore()
                 .collection('users')
                 .doc(userId)
@@ -226,7 +226,7 @@ async function loadCompletedTasksCount(userId) {
         }
 
         document.getElementById('completed-tasks').textContent = completedTasksCount;
-        
+
         const statCard = document.querySelector('.stat-card:not([onclick]) h3');
         if (statCard) {
             statCard.textContent = completedTasksCount;
