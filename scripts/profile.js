@@ -1,4 +1,4 @@
-// profile.js - Complete Implementation
+// profile.js - Complete Implementation with Modal Forms
 document.addEventListener('DOMContentLoaded', () => {
     initializeProfilePage();
 });
@@ -54,14 +54,11 @@ async function loadRecentActivity(userId) {
         }
 
         allCompletedTasks.sort((a, b) => b.timestamp.toMillis() - a.timestamp.toMillis());
-
         const recentTasks = allCompletedTasks.slice(0, 3);
-
         displayRecentActivity(recentTasks);
     } catch (error) {
         console.error("Error loading recent activity:", error);
-        document.getElementById('activity-list').innerHTML =
-            '<li>Error loading recent activity</li>';
+        document.getElementById('activity-list').innerHTML = '<li>Error loading recent activity</li>';
     }
 }
 
@@ -79,9 +76,7 @@ function displayRecentActivity(tasks) {
     }
 
     activityList.innerHTML = tasks.map(task => {
-        const date = task.completedAt.toDate();
         const formattedDate = formatActivityTime(task.completedAt);
-
         return `
             <li class="activity-item">
                 <span class="activity-icon">✓</span>
@@ -181,7 +176,6 @@ async function loadUpcomingTasksCount(userId) {
         }
 
         const upcomingTasksCount = totalTasksCount - completedTasksCount;
-
         document.getElementById('upcoming-tasks').textContent = upcomingTasksCount > 0 ? upcomingTasksCount : 0;
 
         const statCard = document.querySelector('.stat-card[onclick*="caretaker-schedule.html"] h3');
@@ -237,32 +231,18 @@ async function loadCompletedTasksCount(userId) {
     }
 }
 
-
 function loadUserProfile(user) {
-    // 1. Load basic user info
     displayBasicInfo(user);
-
-    // 2. Load dependants count
     loadDependantsCount(user.uid);
-
-    // 3. Load upcoming tasks count
     loadUpcomingTasksCount(user.uid);
-
-    // 4. Load completed tasks count
     loadCompletedTasksCount(user.uid);
-
-    // 5. Load recent activity
     loadRecentActivity(user.uid);
 }
 
-
-
 function displayBasicInfo(user) {
-    // Display core user information
     document.getElementById('user-name').textContent = user.displayName || "User";
     document.getElementById('user-email').textContent = `Email: ${user.email}`;
 
-    // Format account creation date
     const creationDate = user.metadata.creationTime;
     const formattedDate = new Date(creationDate).toLocaleDateString('en-US', {
         year: 'numeric',
@@ -272,21 +252,9 @@ function displayBasicInfo(user) {
     document.getElementById('account-created').textContent = `Member since: ${formattedDate}`;
 }
 
-
-
 function setupEventListeners() {
-
-    // Edit profile button
-    document.getElementById('edit-profile').addEventListener('click', () => {
-        showEditProfileForm();
-    });
-
-    // Change password button
-    document.getElementById('change-password').addEventListener('click', () => {
-        showChangePasswordForm();
-    });
-
-    // Logout button
+    document.getElementById('edit-profile').addEventListener('click', showEditProfileForm);
+    document.getElementById('change-password').addEventListener('click', showChangePasswordForm);
     document.getElementById('logout-btn').addEventListener('click', () => {
         firebase.auth().signOut().then(() => {
             window.location.href = 'login.html';
@@ -294,99 +262,169 @@ function setupEventListeners() {
     });
 }
 
-// Helper Functions
-function formatActivityTime(timestamp) {
-    const date = timestamp.toDate();
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) +
-        ' • ' +
-        date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+/* MODAL FORM FUNCTIONS */
+function createModalContainer(id, titleText) {
+    // Remove existing modal if present
+    const existingModal = document.getElementById(id);
+    if (existingModal) existingModal.remove();
+
+    // Create modal container
+    const modal = document.createElement('div');
+    modal.id = id;
+    modal.className = 'modal-container';
+    // Create modal content
+    const modalContent = document.createElement('div');
+    modalContent.className = 'modal-content';
+
+    // Close button
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'modal-close-btn';
+    closeBtn.innerHTML = '&times;';
+
+    closeBtn.addEventListener('click', () => modal.remove());
+    closeBtn.addEventListener('mouseover', () => {
+        closeBtn.style.color = '#1f2937';
+    });
+    closeBtn.addEventListener('mouseout', () => {
+        closeBtn.style.color = '#6b7280';
+    });
+
+    // Title
+    const title = document.createElement('h2');
+    title.textContent = titleText;
+    title.style.marginTop = '0';
+    title.style.color = 'var(--navy)';
+
+    modalContent.appendChild(closeBtn);
+    modalContent.appendChild(title);
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+
+    return modalContent;
 }
 
-function getActivityIcon(type) {
-    const icons = {
-        'task': '✓',
-        'dependant': '👪',
-        'system': '⚙️',
-        'default': '🔔'
-    };
-    return icons[type] || icons['default'];
-}
-
-let profileFormOpen = false; // Track form state
-
-// Modify the showEditProfileForm function
 async function showEditProfileForm() {
     const user = firebase.auth().currentUser;
     if (!user) return;
 
-    // Check if form already exists to prevent duplicates
-    if (document.getElementById("profile-edit-form")) {
-        document.getElementById("profile-edit-form").remove();
-        return;
-    }
+    const modalContent = createModalContainer('edit-profile-modal', 'Edit Profile');
+    const form = document.createElement('form');
+    form.id = 'profile-edit-form';
+
 
     // Fetch current user data
     const userDoc = await firebase.firestore()
         .collection('users')
         .doc(user.uid)
         .get();
-
     const userData = userDoc.exists ? userDoc.data() : {};
 
-    // Create a form element
-    var form = document.createElement("form");
-    form.setAttribute("method", "post");
-    form.id = "profile-edit-form";
+    // Name Field
+    const nameGroup = document.createElement('div');
+    nameGroup.innerHTML = `
+        <label for="edit-fullname" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--dark-text);">Full Name</label>
+        <input type="text" id="edit-fullname" value="${user.displayName || ''}" required
+            style="width: 100%; padding: 0.75rem; border: 1px solid var(--medium-gray); border-radius: 4px; font-size: 1rem;">
+    `;
+    form.appendChild(nameGroup);
 
-    // Email Label and Input
-    var emailLabel = document.createElement("label");
-    emailLabel.setAttribute("for", "edit-email");
-    emailLabel.textContent = "Email: ";
-
-    var emailInput = document.createElement("input");
-    emailInput.setAttribute("id", "edit-email");
-    emailInput.setAttribute("type", "email");
-    emailInput.setAttribute("value", user.email || '');
-    emailInput.setAttribute("required", "true");
-
-    // Full Name Label and Input
-    var nameLabel = document.createElement("label");
-    nameLabel.setAttribute("for", "edit-fullname");
-    nameLabel.textContent = "Full Name: ";
-
-    var nameInput = document.createElement("input");
-    nameInput.setAttribute("id", "edit-fullname");
-    nameInput.setAttribute("type", "text");
-    nameInput.setAttribute("value", user.displayName || '');
-    nameInput.setAttribute("required", "true");
+    // Email Field
+    const emailGroup = document.createElement('div');
+    emailGroup.innerHTML = `
+        <label for="edit-email" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--dark-text);">Email</label>
+        <input type="email" id="edit-email" value="${user.email || ''}" required
+            style="width: 100%; padding: 0.75rem; border: 1px solid var(--medium-gray); border-radius: 4px; font-size: 1rem;">
+    `;
+    form.appendChild(emailGroup);
 
     // Submit Button
-    var submit = document.createElement("input");
-    submit.setAttribute("type", "submit");
-    submit.setAttribute("value", "Save Changes");
+    const submitBtn = document.createElement('button');
+    submitBtn.type = 'submit';
+    submitBtn.textContent = 'Save Changes';
 
-    // Add event listener to form
-    form.addEventListener("submit", function (e) {
-        e.preventDefault();
-        handleProfileUpdate();
+    submitBtn.addEventListener('mouseover', () => {
+        submitBtn.style.backgroundColor = 'var(--navy)';
+    });
+    submitBtn.addEventListener('mouseout', () => {
+        submitBtn.style.backgroundColor = 'var(--slate-blue)';
     });
 
-    // Append elements to form
-    form.appendChild(emailLabel);
-    form.appendChild(emailInput);
-    form.appendChild(document.createElement("br"));
+    form.appendChild(submitBtn);
 
-    form.appendChild(nameLabel);
-    form.appendChild(nameInput);
-    form.appendChild(document.createElement("br"));
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await handleProfileUpdate();
+        document.getElementById('edit-profile-modal').remove();
+    });
 
-    form.appendChild(submit);
-
-    // Insert the form after the Edit Profile button
-    document.getElementById("edit-profile").insertAdjacentElement("afterend", form);
+    modalContent.appendChild(form);
 }
 
-// Update handleProfileUpdate to work with the new form style
+function showChangePasswordForm() {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    const modalContent = createModalContainer('change-password-modal', 'Change Password');
+    const form = document.createElement('form');
+    form.id = 'password-change-form';
+
+
+    // Current Password
+    const currentPassGroup = document.createElement('div');
+    currentPassGroup.innerHTML = `
+        <label for="current-password" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--dark-text);">Current Password</label>
+        <input type="password" id="current-password" required
+            style="width: 100%; padding: 0.75rem; border: 1px solid var(--medium-gray); border-radius: 4px; font-size: 1rem;">
+    `;
+    form.appendChild(currentPassGroup);
+
+    // New Password
+    const newPassGroup = document.createElement('div');
+    newPassGroup.innerHTML = `
+        <label for="new-password" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--dark-text);">New Password</label>
+        <input type="password" id="new-password" required minlength="6"
+            style="width: 100%; padding: 0.75rem; border: 1px solid var(--medium-gray); border-radius: 4px; font-size: 1rem;">
+    `;
+    form.appendChild(newPassGroup);
+
+    // Confirm Password
+    const confirmPassGroup = document.createElement('div');
+    confirmPassGroup.innerHTML = `
+        <label for="confirm-password" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--dark-text);">Confirm New Password</label>
+        <input type="password" id="confirm-password" required minlength="6"
+            style="width: 100%; padding: 0.75rem; border: 1px solid var(--medium-gray); border-radius: 4px; font-size: 1rem;">
+    `;
+    form.appendChild(confirmPassGroup);
+
+    // Password requirements note
+    const requirementsNote = document.createElement('p');
+    requirementsNote.textContent = 'Password must be at least 6 characters long';
+    requirementsNote.style.cssText = 'font-size: 0.875rem; color: var(--light-text); margin-top: -1rem;';
+    form.appendChild(requirementsNote);
+
+    // Submit Button
+    const submitBtn = document.createElement('button');
+    submitBtn.type = 'submit';
+    submitBtn.textContent = 'Update Password';
+
+    submitBtn.addEventListener('mouseover', () => {
+        submitBtn.style.backgroundColor = 'var(--navy)';
+    });
+    submitBtn.addEventListener('mouseout', () => {
+        submitBtn.style.backgroundColor = 'var(--slate-blue)';
+    });
+
+    form.appendChild(submitBtn);
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await handlePasswordChange();
+        document.getElementById('change-password-modal').remove();
+    });
+
+    modalContent.appendChild(form);
+}
+
 async function handleProfileUpdate() {
     const user = firebase.auth().currentUser;
     if (!user) return;
@@ -401,24 +439,22 @@ async function handleProfileUpdate() {
     }
 
     try {
-        // 1. Reauthenticate user
+        // Reauthenticate user
         const credential = firebase.auth.EmailAuthProvider.credential(
             user.email,
             currentPassword
         );
         await user.reauthenticateWithCredential(credential);
 
-        // 2. Update email if changed
+        // Update email if changed
         if (email !== user.email) {
             await user.updateEmail(email);
-            console.log("Email updated successfully");
         }
 
-        // 3. Update display name
-        const displayName = `${name}`;
-        await user.updateProfile({ displayName });
+        // Update display name
+        await user.updateProfile({ displayName: name });
 
-        // 4. Update Firestore
+        // Update Firestore
         await firebase.firestore()
             .collection('users')
             .doc(user.uid)
@@ -428,13 +464,9 @@ async function handleProfileUpdate() {
                 lastProfileUpdated: firebase.firestore.FieldValue.serverTimestamp()
             });
 
-        // 5. Update UI
-        document.getElementById('user-name').textContent = displayName;
+        // Update UI
+        document.getElementById('user-name').textContent = name;
         document.getElementById('user-email').textContent = `Email: ${email}`;
-
-        // 6. Remove the form
-        document.getElementById('profile-edit-form').remove();
-        console.log('Profile updated successfully!');
 
     } catch (error) {
         console.error("Error updating profile:", error);
@@ -442,83 +474,6 @@ async function handleProfileUpdate() {
     }
 }
 
-// Similarly, modify the showChangePasswordForm function
-function showChangePasswordForm() {
-    const user = firebase.auth().currentUser;
-    if (!user) return;
-
-    // Check if form already exists to prevent duplicates
-    if (document.getElementById("password-change-form")) {
-        document.getElementById("password-change-form").remove();
-        return;
-    }
-
-    // Create a form element
-    var form = document.createElement("form");
-    form.setAttribute("method", "post");
-    form.id = "password-change-form";
-
-    // Current Password Label and Input
-    var currentPasswordLabel = document.createElement("label");
-    currentPasswordLabel.setAttribute("for", "current-password");
-    currentPasswordLabel.textContent = "Current Password: ";
-
-    var currentPasswordInput = document.createElement("input");
-    currentPasswordInput.setAttribute("id", "current-password");
-    currentPasswordInput.setAttribute("type", "password");
-    currentPasswordInput.setAttribute("required", "true");
-
-    // New Password Label and Input
-    var newPasswordLabel = document.createElement("label");
-    newPasswordLabel.setAttribute("for", "new-password");
-    newPasswordLabel.textContent = "New Password: ";
-
-    var newPasswordInput = document.createElement("input");
-    newPasswordInput.setAttribute("id", "new-password");
-    newPasswordInput.setAttribute("type", "password");
-    newPasswordInput.setAttribute("required", "true");
-
-    // Confirm Password Label and Input
-    var confirmPasswordLabel = document.createElement("label");
-    confirmPasswordLabel.setAttribute("for", "confirm-password");
-    confirmPasswordLabel.textContent = "Confirm New Password: ";
-
-    var confirmPasswordInput = document.createElement("input");
-    confirmPasswordInput.setAttribute("id", "confirm-password");
-    confirmPasswordInput.setAttribute("type", "password");
-    confirmPasswordInput.setAttribute("required", "true");
-
-    // Submit Button
-    var submit = document.createElement("input");
-    submit.setAttribute("type", "submit");
-    submit.setAttribute("value", "Update Password");
-
-    // Add event listener to form
-    form.addEventListener("submit", function (e) {
-        e.preventDefault();
-        handlePasswordChange();
-    });
-
-    // Append elements to form
-    form.appendChild(currentPasswordLabel);
-    form.appendChild(currentPasswordInput);
-    form.appendChild(document.createElement("br"));
-
-    form.appendChild(newPasswordLabel);
-    form.appendChild(newPasswordInput);
-    form.appendChild(document.createElement("br"));
-
-    form.appendChild(confirmPasswordLabel);
-    form.appendChild(confirmPasswordInput);
-    form.appendChild(document.createElement("br"));
-
-    form.appendChild(submit);
-
-    // Insert the form after the Change Password button
-    document.getElementById("change-password").insertAdjacentElement("afterend", form);
-}
-
-// Update handlePasswordChange to work with the new form style
 async function handlePasswordChange() {
     const user = firebase.auth().currentUser;
     if (!user) return;
@@ -527,9 +482,13 @@ async function handlePasswordChange() {
     const newPassword = document.getElementById('new-password').value;
     const confirmPassword = document.getElementById('confirm-password').value;
 
-    // Only validation - passwords must match
     if (newPassword !== confirmPassword) {
         alert("New passwords don't match!");
+        return;
+    }
+
+    if (newPassword.length < 6) {
+        alert("Password must be at least 6 characters long");
         return;
     }
 
@@ -541,7 +500,7 @@ async function handlePasswordChange() {
         );
         await user.reauthenticateWithCredential(credential);
 
-        // Update password (Firebase may still enforce some basic requirements)
+        // Update password
         await user.updatePassword(newPassword);
 
         await firebase.firestore()
@@ -551,35 +510,19 @@ async function handlePasswordChange() {
                 lastPasswordUpdated: firebase.firestore.FieldValue.serverTimestamp()
             });
 
-        // Remove form and show success
-        document.getElementById('password-change-form').remove();
         alert("Password updated successfully!");
-
     } catch (error) {
         console.error("Error changing password:", error);
         let message = "Error changing password: ";
-
-        if (error.code === 'auth/wrong-password') {
-            message += "Incorrect current password";
-        } else {
-            message += error.message;
-        }
-
+        message += error.code === 'auth/wrong-password' ? "Incorrect current password" : error.message;
         alert(message);
     }
 }
 
-// You can remove or repurpose these functions as they're no longer needed
-function closeProfileForm() {
-    const form = document.getElementById('profile-edit-form');
-    if (form) {
-        form.remove();
-    }
-}
-
-function closePasswordForm() {
-    const form = document.getElementById('password-change-form');
-    if (form) {
-        form.remove();
-    }
+// Helper Functions
+function formatActivityTime(timestamp) {
+    const date = timestamp.toDate();
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) +
+        ' • ' +
+        date.toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
