@@ -104,3 +104,13 @@ function setNav() {
     });
 }
 setNav();
+
+// Add this to a common JS file included on all pages
+function addFavicon() {
+    const link = document.createElement('link');
+    link.rel = 'icon';
+    link.href = './images/favicon.ico';
+    link.type = 'image/x-icon';
+    document.head.appendChild(link);
+}
+document.addEventListener('DOMContentLoaded', addFavicon);

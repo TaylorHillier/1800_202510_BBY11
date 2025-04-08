@@ -365,6 +365,8 @@ footer {
     padding: 0.8rem 1.5rem;
     cursor: pointer;
     transition: transform 0.2s;
+    font-size: 18px;
+    font-weight: bold;
 }
 
 .btn-secondary {
@@ -374,6 +376,8 @@ footer {
     padding: 0.8rem 1.5rem;
     cursor: pointer;
     transition: transform 0.2s;
+    font-size: 18px;
+    font-weight: bold;
 }
 
 .btn-primary:hover,
