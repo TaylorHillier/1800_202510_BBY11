@@ -95,7 +95,7 @@ ul {
     display: flex;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    background: linear-gradient(135deg, var(--primary-color), var( --navy));
     color: white;
     text-align: center;
     padding: 8rem 2rem 4rem;
@@ -183,7 +183,7 @@ ul {
 .key-features {
     padding: 50px 0;
     text-align: center;
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    background: linear-gradient(135deg, var(--primary-color), var(--navy));
 }
 
 .key-features h2 {
