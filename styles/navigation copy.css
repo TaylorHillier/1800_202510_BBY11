@@ -26,12 +26,7 @@
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Common Elements */
-p {
-  margin-bottom: var(--space-sm);
-}
-
-/* Base Navigation Styles */
+/* Navigation */
 .navigation {
   position: fixed;
   bottom: 0;
@@ -43,7 +38,10 @@ p {
   z-index: 1000;
 }
 
-/* Logged-in Navigation */
+p {
+  margin-bottom: var(--space-sm);
+}
+
 .nav-list {
   display: flex;
   justify-content: space-around;
@@ -57,6 +55,19 @@ p {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+nav-item-unlogged {
+  margin-bottom: var(--space-sm);
+}
+
+.unlogged-navigation ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.nav-item-unlogged .nav-link {
+  color: var(--dark-text);
 }
 
 .nav-link {
@@ -75,12 +86,7 @@ p {
   height: 1.5rem;
 }
 
-/* SVG icons for logged-in users */
-.nav-list svg path {
-  fill: white;
-}
 
-/* Non-logged-in Navigation */
 .nav-list-unlogged {
   display: flex;
   align-items: center;
@@ -90,96 +96,25 @@ p {
   flex-direction: row;
 }
 
-.nav-item-unlogged {
-  margin-bottom: var(--space-sm);
-}
-
-.nav-item-unlogged .nav-link {
-  color: var(--dark-text);
-}
-
-.unlogged-navigation ul {
-  list-style-type: none;
-  padding-left: 0;
-}
-
-/* Logo Styling */
-.nav-logo,
-.small-logo {
-  height: 20px;
-  width: auto;
-  transition: transform 0.2s ease;
-}
-
-.small-logo {
+.nav-logo {
   height: 24px;
+  /* Adjust based on your logo's aspect ratio */
   width: auto;
-  transition: transform 0.2s ease;
 }
 
-.nav-item.logo .nav-link,
-.nav-item-unlogged.logo .nav-link {
-  padding: var(--space-xs);
+/* If you want the logo to be larger than other icons */
+.logo .nav-link {
+  padding: 0.5rem;
+  /* Adjust as needed */
+}
+
+/* If you want to center the logo vertically */
+.logo .nav-link {
   display: flex;
   align-items: center;
-  justify-content: center;
 }
 
-.logo .nav-link:hover .nav-logo {
-  transform: scale(1.05);
-}
-
-.logo .nav-link:hover .small-logo {
-  transform: scale(1.05);
-}
-
-/* Small mobile devices (up to 575px) */
-@media (max-width: 575px) {
-  .nav-logo {
-    height: 20px;
-    display: none;
-  }
-
-  .nav-item p,
-  .nav-item-unlogged p {
-    display: none;
-  }
-
-  .nav-item.logo{
-    margin: 0 auto;
-    display: none;
-  }
-
-  .nav-list{
-    margin-top: 2%;
-  }
-}
-
-/* Regular mobile devices (576px - 767px) */
-@media (min-width: 576px) and (max-width: 991px) {
-  .nav-logo {
-    height: 20px;
-  }
-
-  .nav-item p {
-    display: none;
-  }
-
-  .nav-list {
-    margin-top: 2%;
-  }
-
-  .nav-item.s-logo{
-    margin: 0 auto;
-    display: none;
-  }
-}
-
-
-/* Desktop and larger screens (992px and up) */
 @media (min-width: 992px) {
-
-  /* Layout changes */
   .main-layout {
     flex-direction: row;
   }
@@ -200,7 +135,6 @@ p {
     padding: 0 var(--space-md);
   }
 
-  /* Text and content styling */
   p {
     margin-bottom: 0;
   }
@@ -217,22 +151,19 @@ p {
     font-size: 1rem;
     align-items: center;
   }
+}
 
-  /* Logo styling */
-  .nav-item.logo {
-    margin-bottom: var(--space-lg);
-  }
-
-  .nav-logo {
-    height: 22px;
-  }
-
-  .nav-item.logo .nav-link {
-    justify-content: flex-start;
-  }
-
-  .s-logo {
+@media (max-width: 767px) {
+  .nav-item p {
     display: none;
   }
 
+  .nav-list {
+    margin-top: 2%;
+  }
+}
+
+/* For logged-in users */
+.nav-list svg path {
+  fill: white;
 }

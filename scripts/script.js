@@ -5,11 +5,21 @@
  */
 function setNav() {
 
-  firebase.auth().onAuthStateChanged(user => {
-    if (user) {                   
-      document.getElementById("navigation").insertAdjacentHTML("afterbegin", 
-        `<nav>
+    firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+            document.getElementById("navigation").insertAdjacentHTML("afterbegin",
+                `<nav>
           <ul class="nav-list">
+                <li class="nav-item logo">
+                  <a href="main.html" class="nav-link">
+                      <img src="./images/white-logo.png" alt="App Logo" class="nav-logo">
+                  </a>
+              </li>
+                <li class="nav-item s-logo">
+                  <a href="main.html" class="nav-link">
+                      <img src="./images/white-pill.png" alt="App Logo" class="small-logo">
+                  </a>
+              </li>
               <li class="nav-item">
                   <a href="main.html"  class="nav-link">
                       <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd">
@@ -52,11 +62,21 @@ function setNav() {
               </li>
           </ul>
       </nav>`
-      );
-    } else {
-      document.getElementById("navigation").insertAdjacentHTML("afterbegin", 
-      `<nav>
+            );
+        } else {
+            document.getElementById("navigation").insertAdjacentHTML("afterbegin",
+                `<nav>
           <ul class="nav-list-unlogged">
+                <li class="nav-item-unlogged logo">
+                  <a href="index.html" class="nav-link">
+                      <img src="./images/blue-logo.png" alt="App Logo" class="nav-logo">
+                  </a>
+              </li>
+              <li class="nav-item-unlogged s-logo">
+                  <a href="index.html" class="nav-link">
+                      <img src="./images/white-pill.png" alt="App Logo" class="small-logo">
+                  </a>
+              </li>
               <li class="nav-item-unlogged">
                   <a href="index.html"  class="nav-link">
                       <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd"><path d="M22 11.414v12.586h-20v-12.586l-1.293 1.293-.707-.707 12-12 12 12-.707.707-1.293-1.293zm-6 11.586h5v-12.586l-9-9-9 9v12.586h5v-9h8v9zm-1-7.889h-6v7.778h6v-7.778z"></path>
@@ -80,7 +100,7 @@ function setNav() {
               </li>
           </ul>
       </nav>`);
-    }
-});
+        }
+    });
 }
 setNav();
