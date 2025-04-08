@@ -412,59 +412,6 @@ footer {
 }
 
 
-/* Header for the Medication Form */
-.med-form-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--space-sm);
-    border-bottom: 1px solid var(--medium-gray);
-    padding-bottom: var(--space-xs);
-}
-
-/* Exit (Close) Button */
-.med-exit {
-    background: transparent;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: var(--dark-text);
-}
-
-/* Medication Form inner styling */
-#newMedication-form label {
-    display: block;
-    margin-top: var(--space-sm);
-    font-weight: bold;
-}
-
-#newMedication-form input,
-#newMedication-form textarea {
-    width: 100%;
-    padding: var(--space-xs);
-    margin-top: var(--space-xs);
-    border: 1px solid var(--medium-gray);
-    border-radius: var(--border-radius);
-}
-
-#add-medication-button {
-    margin-top: var(--space-md);
-    padding: var(--space-xs) var(--space-sm);
-    background-color: var(--slate-green);
-    color: var(--white);
-    border: none;
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    display: block;
-    width: 100%;
-    transition: background-color 0.3s ease;
-}
-
-#add-medication-button:hover {
-    background-color: var(--pale-green);
-    color: var(--dark-text);
-}
-
 /* ================================================== */
 /*                 RESPONSIVE STYLES                */
 /* ================================================== */
@@ -526,17 +473,6 @@ footer {
         margin: 0 2%;
     }
 
-    /* Responsive adjustments for medication form modal */
-    @media screen and (max-width: 600px) {
-        .medication-form {
-            width: 90%;
-            margin: 0 1rem calc(var(--nav-height-mobile) + var(--space-sm)) 1rem;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-    }
 }
 
 @media (min-width: 769px) {

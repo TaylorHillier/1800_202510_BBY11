@@ -270,9 +270,6 @@ section {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-sm);
-  border-bottom: 1px solid var(--medium-gray);
-  padding-bottom: var(--space-xs);
 }
 
 /* Exit (Close) Button Style */

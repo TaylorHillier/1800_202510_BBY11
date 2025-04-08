@@ -7,6 +7,9 @@ function logout() {
       });
 }
 
+/**
+ * Inserts content into nav skeleton on each page depending on login status.
+ */
 function setNav() {
 
   firebase.auth().onAuthStateChanged(user => {

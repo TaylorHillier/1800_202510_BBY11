@@ -285,8 +285,27 @@ textarea {
   background-color: var(--pale-green);
 }
 
+#calendar-sidebar {
+  padding: 1rem;
+  overflow-y: scroll;
+  max-height: 100%;
+}
+
+#calendar-sidebar h2 {
+  margin-bottom: 1rem;
+}
+
+#calendar-container {
+  height: fit-content;
+}
+
+#calendar-sidebar h3 {
+  margin-bottom: 0;
+}
+
+
 /* --- Responsive Enhancements for Calendar --- */
-@media (min-width: 768px) {
+@media (min-width: 1200px) {
   /* Calendar: 2-column layout for calendar vs sidebar */
   #calendar {
     display: grid;

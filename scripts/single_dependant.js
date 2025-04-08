@@ -1,38 +1,59 @@
-var dependant;
-var globalUserId;
-let editMode = false;
-let currentSummary = "";
+// ==================================================
+//              GLOBAL VARIABLES & INITIAL SETUP
+// ==================================================
 
-let button = document.getElementById("addMedication");
-if (button) {
-    button.addEventListener("click", createMedicationForm); // Attach the event listener correctly
+var dependant;                 // Dependant ID from URL query parameter
+var globalUserId;              // Authenticated user's UID
+let editMode = false;          // Tracks if the dependant is in edit mode
+let currentSummary = "";       // Placeholder (if used for summary functionality)
+
+// Global Firebase variable to store the full dependant data
+let globalDependantData = {};
+
+// Medication UI state variables
+let removeMedMode = false;     // Tracks if in medication remove mode
+let hasMedications = false;    // Flag indicating whether any medications exist
+
+// Attach "Add Medication" event listener if button exists.
+let medButton = document.getElementById("addMedication");
+if (medButton) {
+    medButton.addEventListener("click", createMedicationForm);
 }
 
+// ==================================================
+//          DEPENDANT DATA & AUTHENTICATION
+// ==================================================
+
+/**
+ * Retrieves the current dependant (from URL) and fetches its data from Firestore.
+ */
 function getCurrentDependant() {
-    const url = new URLSearchParams(window.location.search);
-    dependant = url.get('id');
+    const urlParams = new URLSearchParams(window.location.search);
+    dependant = urlParams.get('id');
 
     firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
             globalUserId = user.uid;
+            try {
+                const dependantDoc = await firebase.firestore()
+                    .collection('users')
+                    .doc(user.uid)
+                    .collection('dependants')
+                    .doc(dependant)
+                    .get();
 
-            const dependantDoc = await firebase.firestore()
-                .collection('users')
-                .doc(user.uid)
-                .collection('dependants')
-                .doc(dependant)
-                .get();
-
-            if (dependantDoc.exists) {
-                // Store the entire dependant data in a global variable.
-                globalDependantData = dependantDoc.data();
-
-                // Render the dependant info (name, relationship, birthdate) in its container.
-                renderDependantView(globalDependantData);
-            } else {
-                console.log("No dependant found");
+                if (dependantDoc.exists) {
+                    // Store full dependant data
+                    globalDependantData = dependantDoc.data();
+                    // Render read-only dependant view
+                    renderDependantView(globalDependantData);
+                } else {
+                    console.log("No dependant found");
+                }
+            } catch (error) {
+                console.error("Error fetching dependant data:", error);
             }
-            
+            // Load additional sections
             loadNotesIssues();
             getMedicationList();
         } else {
@@ -42,16 +63,18 @@ function getCurrentDependant() {
 }
 getCurrentDependant();
 
-// Add this right after getCurrentDependant() call
+// Also set up additional button events once DOM is loaded.
 document.addEventListener("DOMContentLoaded", function () {
     setupButtons();
 });
 
-// Global state variables
-let removeMedMode = false;
-let hasMedications = false;
+// ==================================================
+//             MEDICATION MANAGEMENT
+// ==================================================
 
-// Initialize event listeners for buttons
+/**
+ * Sets up event listeners for medication-related buttons.
+ */
 function setupButtons() {
     let addButton = document.getElementById("addMedication");
     let removeMedButton = document.getElementById("removeMedModeBtn");
@@ -59,7 +82,6 @@ function setupButtons() {
     if (addButton) {
         addButton.addEventListener("click", createMedicationForm);
     }
-
     if (removeMedButton) {
         removeMedButton.addEventListener("click", function () {
             // Only allow removal if medications exist
@@ -72,36 +94,38 @@ function setupButtons() {
     }
 }
 
-// Toggle medication removal mode UI state
+/**
+ * Toggles the "Remove Medication" mode in the UI.
+ */
 function toggleRemoveMedMode() {
     removeMedMode = !removeMedMode;
     console.log("Remove medication mode toggled to:", removeMedMode);
 
-    // Show/hide delete buttons based on mode
+    // Show/hide deletion buttons accordingly.
     const deleteButtons = document.querySelectorAll('.delete-medication');
     deleteButtons.forEach(button => {
         button.style.display = removeMedMode ? 'inline-block' : 'none';
     });
 
-    // Update toggle button text
+    // Update toggle button text.
     const toggleBtn = document.getElementById('removeMedModeBtn');
     if (toggleBtn) {
         toggleBtn.textContent = removeMedMode ? 'Exit Remove Mode' : 'Remove Medications';
     }
 }
 
-// Load and display medications from Firestore
+/**
+ * Retrieves and renders the list of medications from Firestore.
+ */
 function getMedicationList() {
     firebase.auth().onAuthStateChanged(user => {
         if (user) {
             const dependantId = new URLSearchParams(window.location.search).get('id');
-
             if (!dependantId) {
                 console.error("No dependant selected");
                 return;
             }
 
-            // Get medications reference for this dependant
             const medicationsRef = firebase.firestore()
                 .collection('users')
                 .doc(user.uid)
@@ -109,21 +133,16 @@ function getMedicationList() {
                 .doc(dependantId)
                 .collection('medications');
 
-            // Clear existing list
             const medListElement = document.getElementById("med-list");
             medListElement.innerHTML = '';
 
-            // Real-time listener for medication changes
+            // Listen in real time for medication updates.
             medicationsRef.orderBy('startDate', 'desc').onSnapshot((medsSnapshot) => {
                 medListElement.innerHTML = '';
-
-                // Update medication existence flag
                 hasMedications = !medsSnapshot.empty;
 
                 if (!hasMedications) {
                     medListElement.innerHTML = "<p>No medications found.</p>";
-
-                    // Exit remove mode if active but no medications exist
                     if (removeMedMode) {
                         removeMedMode = false;
                         const toggleBtn = document.getElementById('removeMedModeBtn');
@@ -134,21 +153,21 @@ function getMedicationList() {
                     return;
                 }
 
-                // Generate medication list items
+                // Loop through medications and render list items.
                 medsSnapshot.forEach((medDoc) => {
                     const medData = medDoc.data();
                     const listItem = document.createElement('li');
 
-                    // Container for med info and delete button
+                    // Create container for medication info and delete button.
                     const container = document.createElement("div");
                     container.className = "medication-container";
 
-                    // Medication details text
+                    // Create medication info element with HTML formatting.
                     const medInfo = document.createElement("span");
                     medInfo.innerHTML = `<b>${medData.name}</b>: ${medData.numPillsPerDose} times today${medData.continuous ? ' (continuous)' : ''}`;
                     medInfo.className = "medication-info";
 
-                    // Delete button with conditional display
+                    // Create the delete button.
                     const removeBtn = document.createElement("button");
                     removeBtn.textContent = "×";
                     removeBtn.className = "delete-medication";
@@ -165,20 +184,19 @@ function getMedicationList() {
                         font-size: 14px;
                         transition: background-color 0.2s;
                     `;
-
-                    // Confirmation before deletion
+                    // Confirm deletion and then call removeMedication.
                     removeBtn.addEventListener("click", (e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         if (confirm(`Remove ${medData.name}?`)) {
-                            removeMedication(medDoc.id).then(() => {
-                               
-                                // Dispatch a custom event to notify other modules.
-                                document.dispatchEvent(new CustomEvent("medicationRemoved"));
-                            })
-                            .catch(error => {
-                                console.error("Error adding medication:", error);
-                            });;
+                            removeMedication(medDoc.id)
+                                .then(() => {
+                                    console.log('Dispatching medicationRemoved event');
+                                    document.dispatchEvent(new CustomEvent("medicationRemoved"));
+                                })
+                                .catch(error => {
+                                    console.error("Error removing medication:", error);
+                                });
                         }
                     });
 
@@ -196,13 +214,18 @@ function getMedicationList() {
     });
 }
 
+/**
+ * Removes a medication and its related completed tasks from Firestore.
+ * @param {string} medicationId - The ID of the medication to remove.
+ * @returns {Promise} Resolves when removal is complete.
+ */
 function removeMedication(medicationId) {
     const user = firebase.auth().currentUser;
     const dependantId = new URLSearchParams(window.location.search).get('id');
 
     if (!user || !dependantId) {
         console.error("No user signed in or no dependant selected");
-        return;
+        return Promise.reject(new Error("Missing user or dependant"));
     }
 
     const medicationPromise = firebase.firestore()
@@ -222,7 +245,6 @@ function removeMedication(medicationId) {
             return Promise.reject(error);
         });
 
-    // Delete any completed task documents whose IDs start with medicationId + "-"
     const completedTasksPromise = firebase.firestore()
         .collection("users")
         .doc(user.uid)
@@ -249,23 +271,23 @@ function removeMedication(medicationId) {
         });
 
     return Promise.all([medicationPromise, completedTasksPromise])
-    .then(() => {
-        console.log("Medication and related tasks removed successfully");
-    })
-    .catch(error => {
-        console.error("Error in removeMedication:", error);
-        return Promise.reject(error);
-    });
+        .then(() => {
+            console.log("Medication and related tasks removed successfully");
+        })
+        .catch(error => {
+            console.error("Error in removeMedication:", error);
+            return Promise.reject(error);
+        });
 }
 
-// Reset UI if all medications are removed
+/**
+ * Checks whether the medications collection is empty and resets removeMedMode if needed.
+ */
 function checkIfLastMedication() {
     const user = firebase.auth().currentUser;
     const dependantId = new URLSearchParams(window.location.search).get('id');
 
-    if (!user || !dependantId) {
-        return;
-    }
+    if (!user || !dependantId) return;
 
     firebase.firestore()
         .collection("users")
@@ -276,10 +298,8 @@ function checkIfLastMedication() {
         .get()
         .then(snapshot => {
             if (snapshot.empty && removeMedMode) {
-                // Exit remove mode when last medication is deleted
                 removeMedMode = false;
                 hasMedications = false;
-
                 const toggleBtn = document.getElementById('removeMedModeBtn');
                 if (toggleBtn) {
                     toggleBtn.textContent = 'Remove Medications';
@@ -290,18 +310,26 @@ function checkIfLastMedication() {
             console.error("Error checking medications:", error);
         });
 }
+
+// Initialize the medication list on page load.
 getMedicationList();
 
+/**
+ * Creates and displays the medication form as a modal overlay.
+ * Prevents duplicate forms from being created.
+ */
 function createMedicationForm() {
-
-    if(document.getElementById('medication-form')){
+    // Prevent duplicate medication form
+    if (document.getElementById('medication-form')) {
         return;
     }
 
-    if(window.innerWidth < 992){
-    $(document.body).addClass("overflow-y-hidden");
+    // If viewport is small, disable body scrolling.
+    if (window.innerWidth < 992) {
+        $(document.body).addClass("overflow-y-hidden");
     }
-    
+
+    const mainAnchor = document.getElementsByTagName('main')[0];
     let container = document.createElement('div');
     container.className = 'medication-form';
     container.id = 'medication-form';
@@ -318,115 +346,88 @@ function createMedicationForm() {
     timesContainer.className = 'med-times-container';
     timesContainer.id = 'med-times-container';
 
-    let button = document.getElementById("addMedication");
-    let anchor = document.getElementsByTagName('main')[0];
-
-    // Prevent duplicate forms
-    if (document.getElementById("newMedication-form")) {
-        document.getElementById("newMedication-form").remove();
-        return;
-    }
-
+    // Create the medication form.
     var form = document.createElement("form");
     form.setAttribute("method", "post");
     form.setAttribute("action", "addMedication");
     form.id = "newMedication-form";
 
-    // Get today's date (YYYY-MM-DD) for min attributes
+    // Get today's date for input defaults.
     const now = new Date().toLocaleDateString("en-CA");
-    
     const today = now.split("T")[0];
-    const time = new Date(Date.now()).toTimeString().slice(0,5);
-    
+    const time = new Date().toTimeString().slice(0, 5);
 
-    // Start Date
+    // Create form fields.
     var startDateLabel = document.createElement("label");
     startDateLabel.setAttribute("for", "start-date");
     startDateLabel.textContent = "Start Date: ";
-
     var startDate = document.createElement("input");
-    startDate.setAttribute("id", "start-date");
-    startDate.setAttribute("type", "date");
-    startDate.setAttribute("name", "start-date");
-    startDate.setAttribute("value", today);
-    startDate.setAttribute("min", today);
+    startDate.id = "start-date";
+    startDate.type = "date";
+    startDate.name = "start-date";
+    startDate.value = today;
+    startDate.min = today;
 
-    // End Date
     var endDateLabel = document.createElement("label");
     endDateLabel.setAttribute("for", "end-date");
     endDateLabel.textContent = "End Date: ";
-
     var endDate = document.createElement("input");
-    endDate.setAttribute("id", "end-date");
-    endDate.setAttribute("type", "date");
-    endDate.setAttribute("name", "end-date");
-    endDate.setAttribute("min", today);
+    endDate.id = "end-date";
+    endDate.type = "date";
+    endDate.name = "end-date";
+    endDate.min = today;
 
-    // Start Time
     var startTimeLabel = document.createElement("label");
     startTimeLabel.setAttribute("for", "start-time");
     startTimeLabel.textContent = "Start Time: ";
-
     var startTime = document.createElement("input");
-    startTime.setAttribute("id", "start-time");
-    startTime.setAttribute("type", "time");
-    startTime.setAttribute("name", "start-time");
-    startTime.setAttribute("value", `${time}`); // now it's set correctly
+    startTime.id = "start-time";
+    startTime.type = "time";
+    startTime.name = "start-time";
+    startTime.value = time;
 
-    // End Time
     var endTimeLabel = document.createElement("label");
     endTimeLabel.setAttribute("for", "end-time");
     endTimeLabel.textContent = "End Time: ";
-
     var endTime = document.createElement("input");
-    endTime.setAttribute("id", "end-time");
-    endTime.setAttribute("type", "time");
-    endTime.setAttribute("name", "end-time");
-    endTime.setAttribute("value", "22:00"); // now it's set correctly
+    endTime.id = "end-time";
+    endTime.type = "time";
+    endTime.name = "end-time";
+    endTime.value = "22:00";
 
-    // Number of Pills per Dose
     var numPillsLabel = document.createElement("label");
     numPillsLabel.setAttribute("for", "numpillsperdose");
     numPillsLabel.textContent = "Number of pills per dose: ";
-
     var numPills = document.createElement("input");
-    numPills.setAttribute("id", "numpillsperdose");
-    numPills.setAttribute("type", "number");
-    numPills.setAttribute("name", "numpillsperdose");
+    numPills.id = "numpillsperdose";
+    numPills.type = "number";
+    numPills.name = "numpillsperdose";
 
-    // Medication Name
     var medicationLabel = document.createElement("label");
     medicationLabel.setAttribute("for", "medication");
     medicationLabel.textContent = "Medication Name: ";
-
     var medication = document.createElement("input");
-    medication.setAttribute("id", "medication");
-    medication.setAttribute("type", "text");
-    medication.setAttribute("name", "medication");
-    medication.setAttribute("placeholder", "Medication");
+    medication.id = "medication";
+    medication.type = "text";
+    medication.name = "medication";
+    medication.placeholder = "Medication";
 
-    // Doses per Day (New Field)
     var dosesLabel = document.createElement("label");
     dosesLabel.setAttribute("for", "doses-per-day");
     dosesLabel.textContent = "Doses per day: ";
-
     var dosesPerDay = document.createElement("input");
-    dosesPerDay.setAttribute("id", "doses-per-day");
-    dosesPerDay.setAttribute("type", "number");
-    dosesPerDay.setAttribute("name", "doses-per-day");
-    dosesPerDay.setAttribute("min", "1");
+    dosesPerDay.id = "doses-per-day";
+    dosesPerDay.type = "number";
+    dosesPerDay.name = "doses-per-day";
+    dosesPerDay.min = "1";
 
-    // Continuous Checkbox
     var continuousLabel = document.createElement("label");
     continuousLabel.setAttribute("for", "continuous");
     continuousLabel.textContent = "Continuous: (Will auto set 3 months)";
-
     var continuous = document.createElement("input");
-    continuous.setAttribute("id", "continuous");
-    continuous.setAttribute("type", "checkbox");
-    continuous.setAttribute("name", "continuous");
-
-    // When continuous is checked, disable end date and end time
+    continuous.id = "continuous";
+    continuous.type = "checkbox";
+    continuous.name = "continuous";
     continuous.addEventListener("change", function () {
         if (this.checked) {
             endDate.disabled = true;
@@ -437,51 +438,45 @@ function createMedicationForm() {
         }
     });
 
-    // Submit Button
     var submit = document.createElement("input");
-    submit.setAttribute("type", "submit");
-    submit.setAttribute("value", "Add");
+    submit.type = "submit";
+    submit.value = "Add";
     submit.id = 'add-medication-button';
 
     form.addEventListener("submit", function (event) {
         event.preventDefault();
         console.log("Form submitted!");
-    
+
         addMedication()
             .then(() => {
-                console.log('displatching');
-                // Dispatch a custom event to notify other modules.
+                console.log("Dispatching medicationAdded event");
                 document.dispatchEvent(new CustomEvent("medicationAdded"));
                 form.reset();
             })
             .catch(error => {
                 console.error("Error adding medication:", error);
             });
-    
-        document.getElementById('medication-form').remove();
-        $(document.body).removeClass("overflow-y-hidden");
-    });
-    
-    
 
-    // Append elements to form
-
-    var exit  = document.createElement('button');
-    exit.className = 'med-exit';
-    exit.textContent = 'x';
-    exit.addEventListener('click', () => {
         document.getElementById('medication-form').remove();
         $(document.body).removeClass("overflow-y-hidden");
     });
 
-    var title = document.createElement('h2');
-    title.className = 'med-form-header';
-    title.textContent = 'Add a Medication';
+    // Exit button to close the form.
+    var exitBtn = document.createElement('button');
+    exitBtn.className = 'med-exit';
+    exitBtn.textContent = 'x';
+    exitBtn.addEventListener('click', () => {
+        document.getElementById('medication-form').remove();
+        $(document.body).removeClass("overflow-y-hidden");
+    });
 
-    headerContainer.appendChild(title);
-    headerContainer.appendChild(exit);
+    var formTitle = document.createElement('h2');
+    formTitle.className = 'med-form-header';
+    formTitle.textContent = 'Add a Medication';
+
+    headerContainer.appendChild(formTitle);
+    headerContainer.appendChild(exitBtn);
     form.appendChild(headerContainer);
-
 
     datesContainer.appendChild(startDateLabel);
     datesContainer.appendChild(startDate);
@@ -497,31 +492,29 @@ function createMedicationForm() {
 
     form.appendChild(numPillsLabel);
     form.appendChild(numPills);
-    
     form.appendChild(medicationLabel);
     form.appendChild(medication);
-    
     form.appendChild(dosesLabel);
     form.appendChild(dosesPerDay);
-    
     form.appendChild(continuousLabel);
     form.appendChild(continuous);
-    
     form.appendChild(submit);
 
     container.appendChild(form);
-
-    anchor.insertAdjacentElement("beforeend", container);
-
+    // Append the medication form container to the main element.
+    mainAnchor.insertAdjacentElement("beforeend", container);
 }
 
+/**
+ * Adds a new medication to Firestore along with its computed schedule.
+ * @returns {Promise<void>} A promise that resolves when the medication is added and updated with schedule.
+ */
 function addMedication() {
     const user = firebase.auth().currentUser;
     if (!user) {
         console.error("No user signed in");
         return Promise.reject(new Error("No user signed in"));
     }
-
     const url = new URLSearchParams(window.location.search);
     const dependantId = url.get('id');
     if (!dependantId) {
@@ -529,7 +522,6 @@ function addMedication() {
         return Promise.reject(new Error("No dependant selected"));
     }
 
-    // Get form values
     const startDateStr = document.getElementById("start-date").value.trim();
     console.log(startDateStr);
     const endDateStr = document.getElementById("end-date").value.trim();
@@ -540,7 +532,6 @@ function addMedication() {
     const dosesPerDayValue = document.getElementById("doses-per-day").value;
     const isContinuous = document.getElementById("continuous").checked;
 
-    // Basic field validation
     if (!startDateStr || !startTimeStr || !medicationName || !numPillsPerDose || !dosesPerDayValue) {
         console.error("Fill in all required fields");
         return Promise.reject(new Error("Fill in all required fields"));
@@ -560,20 +551,16 @@ function addMedication() {
         return Promise.reject(new Error("Start date cannot be in the past"));
     }
 
-    // If not continuous, validate end date and end time
     if (!isContinuous) {
         if (!endDateStr || !endTimeStr) {
             console.error("Fill in end date and end time or select Continuous");
             return Promise.reject(new Error("Fill in end date and end time or select Continuous"));
         }
-
         const endDateObj = new Date(endDateStr).toLocaleDateString('en-CA');
         if (endDateObj < startDateObj) {
             console.error("End date must be after the start date");
             return Promise.reject(new Error("End date must be after the start date"));
         }
-
-        // If the start and end dates are the same, ensure the end time is after the start time
         if (startDateObj === endDateObj) {
             const [sHour, sMin] = startTimeStr.split(":").map(Number);
             const [eHour, eMin] = endTimeStr.split(":").map(Number);
@@ -584,7 +571,6 @@ function addMedication() {
         }
     }
 
-    // Build the medication object
     const medication = {
         name: medicationName,
         startDate: startDateStr,
@@ -597,7 +583,6 @@ function addMedication() {
         continuous: isContinuous
     };
 
-    // Reference to the medications collection for this dependant
     const medicationCollectionRef = firebase.firestore()
         .collection('users')
         .doc(user.uid)
@@ -605,24 +590,20 @@ function addMedication() {
         .doc(dependantId)
         .collection('medications');
 
-    // Return the promise chain so that the caller can use .then()
     return medicationCollectionRef.add(medication)
         .then(docRef => {
             console.log("New medication added:", medicationName, "ID:", docRef.id);
 
-            // Compute the schedule for the medication using the awake period rather than 24 hours.
             let scheduleArray = [];
-
             let dayStart = new Date(startDateStr);
             let dayEnd;
             if (isContinuous) {
                 dayEnd = new Date(dayStart);
-                dayEnd.setDate(dayEnd.getDate() + 90); // continuous mode: 90 days schedule
+                dayEnd.setDate(dayEnd.getDate() + 90);
             } else {
                 dayEnd = new Date(endDateStr);
             }
 
-            // Parse the start time.
             const [startHour, startMinute] = startTimeStr.split(":").map(Number);
             let endHour, endMinute;
             if (!isContinuous) {
@@ -632,20 +613,16 @@ function addMedication() {
                 endMinute = 0;
             }
 
-            // Iterate over each day in the scheduling range.
             for (let day = new Date(dayStart); day <= dayEnd; day.setDate(day.getDate() + 1)) {
                 let awakeStart = new Date(day);
                 awakeStart.setHours(startHour, startMinute, 0, 0);
-
                 let awakeEnd = new Date(day);
                 awakeEnd.setHours(endHour, endMinute, 0, 0);
-
                 const activeMinutes = (awakeEnd - awakeStart) / (1000 * 60);
                 let intervalMinutes = 0;
                 if (dosesPerDay > 1) {
                     intervalMinutes = activeMinutes / (dosesPerDay - 1);
                 }
-
                 for (let doseIndex = 0; doseIndex < dosesPerDay; doseIndex++) {
                     const doseTime = new Date(awakeStart.getTime() + doseIndex * intervalMinutes * 60000);
                     scheduleArray.push({
@@ -654,8 +631,6 @@ function addMedication() {
                     });
                 }
             }
-
-            // Update the medication document with the computed schedule.
             return docRef.update({ schedule: scheduleArray });
         })
         .then(() => {
@@ -667,23 +642,21 @@ function addMedication() {
         });
 }
 
-
-
+/**
+ * Saves a new note/issue for the dependant.
+ */
 function saveNoteIssue() {
     const userId = globalUserId;
     const dependantId = dependant;
     const newNoteIssue = document.getElementById('new-note-issue').value;
-
     if (newNoteIssue.trim() === '') {
         alert('Please enter a note or issue.');
         return;
     }
-
     const newEntry = {
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
         content: newNoteIssue
     };
-
     firebase.firestore()
         .collection('users')
         .doc(userId)
@@ -700,11 +673,13 @@ function saveNoteIssue() {
         });
 }
 
+/**
+ * Loads and renders the list of notes/issues for the current dependant.
+ */
 function loadNotesIssues() {
     const userId = globalUserId;
     const notesIssuesContainer = document.getElementById('view-notes-issues');
     notesIssuesContainer.innerHTML = '';
-
     firebase.firestore()
         .collection('users')
         .doc(userId)
@@ -718,14 +693,11 @@ function loadNotesIssues() {
                 notesIssuesContainer.textContent = 'No notes or issues yet.';
                 return;
             }
-
             querySnapshot.forEach(doc => {
                 const entry = doc.data();
                 const timestamp = entry.timestamp.toDate().toLocaleString();
-                
                 const noteIssueElement = document.createElement('p');
                 noteIssueElement.textContent = `${timestamp}: ${entry.content}`;
-               
                 notesIssuesContainer.appendChild(noteIssueElement);
             });
         })
@@ -734,11 +706,21 @@ function loadNotesIssues() {
         });
 }
 
+// ==================================================
+//             DEPENDANT EDIT & VIEW MODE
+// ==================================================
 
+/**
+ * Switches to edit mode for the dependant and renders the editable form.
+ */
 function enterEditDependantMode() {
     renderDependantEditForm(globalDependantData);
 }
 
+/**
+ * Renders the edit form for dependant details.
+ * @param {Object} dependent - The dependant data object.
+ */
 function renderDependantEditForm(dependent) {
     const detailsContainer = document.getElementById("dependent-details");
     if (!detailsContainer) return;
@@ -783,33 +765,32 @@ function renderDependantEditForm(dependent) {
         </form>
     `;
     
-    // Optionally clear or hide the dependant-info container to focus on the form.
-    const dependantInfoContainer = document.getElementById("dependant-info");
-    if (dependantInfoContainer) {
-        dependantInfoContainer.innerHTML = "";
+    // Optionally clear the dependant-info container.
+    const infoContainer = document.getElementById("dependant-info");
+    if (infoContainer) {
+        infoContainer.innerHTML = "";
     }
     
-    // Attach event listeners for Save and Cancel actions.
+    // Attach events for form actions.
     document.getElementById("save-dependant-edits").addEventListener("click", saveDependantEdits);
-    document.getElementById("cancel-dependant-edits").addEventListener("click", function () {
-        // Restore view mode using the global dependant data.
+    document.getElementById("cancel-dependant-edits").addEventListener("click", () => {
         renderDependantView(globalDependantData);
     });
 }
 
-// This function renders the normal (read-only) view of dependant details.
+/**
+ * Renders the read-only view of dependant details.
+ * @param {Object} dependent - The dependant data object.
+ */
 function renderDependantView(dependent) {
-    // Populate the primary dependant info.
-    const dependantInfoContainer = document.getElementById("dependant-info");
-    if (dependantInfoContainer) {
-        dependantInfoContainer.innerHTML = `
+    const infoContainer = document.getElementById("dependant-info");
+    if (infoContainer) {
+        infoContainer.innerHTML = `
             <h2>${dependent.firstname || ""} ${dependent.lastname || ""}</h2>
             <p><strong>Relationship:</strong> ${dependent.relationship || "Not specified"}</p>
             <p><strong>Birthdate:</strong> ${dependent.birthdate || "Not specified"}</p>
         `;
     }
-    
-    // Populate the detailed information container.
     const detailsContainer = document.getElementById("dependent-details");
     if (detailsContainer) {
         detailsContainer.innerHTML = `
@@ -817,14 +798,12 @@ function renderDependantView(dependent) {
                 <h3>Health Summary</h3>
                 <p>${dependent.healthSummary || "No information provided"}</p>
             </div>
-    
             <div class="profile-section">
                 <h3>Medical Information</h3>
                 <p><strong>Allergies:</strong> ${dependent.medicalInfo?.allergies || "None"}</p>
                 <p><strong>Medications:</strong> ${dependent.medicalInfo?.medications || "None"}</p>
                 <p><strong>Health History:</strong> ${dependent.medicalInfo?.healthHistory || "No history provided"}</p>
             </div>
-    
             <div class="profile-section">
                 <h3>Emergency Contacts</h3>
                 <div class="contact-card">
@@ -840,7 +819,6 @@ function renderDependantView(dependent) {
                     <p>${dependent.emergencyContacts?.secondary?.relationship || ""}</p>
                 </div>
             </div>
-    
             <div class="profile-section">
                 <h3>Additional Notes</h3>
                 <p>${dependent.additionalInfo || "No additional notes"}</p>
@@ -848,52 +826,19 @@ function renderDependantView(dependent) {
             <button id="edit-dependant">Edit Dependant</button>
         `;
         
-        // Attach event listener for the Edit Dependant button.
+        // Attach event to the "Edit Dependant" button.
         const editButton = document.getElementById("edit-dependant");
         if (editButton) {
-            editButton.addEventListener("click", function () {
-                // Call the existing function for rendering the edit form.
-                renderDependantEditForm(dependent);
-            });
+            editButton.addEventListener("click", () => renderDependantEditForm(dependent));
         }
     }
 }
 
-function setupViewDetailsButton() {
-    const viewDetailsButton = document.getElementById("view-details");
-    if (!viewDetailsButton) return;
-    
-    viewDetailsButton.addEventListener("click", function () {
-     
-        renderDependantView(globalDependantData);
-      
-        const $dependentDiv = $(document.getElementById("dependent-details"));
-        const $editbutton = $(document.getElementById("view-details"))
-
-        if($dependentDiv.hasClass("open")){
-            $dependentDiv.slideUp(500, function() {
-                $dependentDiv.removeClass("open"); 
-            });
-            $editbutton.text('View Details');
-        } else {
-            $dependentDiv.hide().slideDown(500, function() {
-                $dependentDiv.addClass("open");
-            });
-            $editbutton.text('Close Details');
-        }
-    });
-}
-
-
-// Call this function after the DOM is loaded or when your dependant data is ready.
-document.addEventListener("DOMContentLoaded", function () {
-    setupViewDetailsButton();
-});
-
-// Called when the user clicks Save in the edit dependant form.
+/**
+ * Saves the edited dependant data to Firestore and refreshes the view.
+ */
 function saveDependantEdits() {
-    // Collect values from the form.
-    let updatedData = {
+    const updatedData = {
         firstname: document.getElementById("edit-firstname").value.trim(),
         lastname: document.getElementById("edit-lastname").value.trim(),
         relationship: document.getElementById("edit-relationship").value.trim(),
@@ -919,7 +864,6 @@ function saveDependantEdits() {
         additionalInfo: document.getElementById("edit-additionalInfo").value.trim()
     };
 
-    // Update Firestore with the edited dependant data.
     firebase.firestore()
         .collection("users")
         .doc(globalUserId)
@@ -928,16 +872,50 @@ function saveDependantEdits() {
         .update(updatedData)
         .then(() => {
             console.log("Dependant data updated successfully");
-            // Update the global dependant data with the new values.
+            // Update global dependant data.
             globalDependantData = { ...globalDependantData, ...updatedData };
-            // Re-render the view mode with the updated data.
             renderDependantView(globalDependantData);
         })
         .catch(error => {
             console.error("Error updating dependant data:", error);
         });
 }
-// Helper function to get dependant ID from URL
+
+/**
+ * Sets up a toggle listener on the "View Details" button to slide the details view in/out.
+ */
+function setupViewDetailsButton() {
+    const viewDetailsButton = document.getElementById("view-details");
+    if (!viewDetailsButton) return;
+    
+    viewDetailsButton.addEventListener("click", function () {
+        renderDependantView(globalDependantData);
+        const $dependentDiv = $(document.getElementById("dependent-details"));
+        const $viewDetailsBtn = $(viewDetailsButton);
+
+        if ($dependentDiv.hasClass("open")) {
+            $dependentDiv.slideUp(500, function () {
+                $dependentDiv.removeClass("open");
+            });
+            $viewDetailsBtn.text('View Details');
+        } else {
+            $dependentDiv.hide().slideDown(500, function () {
+                $dependentDiv.addClass("open");
+            });
+            $viewDetailsBtn.text('Close Details');
+        }
+    });
+}
+
+// Attach view details button event after DOM is loaded.
+document.addEventListener("DOMContentLoaded", function () {
+    setupViewDetailsButton();
+});
+
+/**
+ * Retrieves the dependant ID from the URL.
+ * @returns {string|null} Dependant ID, or null if not present.
+ */
 function getDependantId() {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get('id');

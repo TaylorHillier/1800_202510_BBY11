@@ -1,809 +1,754 @@
+// Global variable to hold the signed-in user’s UID.
 var globalUserId;
 
+/**
+ * CalendarApp class manages the calendar view, schedule loading, and rendering.
+ */
 class CalendarApp {
+  /**
+   * Creates an instance of CalendarApp.
+   * @param {string} containerId - The ID of the main container element.
+   */
   constructor(containerId) {
-      this.container = document.getElementById(containerId);
-    
-      if (!this.container) {
-          console.error(`CalendarApp Error: Main container element with ID "${containerId}" not found.`);
-          
-          return;
-      }
-  
-      this.calenderContainerId = containerId + "-container";
-      this.calenderContainer = document.getElementById(this.calenderContainerId);
-      this.currentDate = new Date(); // Date object for the currently viewed month
-      this.selectedDate = null; // Stores the selected date string ('YYYY-MM-DD')
-      this.sortedSchedule = []; 
-  
-      const pageurl = window.location.href;
-      this.isSingleDependant = pageurl.includes('single_dependant');
-      this.isCareTakerSchedule = pageurl.includes('caretaker-schedule');
+    // Get the main container element.
+    this.container = document.getElementById(containerId);
+    if (!this.container) {
+      console.error(`CalendarApp Error: Main container element with ID "${containerId}" not found.`);
+      return;
+    }
 
-     
-      this.init();
+    // Define the calendar container ID and obtain the corresponding DOM element.
+    this.calendarContainerId = containerId + "-container";
+    this.calendarContainer = document.getElementById(this.calendarContainerId);
+    this.currentDate = new Date(); // Current month/year view.
+    this.selectedDate = null; // Currently selected date (formatted as 'YYYY-MM-DD').
+    this.sortedSchedule = []; // Array to store sorted schedule entries.
+    this.calendarHeight = null;
+
+    // Determine page mode based on URL.
+    const pageUrl = window.location.href;
+    this.isSingleDependant = pageUrl.includes('single_dependant');
+    this.isCareTakerSchedule = pageUrl.includes('caretaker-schedule');
+
+    this.init();
   }
 
   /**
-   * Initializes the basic structure of the calendar container if it doesn't exist
-   * and renders the navigation controls.
+   * Initializes the calendar container.
+   * If the container for the calendar does not exist, it creates one and then renders the navigation.
    */
   init() {
-      // Ensure the main container exists before trying to append to it
-      if (!this.container) return;
+    if (!this.container) return;
 
-      // Create the specific calendar container div if it's not already in the HTML
-      if (this.calenderContainer == null) {
-          const calCont = document.createElement('div');
-          calCont.id = this.calenderContainerId; // Use the derived ID
-          this.container.appendChild(calCont);
-          this.calenderContainer = calCont;
-      }
+    // Create the calendar container if it doesn't exist.
+    if (!this.calendarContainer) {
+      const calContainer = document.createElement('div');
+      calContainer.id = this.calendarContainerId;
+      this.container.appendChild(calContainer);
+      this.calendarContainer = calContainer;
+    }
 
-      // Ensure the calendar container exists before rendering into it
-      if (!this.calenderContainer) {
-          console.error("Failed to find or create calendar-container element.");
-          return;
-      }
+    if (!this.calendarContainer) {
+      console.error("Failed to find or create calendar container element.");
+      return;
+    }
 
-      // Render the month navigation (prev/next buttons, month display)
-      this.renderNavigation();
+    // Render navigation controls (prev/next buttons and month/year display).
+    this.renderNavigation();
   }
 
   /**
-   * Renders the previous/next month buttons and the current month/year display.
-   * Removes existing navigation first to prevent duplicates.
+   * Renders the navigation controls for the calendar.
+   * This includes the previous and next month buttons, and the current month/year display.
    */
   renderNavigation() {
-      if (!this.calenderContainer) return; // Don't render if container is missing
+    if (!this.calendarContainer) return;
 
-      const existingNav = this.calenderContainer.querySelector('.calendar-navigation');
-      if (existingNav) existingNav.remove(); // Clean up old navigation
+    // Remove any existing navigation to avoid duplicates.
+    const existingNav = this.calendarContainer.querySelector('.calendar-navigation');
+    if (existingNav) existingNav.remove();
 
-      const navContainer = document.createElement('div');
-      navContainer.className = 'calendar-navigation';
+    const navContainer = document.createElement('div');
+    navContainer.className = 'calendar-navigation';
 
-      const prevButton = document.createElement('button');
-      prevButton.innerText = '←'; // Previous month
-      prevButton.addEventListener('click', () => this.changeMonth(-1));
+    // Previous month button.
+    const prevButton = document.createElement('button');
+    prevButton.innerText = '←';
+    prevButton.addEventListener('click', () => this.changeMonth(-1));
 
-      const nextButton = document.createElement('button');
-      nextButton.innerText = '→'; // Next month
-      nextButton.addEventListener('click', () => this.changeMonth(1));
+    // Next month button.
+    const nextButton = document.createElement('button');
+    nextButton.innerText = '→';
+    nextButton.addEventListener('click', () => this.changeMonth(1));
 
-      const monthYearDisplay = document.createElement('div');
-      monthYearDisplay.id = 'month-year-display'; // ID for updating text
-      monthYearDisplay.innerText = this.formatMonthYear(this.currentDate);
+    // Month and year display.
+    const monthYearDisplay = document.createElement('div');
+    monthYearDisplay.id = 'month-year-display';
+    monthYearDisplay.innerText = this.formatMonthYear(this.currentDate);
 
-      navContainer.appendChild(prevButton);
-      navContainer.appendChild(monthYearDisplay);
-      navContainer.appendChild(nextButton);
-      this.calenderContainer.appendChild(navContainer);
+    navContainer.appendChild(prevButton);
+    navContainer.appendChild(monthYearDisplay);
+    navContainer.appendChild(nextButton);
+    this.calendarContainer.appendChild(navContainer);
   }
 
   /**
-   * Renders the main calendar grid for the current month (this.currentDate).
-   * Includes weekday headers and numbered day cells.
+   * Renders the main calendar grid for the current month.
+   * It creates weekday headers and day cells, and marks today’s cell.
    */
   renderCalendar() {
-     
-      if (!this.calenderContainer) {
-          console.error("renderCalendar called but calenderContainer is not available.");
-          return;
+    if (!this.calendarContainer) {
+      console.error("renderCalendar called but calendar container is not available.");
+      return;
+    }
+
+    // Remove existing calendar grid to prevent duplicates.
+    const existingCalendar = this.calendarContainer.querySelector('.calendar-grid');
+    if (existingCalendar) existingCalendar.remove();
+
+    const calendarGrid = document.createElement('div');
+    calendarGrid.className = 'calendar-grid';
+
+    // Determine weekday headers.
+    const weekdays = window.innerWidth > 500
+      ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+      : ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    weekdays.forEach(day => {
+      const dayHeader = document.createElement('div');
+      dayHeader.className = 'calendar-weekday';
+      dayHeader.innerText = day;
+      calendarGrid.appendChild(dayHeader);
+    });
+
+    // Calculate first and last day of the month.
+    const year = this.currentDate.getFullYear();
+    const month = this.currentDate.getMonth();
+    const firstDayOfMonth = new Date(year, month, 1);
+    const lastDayOfMonth = new Date(year, month + 1, 0);
+    const startingDayOfWeek = firstDayOfMonth.getDay();
+    const totalDaysInMonth = lastDayOfMonth.getDate();
+
+    // Add empty padding cells for days before the first day.
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      const paddingDay = document.createElement('div');
+      paddingDay.className = 'calendar-day inactive';
+      calendarGrid.appendChild(paddingDay);
+    }
+
+    // Create day cells.
+    const today = new Date();
+    const todayDateString = today.toLocaleDateString('en-CA');
+    for (let day = 1; day <= totalDaysInMonth; day++) {
+      const dayElement = document.createElement('div');
+      dayElement.className = 'calendar-day';
+      dayElement.innerText = day;
+      const currentDayDate = new Date(year, month, day);
+      const dateString = currentDayDate.toLocaleDateString('en-CA');
+      dayElement.dataset.date = dateString;
+      dayElement.addEventListener('click', () => this.selectDate(dayElement));
+      if (dateString === todayDateString) {
+        dayElement.classList.add('today');
       }
+      calendarGrid.appendChild(dayElement);
+    }
 
-      // Remove existing calendar grid to prevent duplicates
-      const existingCalendar = this.calenderContainer.querySelector('.calendar-grid');
-      if (existingCalendar) existingCalendar.remove();
-
-      const calendarGrid = document.createElement('div');
-      calendarGrid.className = 'calendar-grid';
-
-      let weekdays = [];
-      // Add weekday headers (Sun, Mon, ...)
-      if(window.innerWidth > 500) {
-       weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-      } else {
-        weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-      }
-      weekdays.forEach(day => {
-          const dayHeader = document.createElement('div');
-          dayHeader.className = 'calendar-weekday';
-          dayHeader.innerText = day;
-          calendarGrid.appendChild(dayHeader);
-      });
-
-      // Calculate first and last day of the current month
-      const year = this.currentDate.getFullYear();
-      const month = this.currentDate.getMonth();
-      const firstDayOfMonth = new Date(year, month, 1);
-      const lastDayOfMonth = new Date(year, month + 1, 0);
-      const startingDayOfWeek = firstDayOfMonth.getDay(); // 0=Sun, 1=Mon, ...
-      const totalDaysInMonth = lastDayOfMonth.getDate();
-
-      // Add empty padding cells for days before the 1st of the month
-      for (let i = 0; i < startingDayOfWeek; i++) {
-          const paddingDay = document.createElement('div');
-          paddingDay.className = 'calendar-day inactive'; 
-          calendarGrid.appendChild(paddingDay);
-      }
-
-      // Create cells for each actual day of the month
-      const today = new Date(); // Get today's date for comparison
-      const todayDateString = today.toLocaleDateString('en-CA'); // Format 'YYYY-MM-DD'
-
-      for (let day = 1; day <= totalDaysInMonth; day++) {
-          const dayElement = document.createElement('div');
-          dayElement.className = 'calendar-day';
-          dayElement.innerText = day; // Display the day number
-
-          // Store the date ('YYYY-MM-DD') in a data attribute for easy access
-          const currentDayDate = new Date(year, month, day);
-          const dateString = currentDayDate.toLocaleDateString('en-CA');
-          dayElement.dataset.date = dateString;
-
-          // Add click listener to select the date
-          dayElement.addEventListener('click', () => this.selectDate(dayElement));
-
-          // Highlight today's date
-          if (dateString === todayDateString) {
-              dayElement.classList.add('today');
-          }
-          calendarGrid.appendChild(dayElement);
-      }
-      this.calenderContainer.appendChild(calendarGrid);
-      this.updateMonthDisplay(); // Ensure month/year text is correct
+    this.calendarContainer.appendChild(calendarGrid);
+    this.updateMonthDisplay();
   }
 
   /**
-   * Handles clicking on a day cell. Highlights the selected day and
-   * renders the schedule details either below the calendar (mobile)
-   * or in the sidebar (desktop).
+   * Handles the selection of a day cell.
+   * It highlights the selected cell and renders schedule details either below the calendar or in a sidebar.
    * @param {HTMLElement} dayElement - The clicked day cell element.
    */
   selectDate(dayElement) {
-      if (!this.calenderContainer) return;
+    if (!this.calendarContainer) return;
 
-      // Remove 'selected' class from previously selected day
-      const previousSelected = this.calenderContainer.querySelector('.selected');
-      if (previousSelected) previousSelected.classList.remove('selected');
+    // Remove the "selected" class from previously selected cell.
+    const previousSelected = this.calendarContainer.querySelector('.selected');
+    if (previousSelected) previousSelected.classList.remove('selected');
 
-      // Add 'selected' class to the clicked day
-      dayElement.classList.add('selected');
-      this.selectedDate = dayElement.dataset.date; // Store the selected date string
+    // Mark the clicked cell as selected.
+    dayElement.classList.add('selected');
+    this.selectedDate = dayElement.dataset.date;
 
-      // Render details based on screen width
-      if (window.innerWidth < 768) { 
-          this.renderScheduleBelowCalendar();
-      } else {
-          this.renderSideBar();
-      }
+    // Render schedule details depending on screen size.
+    if (window.innerWidth < 992) {
+      this.renderScheduleBelowCalendar();
+    } else {
+      this.renderSideBar();
+    }
   }
 
   /**
-   * Changes the currently viewed month and reloads/re-renders the calendar.
-   * @param {number} delta - Change in months (-1 for previous, 1 for next).
+   * Changes the current month view by a given delta and updates the calendar.
+   * @param {number} delta - Change in month (-1 for previous, 1 for next).
    */
   changeMonth(delta) {
     this.currentDate.setMonth(this.currentDate.getMonth() + delta);
-  
-    this.loadMedicationSchedules().then(() => {
-      this.renderCalendar();
-  
-  
-        this.renderScheduleOnCalendar();
-      
-  
-      const previousSelected = this.calenderContainer?.querySelector('.selected');
-      if (previousSelected) previousSelected.classList.remove('selected');
-  
-      // Determine which day to auto-select:
-      const systemDate = new Date();
-      let selectedCell;
-      if (
-        this.currentDate.getMonth() !== systemDate.getMonth() ||
-        this.currentDate.getFullYear() !== systemDate.getFullYear()
-      ) {
-        // New month is not the current month: select the first available day.
-        selectedCell = this.calenderContainer?.querySelector('.calendar-day:not(.inactive)');
-      } else {
-        // New month is the current month: select today's cell.
-        const todayStr = systemDate.toLocaleDateString('en-CA');
-        selectedCell = this.calenderContainer?.querySelector(`.calendar-day[data-date="${todayStr}"]`);
-      }
-      if (selectedCell) this.selectDate(selectedCell);
-  
-      console.log(this.selectedDate);
-  
-      this.clearSideBarOrBelow();
-  
-      if (window.innerWidth < 768) {
-        this.renderScheduleBelowCalendar();
-      } else {
-        this.renderSideBar();
-      }
-    }).catch(error => {
-      console.error("Error reloading schedules for new month:", error);
-      if (this.calenderContainer) {
-        this.calenderContainer.innerHTML = "<p>Error loading schedule data for the selected month.</p>";
-      }
-    });
+    this.updateCalendarView();
   }
-  
 
   /**
-   * Helper function to clear the content of the sidebar and below-calendar details area.
+   * A helper method that reloads medication schedules, re-renders the calendar, and auto-selects today if possible.
+   */
+  updateCalendarView() {
+    this.loadMedicationSchedules()
+      .then(() => {
+        this.renderCalendar();
+        this.renderScheduleOnCalendar();
+        const todayElement = this.calendarContainer.querySelector('.calendar-day.today');
+        if (todayElement) {
+          this.selectDate(todayElement);
+        } else {
+          console.log("Today's date not in view or not found, no auto-selection.");
+        }
+      })
+      .catch(error => {
+        console.error("Error updating calendar view:", error);
+        if (this.calendarContainer) {
+          this.calendarContainer.innerHTML = "<p>Error loading schedule data for the selected month.</p>";
+        }
+      });
+  }
+
+  /**
+   * Clears content from the sidebar and below-calendar schedule sections.
    */
   clearSideBarOrBelow() {
-      const sideBar = document.getElementById("calendar-sidebar");
-      if (sideBar) sideBar.innerHTML = ""; // Clear sidebar content
-      const belowContainer = document.getElementById('daily-schedule-container');
-      if (belowContainer) belowContainer.innerHTML = ""; // Clear below-calendar content
+    const sideBar = document.getElementById("calendar-sidebar");
+    if (sideBar) sideBar.innerHTML = "";
+    const belowContainer = document.getElementById('daily-schedule-container');
+    if (belowContainer) belowContainer.innerHTML = "";
   }
 
   /**
-   * Formats a Date object into a "Month Year" string (e.g., "March 2025").
+   * Formats a Date object into a "Month Year" string.
    * @param {Date} date - The date to format.
-   * @returns {string} - The formatted month and year string.
+   * @returns {string} The formatted month and year.
    */
   formatMonthYear(date) {
-      return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+    return date.toLocaleString('default', { month: 'long', year: 'numeric' });
   }
 
   /**
-   * Updates the text of the month/year display element in the navigation.
+   * Updates the month/year display element.
    */
   updateMonthDisplay() {
-      if (!this.calenderContainer) return;
-      const monthDisplay = this.calenderContainer.querySelector('#month-year-display');
-      if (monthDisplay) monthDisplay.innerText = this.formatMonthYear(this.currentDate);
+    if (!this.calendarContainer) return;
+    const monthDisplay = this.calendarContainer.querySelector('#month-year-display');
+    if (monthDisplay) monthDisplay.innerText = this.formatMonthYear(this.currentDate);
   }
 
+  /**
+   * Helper: Processes a single schedule entry.
+   * @param {Object} entry - The raw schedule entry.
+   * @param {string} medName - Medication name.
+   * @param {string} dependantName - Dependant name.
+   * @param {string} numPills - Number of pills per dose.
+   * @returns {Object|null} The processed entry, or null if invalid.
+   */
+  processScheduleEntry(entry, medName, dependantName, numPills) {
+    let processedEntry = { ...entry };
+    processedEntry.medication = medName;
+    processedEntry.dependantName = dependantName;
+    processedEntry.numPillsPerDose = numPills || "1";
+
+    if (processedEntry.doseTime && processedEntry.doseTime.toDate) {
+      processedEntry.doseTime = processedEntry.doseTime.toDate();
+    } else if (processedEntry.doseTime) {
+      processedEntry.doseTime = new Date(processedEntry.doseTime);
+    } else {
+      console.warn(`Missing 'doseTime' for ${medName}, dependant ${dependantName}. Skipping.`);
+      return null;
+    }
+
+    if (processedEntry.doseTime instanceof Date && !isNaN(processedEntry.doseTime)) {
+      return processedEntry;
+    } else {
+      console.warn(`Invalid 'doseTime' for ${medName}, dependant ${dependantName}. Skipping.`);
+      return null;
+    }
+  }
+
+  /**
+   * Loads medication schedules from Firestore and aggregates them.
+   * @returns {Promise} Resolves when schedules are loaded.
+   */
   async loadMedicationSchedules() {
     if (!globalUserId) {
-        console.error("Attempted to load schedules but globalUserId is not set.");
-        this.sortedSchedule = [];
-        return Promise.reject(new Error("User ID not available"));
+      console.error("User ID not available");
+      this.sortedSchedule = [];
+      return Promise.reject(new Error("User ID not available"));
     }
 
     let combinedSchedule = [];
-    console.log(`loading medications for user: ${globalUserId}`);
+    console.log(`Loading medications for user: ${globalUserId}`);
 
     try {
-        if (this.isCareTakerSchedule) {
-            console.log("Loading caretaker schedule...");
-            const dependantsSnapshot = await firebase.firestore()
-                .collection('users')
-                .doc(globalUserId)
-                .collection('dependants')
-                .get();
+      if (this.isCareTakerSchedule) {
+        console.log("Loading caretaker schedule...");
+        const dependantsSnapshot = await firebase.firestore()
+          .collection('users')
+          .doc(globalUserId)
+          .collection('dependants')
+          .get();
 
-            console.log(`Found ${dependantsSnapshot.size} dependants for caretaker.`);
+        const schedulePromises = dependantsSnapshot.docs.map(async (dependantDoc) => {
+          const dependantId = dependantDoc.id;
+          const dependantData = dependantDoc.data();
+          const dependantName = (dependantData.firstname && dependantData.lastname)
+            ? `${dependantData.firstname} ${dependantData.lastname}`
+            : `Unnamed (${dependantId.substring(0, 5)})`;
 
-            const promises = dependantsSnapshot.docs.map(async (dependantDoc) => {
-                const dependantId = dependantDoc.id;
-                const dependantData = dependantDoc.data();
-                const dependantName = (dependantData.firstname && dependantData.lastname) ?
-                    `${dependantData.firstname} ${dependantData.lastname}` :
-                    `Unnamed (${dependantId.substring(0, 5)})`;
+          const medsSnapshot = await firebase.firestore()
+            .collection('users')
+            .doc(globalUserId)
+            .collection('dependants')
+            .doc(dependantId)
+            .collection('medications')
+            .get();
 
-                console.log(`Processing meds for dependant: ${dependantName} (${dependantId})`);
-                const medsSnapshot = await firebase.firestore()
-                    .collection('users')
-                    .doc(globalUserId)
-                    .collection('dependants')
-                    .doc(dependantId)
-                    .collection('medications')
-                    .get();
-
-                console.log(`Found ${medsSnapshot.size} medication docs for ${dependantName}.`);
-                let dependantScheduleEntries = [];
-                medsSnapshot.forEach(doc => {
-                    const medData = doc.data();
-                    const medName = medData.name || 'Unknown Medication';
-
-                    // For each medication, process its schedule array.
-                    if (medData.schedule && Array.isArray(medData.schedule)) {
-                        medData.schedule.forEach(entry => {
-                            let processedEntry = { ...entry };
-                            processedEntry.medication = medName;
-                            processedEntry.dependantName = dependantName;
-                            // NEW: Attach the numPillsPerDose field from the medication document.
-                            processedEntry.numPillsPerDose = medData.numPillsPerDose || "1";
-
-                            if (processedEntry.doseTime && processedEntry.doseTime.toDate) {
-                                processedEntry.doseTime = processedEntry.doseTime.toDate();
-                            } else if (processedEntry.doseTime) {
-                                processedEntry.doseTime = new Date(processedEntry.doseTime);
-                            } else {
-                                console.warn(`Missing 'doseTime' for an entry in med '${medName}', dependant '${dependantName}'. Skipping.`);
-                                return;
-                            }
-
-                            if (processedEntry.doseTime instanceof Date && !isNaN(processedEntry.doseTime)) {
-                                dependantScheduleEntries.push(processedEntry);
-                            } else {
-                                console.warn(`Invalid 'doseTime' found for ${medName}, dependant ${dependantName}. Skipping.`);
-                            }
-                        });
-                    }
-                });
-                return dependantScheduleEntries;
-            });
-
-            const allSchedules = await Promise.all(promises);
-            combinedSchedule = allSchedules.flat();
-
-        } else if (this.isSingleDependant) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const dependantId = urlParams.get('id');
-            if (!dependantId) {
-                console.error("Single dependant view, but no 'id' found in URL parameters.");
-                this.sortedSchedule = [];
-                return Promise.reject(new Error("Missing dependant ID in URL"));
-            }
-
-            console.log(`Loading single dependant schedule for dependant ID: ${dependantId}`);
-
-            const medsSnapshot = await firebase.firestore()
-                .collection('users')
-                .doc(globalUserId)
-                .collection('dependants')
-                .doc(dependantId)
-                .collection('medications')
-                .get();
-
-            console.log(`Found ${medsSnapshot.size} medication docs for dependant ${dependantId}.`);
-
-            medsSnapshot.forEach(doc => {
-                const medData = doc.data();
-                const medName = medData.name || 'Unknown Medication';
-
-                if (medData.schedule && Array.isArray(medData.schedule)) {
-                    medData.schedule.forEach(entry => {
-                        let processedEntry = { ...entry };
-                        processedEntry.medication = medName;
-                        // NEW: Attach numPillsPerDose from the medication document.
-                        processedEntry.numPillsPerDose = medData.numPillsPerDose || "1";
-
-                        if (processedEntry.doseTime && processedEntry.doseTime.toDate) {
-                            processedEntry.doseTime = processedEntry.doseTime.toDate();
-                        } else if (processedEntry.doseTime) {
-                            processedEntry.doseTime = new Date(processedEntry.doseTime);
-                        } else {
-                            console.warn(`Missing 'doseTime' for an entry in med '${medName}', dependant '${dependantId}'. Skipping.`);
-                            return;
-                        }
-
-                        if (processedEntry.doseTime instanceof Date && !isNaN(processedEntry.doseTime)) {
-                            combinedSchedule.push(processedEntry);
-                        } else {
-                            console.warn(`Invalid 'doseTime' found for ${medName}, dependant ${dependantId}. Skipping.`);
-                        }
-                    });
+          let dependantScheduleEntries = [];
+          medsSnapshot.forEach(doc => {
+            const medData = doc.data();
+            const medName = medData.name || 'Unknown Medication';
+            if (medData.schedule && Array.isArray(medData.schedule)) {
+              medData.schedule.forEach(entry => {
+                const processed = this.processScheduleEntry(entry, medName, dependantName, medData.numPillsPerDose);
+                if (processed) {
+                  dependantScheduleEntries.push(processed);
                 }
+              });
+            }
+          });
+          return dependantScheduleEntries;
+        });
+        const allSchedules = await Promise.all(schedulePromises);
+        combinedSchedule = allSchedules.flat();
+      } else if (this.isSingleDependant) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const dependantId = urlParams.get('id');
+        if (!dependantId) {
+          console.error("Missing dependant ID in URL");
+          this.sortedSchedule = [];
+          return Promise.reject(new Error("Missing dependant ID in URL"));
+        }
+        const medsSnapshot = await firebase.firestore()
+          .collection('users')
+          .doc(globalUserId)
+          .collection('dependants')
+          .doc(dependantId)
+          .collection('medications')
+          .get();
+
+        medsSnapshot.forEach(doc => {
+          const medData = doc.data();
+          const medName = medData.name || 'Unknown Medication';
+          if (medData.schedule && Array.isArray(medData.schedule)) {
+            medData.schedule.forEach(entry => {
+              const processed = this.processScheduleEntry(entry, medName, '', medData.numPillsPerDose);
+              if (processed) {
+                combinedSchedule.push(processed);
+              }
             });
-        } else {
-            console.log("Not a caretaker or single dependant schedule page. No schedules loaded.");
-        }
+          }
+        });
+      } else {
+        console.log("No schedule mode detected.");
+      }
 
-        combinedSchedule.sort((a, b) => a.doseTime - b.doseTime);
-        this.sortedSchedule = combinedSchedule;
-
-        console.log("Loaded and sorted schedule entries:", this.sortedSchedule.length);
-
+      combinedSchedule.sort((a, b) => a.doseTime - b.doseTime);
+      this.sortedSchedule = combinedSchedule;
+      console.log("Loaded and sorted schedule entries:", this.sortedSchedule.length);
     } catch (error) {
-        console.error("Error loading medication schedules from Firestore:", error);
-        this.sortedSchedule = [];
-        if (this.calenderContainer) {
-            this.calenderContainer.innerHTML = "";
-            const errorMsg = document.createElement('p');
-            errorMsg.textContent = "Error loading schedule data. Please check console and try refreshing.";
-            errorMsg.style.color = 'red';
-            this.calenderContainer.appendChild(errorMsg);
-        }
-        return Promise.reject(error);
+      console.error("Error loading medication schedules:", error);
+      this.sortedSchedule = [];
+      if (this.calendarContainer) {
+        this.calendarContainer.innerHTML = "";
+        const errorMsg = document.createElement('p');
+        errorMsg.textContent = "Error loading schedule data. Please try refreshing.";
+        errorMsg.style.color = 'red';
+        this.calendarContainer.appendChild(errorMsg);
+      }
+      return Promise.reject(error);
     }
     return Promise.resolve();
-}
+  }
 
-/**
- * Renders medication summaries directly onto the calendar day cells.
- * Each summary now includes the number of pills per dose along with the medication name and time.
- */
-renderScheduleOnCalendar() {
-    if (!this.calenderContainer) {
-        console.error("renderScheduleOnCalendar called but calenderContainer is not available.");
-        return;
+  /**
+   * Helper: Creates a header element for schedule details from a selected date.
+   * @returns {HTMLElement} The header element.
+   */
+  createScheduleHeader() {
+    const header = document.createElement('h2');
+    try {
+      const dateObj = new Date(this.selectedDate + 'T00:00:00');
+      header.innerHTML = `Schedule for <br>${dateObj.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })}`;
+    } catch (e) {
+      header.textContent = `Schedule for ${this.selectedDate}`;
+    }
+    return header;
+  }
+
+  /**
+   * Renders medication summaries onto the calendar day cells.
+   */
+  renderScheduleOnCalendar() {
+    if (!this.calendarContainer) {
+      console.error("Calendar container not available for rendering schedule.");
+      return;
     }
     console.log("Rendering schedule summaries on calendar cells...");
 
-    this.calenderContainer.querySelectorAll('.calendar-day .entry-container').forEach(container => {
-        container.remove();
+    // Remove existing summary containers.
+    this.calendarContainer.querySelectorAll('.calendar-day .entry-container').forEach(container => {
+      container.remove();
     });
 
     let groupedEntries = {};
     this.sortedSchedule.forEach(entry => {
-        if (!(entry.doseTime instanceof Date) || isNaN(entry.doseTime)) {
-            console.warn("Skipping entry with invalid doseTime during calendar rendering:", entry);
-            return;
-        }
-        const formattedDate = entry.doseTime.toLocaleDateString('en-CA');
-        if (!groupedEntries[formattedDate]) {
-            groupedEntries[formattedDate] = {};
-        }
-        let groupKey = 'default';
-        if (this.isCareTakerSchedule) {
-            groupKey = entry.dependantName || 'Unknown Dependant';
-        }
-        if (!groupedEntries[formattedDate][groupKey]) {
-            groupedEntries[formattedDate][groupKey] = [];
-        }
-        groupedEntries[formattedDate][groupKey].push(entry);
+      if (!(entry.doseTime instanceof Date) || isNaN(entry.doseTime)) {
+        console.warn("Skipping entry with invalid doseTime:", entry);
+        return;
+      }
+      const formattedDate = entry.doseTime.toLocaleDateString('en-CA');
+      if (!groupedEntries[formattedDate]) {
+        groupedEntries[formattedDate] = {};
+      }
+      let groupKey = this.isCareTakerSchedule ? (entry.dependantName || 'Unknown Dependant') : 'default';
+      if (!groupedEntries[formattedDate][groupKey]) {
+        groupedEntries[formattedDate][groupKey] = [];
+      }
+      groupedEntries[formattedDate][groupKey].push(entry);
     });
 
+    // Loop through each date and render entry containers.
     for (const date in groupedEntries) {
-        const dayCell = this.calenderContainer.querySelector(`.calendar-day[data-date="${date}"]`);
-        if (!dayCell) continue;
+      const dayCell = this.calendarContainer.querySelector(`.calendar-day[data-date="${date}"]`);
+      if (!dayCell) continue;
 
-        const dateGroups = groupedEntries[date];
+      const dateGroups = groupedEntries[date];
+      let mainEntryContainer = dayCell.querySelector('.day-schedule-wrapper');
+      if (!mainEntryContainer) {
+        mainEntryContainer = document.createElement('div');
+        mainEntryContainer.className = 'day-schedule-wrapper';
+        dayCell.appendChild(mainEntryContainer);
+      }
 
-        let mainEntryContainer = dayCell.querySelector('.day-schedule-wrapper');
-        if (!mainEntryContainer) {
-            mainEntryContainer = document.createElement('div');
-            mainEntryContainer.className = 'day-schedule-wrapper';
-            dayCell.appendChild(mainEntryContainer);
-        }
+      let sum = 0;
+      for (const groupKey in dateGroups) {
+        const events = dateGroups[groupKey];
+        const groupContainer = document.createElement('div');
+        groupContainer.className = 'entry-container';
+        groupContainer.setAttribute('data-group', groupKey);
 
-        let sum = 0;
-        for (const groupKey in dateGroups) {
-            const events = dateGroups[groupKey];
-            const groupContainer = document.createElement('div');
-            groupContainer.className = 'entry-container';
-            groupContainer.setAttribute('data-group', groupKey);
-
-            let header = document.createElement('div');
-            if(window.innerWidth > 768) {
-                if (this.isCareTakerSchedule && groupKey !== 'default') {
-                    header.className = 'entry-header-small';
-                    header.innerText = groupKey.split(' ')[0];
-                    groupContainer.appendChild(header);
-                }
-      
-                const summary = document.createElement('div');
-                summary.className = 'medication-summary';
-                // NEW: Display the number of pills per dose along with medication name.
-                summary.innerHTML = `<div id='event-quant' class='event-quant'>${events.length}</div>`;
-                if(this.isCareTakerSchedule){
-                    header.appendChild(summary);
-                } else {
-                    groupContainer.appendChild(summary);
-                }
-
-                mainEntryContainer.appendChild(groupContainer);
-            } else {
-                sum += events.length;
-
-                if(this.isSingleDependant){
-                    const summary = document.createElement('div');
-                    summary.className = 'medication-summary';
-                    summary.innerHTML = `<div id='event-quant' class='event-quant'>${events.length}</div>`;
-                    groupContainer.appendChild(summary);
-                    mainEntryContainer.appendChild(groupContainer);
-                }
-            }
-        }
-
-        if(this.isCareTakerSchedule && sum !== 0) {
-            const groupContainer = document.createElement('div');
-            groupContainer.className = 'entry-container';
-
+        if (window.innerWidth > 1600) {
+          if (this.isCareTakerSchedule && groupKey !== 'default') {
+            const header = document.createElement('div');
+            header.className = 'entry-header-small';
+            header.innerText = groupKey.split(' ')[0];
+            groupContainer.appendChild(header);
+          }
+          const summary = document.createElement('div');
+          summary.className = 'medication-summary';
+          summary.innerHTML = `<div id="event-quant" class="event-quant">${events.length}</div>`;
+          if (this.isCareTakerSchedule) {
+            groupContainer.firstChild && groupContainer.firstChild.appendChild(summary) ||
+              groupContainer.appendChild(summary);
+          } else {
+            groupContainer.appendChild(summary);
+          }
+          mainEntryContainer.appendChild(groupContainer);
+        } else {
+          sum += events.length;
+          if (this.isSingleDependant) {
             const summary = document.createElement('div');
             summary.className = 'medication-summary';
-            summary.innerHTML = `<div id='event-quant' class='event-quant'>${sum}</div>`;
-
+            summary.innerHTML = `<div id="event-quant" class="event-quant">${events.length}</div>`;
             groupContainer.appendChild(summary);
             mainEntryContainer.appendChild(groupContainer);
+          }
         }
-    }
-    console.log("Finished rendering schedule summaries.");
-}
+      }
 
-/**
- * Renders the detailed schedule for the selected date below the calendar.
- * Each entry now shows the number of pills per dose plus the medication name at the scheduled time.
- */
-renderScheduleBelowCalendar() {
+      if (this.isCareTakerSchedule && sum !== 0) {
+        const groupContainer = document.createElement('div');
+        groupContainer.className = 'entry-container';
+        const summary = document.createElement('div');
+        summary.className = 'medication-summary';
+        summary.innerHTML = `<div id="event-quant" class="event-quant">${sum}</div>`;
+        groupContainer.appendChild(summary);
+        mainEntryContainer.appendChild(groupContainer);
+      }
+    }
+
+    this.calendarHeight = document.getElementById('calendar-container').offsetHeight;
+    console.log("Finished rendering schedule summaries.");
+  }
+
+  /**
+   * Renders the detailed schedule for the selected date below the calendar.
+   */
+  renderScheduleBelowCalendar() {
     if (!this.container) {
-        console.error("Cannot render schedule below, main container not found.");
-        return;
+      console.error("Main container not found for rendering schedule below calendar.");
+      return;
     }
 
     let detailsContainer = document.getElementById('daily-schedule-container');
     if (!detailsContainer) {
-        detailsContainer = document.createElement('div');
-        detailsContainer.id = 'daily-schedule-container';
-        detailsContainer.style.marginTop = '20px';
-        this.container.appendChild(detailsContainer);
+      detailsContainer = document.createElement('div');
+      detailsContainer.id = 'daily-schedule-container';
+      detailsContainer.style.marginTop = '20px';
+      this.container.appendChild(detailsContainer);
     }
     detailsContainer.innerHTML = "";
 
     if (!this.selectedDate) {
-        detailsContainer.innerText = "Select a date to view the schedule.";
-        return;
+      detailsContainer.innerText = "Select a date to view the schedule.";
+      return;
     }
 
     console.log(`Rendering schedule details below calendar for: ${this.selectedDate}`);
+    detailsContainer.appendChild(this.createScheduleHeader());
 
     let entriesToRender = this.sortedSchedule.filter(entry =>
-        entry.doseTime instanceof Date &&
-        !isNaN(entry.doseTime) &&
-        entry.doseTime.toLocaleDateString('en-CA') === this.selectedDate
+      entry.doseTime instanceof Date &&
+      !isNaN(entry.doseTime) &&
+      entry.doseTime.toLocaleDateString('en-CA') === this.selectedDate
     );
 
     if (entriesToRender.length === 0) {
-        detailsContainer.innerText = "No scheduled medications for this day.";
-        return;
+      detailsContainer.innerText = "No scheduled medications for this day.";
+      return;
     }
 
     if (this.isCareTakerSchedule) {
-        let groups = {};
-        entriesToRender.forEach(entry => {
-            const name = entry.dependantName || 'Unknown Dependant';
-            groups[name] = groups[name] || [];
-            groups[name].push(entry);
+      let groups = {};
+      entriesToRender.forEach(entry => {
+        const name = entry.dependantName || 'Unknown Dependant';
+        groups[name] = groups[name] || [];
+        groups[name].push(entry);
+      });
+      for (const name in groups) {
+        let groupContainer = document.createElement('div');
+        groupContainer.className = 'entry-group-below';
+        let header = document.createElement('h3');
+        header.innerText = name;
+        groupContainer.appendChild(header);
+
+        groups[name].forEach(entry => {
+          const medEntry = document.createElement('div');
+          medEntry.className = 'medication-entry-below';
+          const formattedTime = entry.doseTime.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            hour12: true 
+          });
+          medEntry.innerText = `• ${entry.numPillsPerDose} x ${entry.medication} at ${formattedTime}`;
+          groupContainer.appendChild(medEntry);
         });
-
-        const containerHeader = document.createElement('h2');
-        try {
-            console.log("hello");
-            const dateObj = new Date(this.selectedDate + 'T00:00:00');
-            containerHeader.textContent = `Schedule for ${dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
-        } catch(e) {
-            console.log("hello");
-            containerHeader.textContent = `Schedule for ${this.selectedDate}`;
-        }
-
-        detailsContainer.appendChild(containerHeader);
-        for (const name in groups) {
-            let groupContainer = document.createElement('div');
-            groupContainer.className = 'entry-group-below';
-            let header = document.createElement('h3');
-            header.innerText = name;
-            groupContainer.appendChild(header);
-
-            groups[name].forEach(entry => {
-                const medEntry = document.createElement('div');
-                medEntry.className = 'medication-entry-below';
-                const formattedTime = entry.doseTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-                // NEW: Display number of pills per dose along with medication name.
-                medEntry.innerText = `• ${entry.numPillsPerDose} x ${entry.medication} at ${formattedTime}`;
-                groupContainer.appendChild(medEntry);
-            });
-            detailsContainer.appendChild(groupContainer);
-        }
-
-        
+        detailsContainer.appendChild(groupContainer);
+      }
     } else {
-        const header = document.createElement('h2');
-        try {
-            console.log("hello");
-            const dateObj = new Date(this.selectedDate + 'T00:00:00');
-            header.textContent = `Schedule for ${dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
-        } catch(e) {
-            console.log("hello");
-            header.textContent = `Schedule for ${this.selectedDate}`;
-        }
-        detailsContainer.appendChild(header);
-        
-
-        entriesToRender.forEach(entry => {
-            const medEntry = document.createElement('div');
-            medEntry.className = 'medication-entry-below';
-            const formattedTime = entry.doseTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-            medEntry.innerText = `• ${entry.numPillsPerDose} x ${entry.medication} at ${formattedTime}`;
-            detailsContainer.appendChild(medEntry);
+      entriesToRender.forEach(entry => {
+        const medEntry = document.createElement('div');
+        medEntry.className = 'medication-entry-below';
+        const formattedTime = entry.doseTime.toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit', 
+          hour12: true 
         });
+        medEntry.innerText = `• ${entry.numPillsPerDose} x ${entry.medication} at ${formattedTime}`;
+        detailsContainer.appendChild(medEntry);
+      });
     }
-}
+  }
 
-/**
- * Renders the detailed schedule for the selected date in a sidebar.
- * Each entry now includes the number of pills per dose along with the medication name and time.
- */
-renderSideBar() {
+  /**
+   * Renders the detailed schedule for the selected date in the sidebar.
+   */
+  renderSideBar() {
     if (!this.container) {
-        console.error("Cannot render sidebar, main container not found.");
-        return;
+      console.error("Main container not found. Cannot render sidebar.");
+      return;
     }
-
     let sideBar = document.getElementById("calendar-sidebar");
     if (!sideBar) {
-        sideBar = document.createElement("aside");
-        sideBar.id = "calendar-sidebar";
-        this.container.appendChild(sideBar);
+      sideBar = document.createElement("aside");
+      sideBar.id = "calendar-sidebar";
+      this.container.appendChild(sideBar);
     }
     sideBar.innerHTML = "";
 
     if (!this.selectedDate) {
-        sideBar.innerText = "Select a date to view details.";
-        return;
+      sideBar.innerText = "Select a date to view details.";
+      return;
     }
 
-    console.log(`Rendering schedule details in sidebar for: ${this.selectedDate}`);
+    sideBar.appendChild(this.createScheduleHeader());
 
     let entriesToRender = this.sortedSchedule.filter(
-        entry => entry.doseTime instanceof Date && !isNaN(entry.doseTime) &&
-        entry.doseTime.toLocaleDateString('en-CA') === this.selectedDate
+      entry => entry.doseTime instanceof Date && !isNaN(entry.doseTime) &&
+               entry.doseTime.toLocaleDateString('en-CA') === this.selectedDate
     );
 
-    const header = document.createElement('h2');
-    try {
-        const dateObj = new Date(this.selectedDate + 'T00:00:00');
-        header.textContent = `Schedule for ${dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}`;
-    } catch(e) {
-        header.textContent = `Schedule for ${this.selectedDate}`;
-    }
-    sideBar.appendChild(header);
-
     if (entriesToRender.length === 0) {
-        const noEventsMsg = document.createElement('p');
-        noEventsMsg.innerText = "No scheduled medications for this day.";
-        sideBar.appendChild(noEventsMsg);
-        return;
+      const noEventsMsg = document.createElement('p');
+      noEventsMsg.innerText = "No scheduled medications for this day.";
+      sideBar.appendChild(noEventsMsg);
+      return;
     }
 
     if (this.isCareTakerSchedule) {
-        let groups = {};
-        entriesToRender.forEach(entry => {
-            const name = entry.dependantName || 'Unknown Dependant';
-            groups[name] = groups[name] || [];
-            groups[name].push(entry);
-        });
-
-        for (const name in groups) {
-            let groupList = document.createElement('ul');
-            groupList.className = 'sidebar-list-group';
-            let listHeader = document.createElement('h3');
-            listHeader.innerText = name;
-            sideBar.appendChild(listHeader);
-            sideBar.appendChild(groupList);
-
-            groups[name].forEach(entry => {
-                const medEntry = document.createElement('li');
-                medEntry.className = 'medication-entry-sidebar';
-                const formattedTime = entry.doseTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-                // NEW: Show number of pills per dose.
-                medEntry.innerText = `${entry.numPillsPerDose} x ${entry.medication} at ${formattedTime}`;
-                groupList.appendChild(medEntry);
-            });
-        }
-    } else {
-        const groupList = document.createElement('ul');
-        groupList.className = 'sidebar-list-single';
+      let groups = {};
+      entriesToRender.forEach(entry => {
+        const name = entry.dependantName || 'Unknown Dependant';
+        groups[name] = groups[name] || [];
+        groups[name].push(entry);
+      });
+      for (const name in groups) {
+        let groupList = document.createElement('ul');
+        groupList.className = 'sidebar-list-group';
+        let listHeader = document.createElement('h3');
+        listHeader.innerText = name;
+        sideBar.appendChild(listHeader);
         sideBar.appendChild(groupList);
-
-        entriesToRender.forEach(entry => {
-            const medEntry = document.createElement('li');
-            medEntry.className = 'medication-entry-sidebar';
-            const formattedTime = entry.doseTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-            medEntry.innerText = `${entry.numPillsPerDose} x ${entry.medication} at ${formattedTime}`;
-            groupList.appendChild(medEntry);
+        groups[name].forEach(entry => {
+          const medEntry = document.createElement('li');
+          medEntry.className = 'medication-entry-sidebar';
+          const formattedTime = entry.doseTime.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          });
+          medEntry.innerText = `${entry.numPillsPerDose} x ${entry.medication} at ${formattedTime}`;
+          groupList.appendChild(medEntry);
         });
+      }
+    } else {
+      const groupList = document.createElement('ul');
+      groupList.className = 'sidebar-list-single';
+      sideBar.appendChild(groupList);
+      entriesToRender.forEach(entry => {
+        const medEntry = document.createElement('li');
+        medEntry.className = 'medication-entry-sidebar';
+        const formattedTime = entry.doseTime.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+        medEntry.innerText = `${entry.numPillsPerDose} x ${entry.medication} at ${formattedTime}`;
+        groupList.appendChild(medEntry);
+      });
     }
-}
 
-} // --- End of CalendarApp Class Definition ---
+    console.log(this.calendarHeight);
+    sideBar.style.cssText = `max-height: ${this.calendarHeight}px;`;
 
+  }
+} // End of CalendarApp class
 
-// --- Initialize after DOM loaded AND user authenticated ---
+// ==================================================
+//             CALENDAR INITIALIZATION
+// ==================================================
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOM fully loaded. Setting up Firebase auth listener.");
+  console.log("DOM fully loaded. Setting up Firebase auth listener.");
 
-    // Get the main container element where the calendar/login message will be displayed
-    const calendarAppHostElement = document.getElementById('calendar');
-    if (!calendarAppHostElement) {
-        console.error("CRITICAL: The main host element with ID 'calendar' was not found in the HTML. Cannot initialize application.");
-        document.body.innerHTML = "<p style='color:red; font-weight:bold;'>Error: Application container missing.</p>";
+  const calendarAppHostElement = document.getElementById('calendar');
+  if (!calendarAppHostElement) {
+    console.error("CRITICAL: Main container with ID 'calendar' not found.");
+    document.body.innerHTML = "<p style='color:red; font-weight:bold;'>Error: Application container missing.</p>";
+    return;
+  }
+
+  firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+      globalUserId = user.uid;
+    //   console.log("User signed in with UID:", globalUserId);
+      calendarAppHostElement.innerHTML = '';
+    //   console.log("Initializing CalendarApp...");
+      const calendar = new CalendarApp('calendar');
+      if (!calendar || !calendar.container) {
+        console.error("Failed to initialize CalendarApp.");
+        calendarAppHostElement.innerHTML = "<p style='color:red;'>Error initializing calendar component.</p>";
         return;
-    }
+      }
 
-    // Listen for changes in Firebase authentication state
-    firebase.auth().onAuthStateChanged(user => {
+      //console.log("Loading medication schedules...");
+      calendar.loadMedicationSchedules().then(() => {
+        //console.log("Schedules loaded successfully. Rendering calendar view.");
+        calendar.renderCalendar();
+        calendar.renderScheduleOnCalendar();
 
-        if (user) {
-            // --- User is Signed In ---
-            globalUserId = user.uid; // Set the global variable
-            console.log("Firebase Auth: User signed in with UID:", globalUserId);
-
-            // Ensure the host element is empty before initializing
-            calendarAppHostElement.innerHTML = '';
-
-            console.log("Initializing CalendarApp...");
-            // Create an instance of the CalendarApp, passing the host element's ID
-            const calendar = new CalendarApp('calendar');
-
-            // Check if the CalendarApp instance was created successfully
-            if (!calendar || !calendar.container) {
-                console.error("Failed to initialize CalendarApp instance properly (likely container issue).");
-                calendarAppHostElement.innerHTML = "<p style='color:red;'>Error initializing calendar component.</p>";
-                return;
-            }
-
-            console.log("Calling loadMedicationSchedules...");
-            // Load schedules first, then render the calendar with the data
-            calendar.loadMedicationSchedules().then(() => {
-                console.log("Schedules loaded successfully. Rendering calendar view.");
-
-                calendar.renderCalendar(); // Render the calendar grid structure
-                calendar.renderScheduleOnCalendar(); // Add summaries to cells
-
-                const todayElement = calendar.calenderContainer?.querySelector('.calendar-day.today');
-                if (todayElement) {
-                    console.log("Auto-selecting today's date.");
-                    calendar.selectDate(todayElement);
-                } else {
-                    console.log("Today's date not in current view or not found, no auto-selection.");
-                }
-
-                console.log("Calendar rendering process complete.");
-            }).catch(error => {
-                console.error("Error during calendar setup (loading/rendering):", error);
-                // Display error within the host element
-                calendarAppHostElement.innerHTML = '';
-                const errorMsg = document.createElement('p');
-                errorMsg.textContent = `Error loading schedule data: ${error.message || 'Please try again later.'}`;
-                errorMsg.style.color = 'red';
-                calendarAppHostElement.appendChild(errorMsg);
-            });
-
-            // Add a custom event listener so that when a medication is added,
-            // the calendar updates by reloading schedules and re-rendering the view.
-            document.addEventListener("medicationAdded", () => {
-                console.log("Medication added event received in calendar script, updating calendar...");
-                calendar.loadMedicationSchedules().then(() => {
-                    calendar.renderCalendar();
-                    calendar.renderScheduleOnCalendar();
-                    const todayElement = calendar.calenderContainer?.querySelector('.calendar-day.today');
-                    if (todayElement) {
-                        console.log("Auto-selecting today's date.");
-                        calendar.selectDate(todayElement);
-                    } else {
-                        console.log("Today's date not in current view or not found, no auto-selection.");
-                    }
-                }).catch(err => {
-                    console.error("Error updating calendar after medication added:", err);
-                });
-            });
-
-            document.addEventListener("medicationRemoved", () => {
-                console.log("Medication added event received in calendar script, updating calendar...");
-                calendar.loadMedicationSchedules().then(() => {
-                    calendar.renderCalendar();
-                    calendar.renderScheduleOnCalendar();
-                    const todayElement = calendar.calenderContainer?.querySelector('.calendar-day.today');
-                    if (todayElement) {
-                        console.log("Auto-selecting today's date.");
-                        calendar.selectDate(todayElement);
-                    } else {
-                        console.log("Today's date not in current view or not found, no auto-selection.");
-                    }
-                }).catch(err => {
-                    console.error("Error updating calendar after medication added:", err);
-                });
-            });
-
+        const todayElement = calendar.calendarContainer?.querySelector('.calendar-day.today');
+        if (todayElement) {
+        //   console.log("Auto-selecting today's date.");
+          calendar.selectDate(todayElement);
         } else {
-            console.log("Firebase Auth: No user signed in.");
-            globalUserId = null;
-
-            calendarAppHostElement.innerHTML = '<p>Please log in to view your medication schedule.</p>';
-            const appSpecificContainer = document.getElementById('calendar-container');
-            if (appSpecificContainer) appSpecificContainer.remove();
-            const sidebar = document.getElementById('calendar-sidebar');
-            if (sidebar) sidebar.remove();
-            const belowDetails = document.getElementById('daily-schedule-container');
-            if (belowDetails) belowDetails.remove();
+           console.log("Today's date not in view, no auto-selection.");
         }
-    });
+        // console.log("Calendar rendering complete.");
+      }).catch(error => {
+        console.error("Error during calendar setup:", error);
+        calendarAppHostElement.innerHTML = '';
+        const errorMsg = document.createElement('p');
+        errorMsg.textContent = `Error loading schedule data: ${error.message || 'Please try again later.'}`;
+        errorMsg.style.color = 'red';
+        calendarAppHostElement.appendChild(errorMsg);
+      });
+
+      // Attach custom event listeners for medication changes.
+      document.addEventListener("medicationAdded", () => {
+        // console.log("Medication added event received, updating calendar...");
+        calendar.loadMedicationSchedules().then(() => {
+          calendar.renderCalendar();
+          calendar.renderScheduleOnCalendar();
+          const todayElement = calendar.calendarContainer?.querySelector('.calendar-day.today');
+          if (todayElement) {
+            // console.log("Auto-selecting today's date.");
+            calendar.selectDate(todayElement);
+          } else {
+             console.log("Today's date not in view.");
+          }
+        }).catch(err => {
+          console.error("Error updating calendar after medication added:", err);
+        });
+      });
+
+      document.addEventListener("medicationRemoved", () => {
+        // console.log("Medication removed event received, updating calendar...");
+        calendar.loadMedicationSchedules().then(() => {
+          calendar.renderCalendar();
+          calendar.renderScheduleOnCalendar();
+          const todayElement = calendar.calendarContainer?.querySelector('.calendar-day.today');
+          if (todayElement) {
+            // console.log("Auto-selecting today's date.");
+            calendar.selectDate(todayElement);
+          } else {
+             console.log("Today's date not in view.");
+          }
+        }).catch(err => {
+          console.error("Error updating calendar after medication removed:", err);
+        });
+      });
+
+    } else {
+      console.log("No user signed in.");
+      globalUserId = null;
+      calendarAppHostElement.innerHTML = '<p>Please log in to view your medication schedule.</p>';
+      const container = document.getElementById('calendar-container');
+      if (container) container.remove();
+      const sidebar = document.getElementById('calendar-sidebar');
+      if (sidebar) sidebar.remove();
+      const belowDetails = document.getElementById('daily-schedule-container');
+      if (belowDetails) belowDetails.remove();
+    }
+  });
 });
