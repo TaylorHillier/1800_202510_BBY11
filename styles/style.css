@@ -1,5 +1,5 @@
 /* ================================================== */
-/*                   GLOBAL STYLES                  */
+/*                GLOBAL BASE STYLES                */
 /* ================================================== */
 
 /* Root Variables */
@@ -25,15 +25,19 @@
     --nav-height-mobile: 4rem;
 }
 
+/* Reset & Base Elements */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
 
 body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
     font-family: 'Inter', 'Segoe UI', sans-serif;
     line-height: 1.6;
     color: var(--dark-text);
     background-color: var(--background-color);
-    margin: 0;
-    padding: 0;
-    height: 100%;
 }
 
 p {
@@ -44,15 +48,11 @@ main {
     width: 100%;
 }
 
-.overflow-y-hidden {
-    overflow-y: hidden;
-}
-
 a {
     text-decoration: none;
     white-space: nowrap;
-    color: var(--link);
     width: 100%;
+    color: var(--dark-text);
 }
 
 ul {
@@ -60,8 +60,13 @@ ul {
     padding: 0;
 }
 
+/* Utility Classes */
+.overflow-y-hidden {
+    overflow-y: hidden;
+}
+
 /* ================================================== */
-/*                   LAYOUT STYLES                  */
+/*                  LAYOUT STYLES                   */
 /* ================================================== */
 
 .main-layout {
@@ -69,7 +74,7 @@ ul {
     margin-bottom: var(--nav-height-mobile);
 }
 
-@media(min-width:992px) {
+@media (min-width: 992px) {
     .main-layout {
         display: flex;
         margin-bottom: 0;
@@ -77,7 +82,7 @@ ul {
 }
 
 /* ================================================== */
-/*                  COMPONENT STYLES                */
+/*                COMPONENT STYLES                 */
 /* ================================================== */
 
 /* ----- Hero Section ----- */
@@ -211,7 +216,7 @@ ul {
 .feature-icon {
     font-size: 3em;
     margin-bottom: 20px;
-    color: #007bff;
+    color: var(--primary-color);
 }
 
 .feature-card h3 {
@@ -406,16 +411,58 @@ footer {
     background-color: var(--soft-blue);
 }
 
-/* ================================================== */
-/*                 UTILITY CLASSES                  */
-/* ================================================== */
 
-.hidden {
-    display: none;
+/* Header for the Medication Form */
+.med-form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--medium-gray);
+    padding-bottom: var(--space-xs);
 }
 
-.hidden-mobile {
-    display: none;
+/* Exit (Close) Button */
+.med-exit {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--dark-text);
+}
+
+/* Medication Form inner styling */
+#newMedication-form label {
+    display: block;
+    margin-top: var(--space-sm);
+    font-weight: bold;
+}
+
+#newMedication-form input,
+#newMedication-form textarea {
+    width: 100%;
+    padding: var(--space-xs);
+    margin-top: var(--space-xs);
+    border: 1px solid var(--medium-gray);
+    border-radius: var(--border-radius);
+}
+
+#add-medication-button {
+    margin-top: var(--space-md);
+    padding: var(--space-xs) var(--space-sm);
+    background-color: var(--slate-green);
+    color: var(--white);
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    display: block;
+    width: 100%;
+    transition: background-color 0.3s ease;
+}
+
+#add-medication-button:hover {
+    background-color: var(--pale-green);
+    color: var(--dark-text);
 }
 
 /* ================================================== */
@@ -423,8 +470,6 @@ footer {
 /* ================================================== */
 
 @media screen and (max-width: 768px) {
-
-    /* Mobile Menu */
     .mobile-menu-toggle {
         display: flex;
         flex-direction: column;
@@ -438,7 +483,6 @@ footer {
         margin: 2px 0;
     }
 
-    /* Layout Adjustments */
     .feature-grid {
         grid-template-columns: 1fr;
     }
@@ -447,7 +491,6 @@ footer {
         grid-template-columns: 1fr;
     }
 
-    /* Hero Section */
     .hero {
         padding: 4rem 2rem;
     }
@@ -460,7 +503,6 @@ footer {
         font-size: 1rem;
     }
 
-    /* CTA Section */
     .cta-container {
         width: 90%;
         margin: 1rem auto;
@@ -470,16 +512,11 @@ footer {
         padding: 1.5rem;
     }
 
-    /* .cta-buttons {
-        flex-direction: column;
-    } */
-
     .btn-primary,
     .btn-secondary {
         width: 100%;
     }
 
-    /* Profile */
     .profile-header {
         flex-direction: column;
         text-align: center;
@@ -488,13 +525,21 @@ footer {
     .feature-card {
         margin: 0 2%;
     }
+
+    /* Responsive adjustments for medication form modal */
+    @media screen and (max-width: 600px) {
+        .medication-form {
+            width: 90%;
+            margin: 0 1rem calc(var(--nav-height-mobile) + var(--space-sm)) 1rem;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    }
 }
 
 @media (min-width: 769px) {
-    /* .feature-grid {
-        grid-template-columns: repeat(3, 1fr);
-    } */
-
     .feature-card {
         margin: 0 2%;
     }
@@ -504,5 +549,54 @@ footer {
     .feature-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+}
 
+/* ================================================== */
+/*                 CUSTOM LIST STYLES               */
+/* ================================================== */
+
+.clean-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.clean-list li {
+    padding: var(--space-sm) var(--space-md);
+    border-bottom: 1px solid var(--medium-gray);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.clean-list li:last-child {
+    border-bottom: none;
+}
+
+.clean-list li:hover {
+    background-color: var(--pale-green);
+}
+
+/* Sidebar List Styles */
+.sidebar-list-group,
+.sidebar-list-single {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-list-group li,
+.sidebar-list-single li {
+    padding: var(--space-xs);
+    border-bottom: 1px solid var(--medium-gray);
+}
+
+.sidebar-list-group li:last-child,
+.sidebar-list-single li:last-child {
+    border-bottom: none;
+}
+
+.sidebar-list-group li:hover,
+.sidebar-list-single li:hover {
+    background-color: var(--pale-green);
 }

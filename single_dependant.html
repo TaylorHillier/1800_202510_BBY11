@@ -31,14 +31,17 @@
                 <button id="view-details">View Details</button>
                 <div id="dependent-details"></div>
 
-                Here are your medications for the day:
-                <ul id="med-list">
-                
-                </ul>
-                <div>
-                    <button id="addMedication">Add a Medication</button>
-                    <button id="removeMedModeBtn">Remove Medication</button>
+                <div id="medications-container">
+                    <p>Here are your medications for the day:</p>
+                    <ul id="med-list">
+                    
+                    </ul>
+                    <div class="med-controls">
+                        <button id="addMedication">Add a Medication</button>
+                        <button id="removeMedModeBtn">Remove Medication</button>
+                    </div>
                 </div>
+                
             </section>
             <section id="calendar">
             
@@ -59,8 +62,9 @@
 
 <script src="./scripts/FIREBASE_API.js"></script>
 <script src="./scripts/script.js"></script>
-<script src="./scripts/calendar.js"></script>
 <script src="./scripts/single_dependant.js"></script>
+<script src="./scripts/calendar.js"></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         loadNotesIssues(); 

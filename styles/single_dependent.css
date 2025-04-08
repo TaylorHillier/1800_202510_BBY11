@@ -39,13 +39,6 @@ body {
   line-height: 1.6;
 }
 
-/* Navigation */
-#navigation {
-  background-color: var(--navy);
-  color: var(--white);
-  padding: var(--space-md);
-  min-height: var(--nav-height-mobile);
-}
 
 /* Section styles */
 section {
@@ -56,6 +49,13 @@ section {
   box-shadow: var(--shadow);
 }
 
+#medications-container {
+  padding: 1rem 0;
+}
+
+.med-controls button{
+  margin: 1rem 0;
+}
 /* Medications Section */
 #medications h1 {
   font-size: 1.5rem;
@@ -83,7 +83,7 @@ section {
   background-color: var(--slate-green);
   color: var(--white);
   border: none;
-  padding: var(--space-xs) var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
   border-radius: var(--border-radius);
   cursor: pointer;
   margin-right: var(--space-sm);
@@ -258,6 +258,10 @@ section {
 @media (min-width: 992px) {
   .medication-form { 
     max-height: unset;           /* Ensure the modal never exceeds the viewport height */
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
   }
 }
 
@@ -410,20 +414,5 @@ section {
   .medication-form {
    
     margin: 0 1rem calc(var(--nav-height-mobile) + var(--space-sm)) 1rem;
-  }
-}
-
-/* General responsive adjustments for the page */
-@media screen and (max-width: 768px) {
-  .main-layout {
-    padding: var(--space-sm);
-  }
-
-  #navigation {
-    padding: var(--space-sm);
-  }
-
-  section {
-    padding: var(--space-sm);
   }
 }

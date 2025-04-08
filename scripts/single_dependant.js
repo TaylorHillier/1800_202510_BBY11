@@ -145,8 +145,7 @@ function getMedicationList() {
 
                     // Medication details text
                     const medInfo = document.createElement("span");
-                    medInfo.textContent = `${medData.name}: ${medData.numPillsPerDose} times today`;
-                    medInfo.textContent += medData.continuous ? '(continuous)' : '';
+                    medInfo.innerHTML = `<b>${medData.name}</b>: ${medData.numPillsPerDose} times today${medData.continuous ? ' (continuous)' : ''}`;
                     medInfo.className = "medication-info";
 
                     // Delete button with conditional display
@@ -172,7 +171,14 @@ function getMedicationList() {
                         e.preventDefault();
                         e.stopPropagation();
                         if (confirm(`Remove ${medData.name}?`)) {
-                            removeMedication(medDoc.id);
+                            removeMedication(medDoc.id).then(() => {
+                               
+                                // Dispatch a custom event to notify other modules.
+                                document.dispatchEvent(new CustomEvent("medicationRemoved"));
+                            })
+                            .catch(error => {
+                                console.error("Error adding medication:", error);
+                            });;
                         }
                     });
 
@@ -199,8 +205,7 @@ function removeMedication(medicationId) {
         return;
     }
 
-    // Delete the medication document.
-    firebase.firestore()
+    const medicationPromise = firebase.firestore()
         .collection("users")
         .doc(user.uid)
         .collection("dependants")
@@ -210,22 +215,21 @@ function removeMedication(medicationId) {
         .delete()
         .then(() => {
             console.log("Medication removed successfully");
-            // Check if any medications remain
             checkIfLastMedication();
         })
         .catch(error => {
             console.error("Error removing medication:", error);
+            return Promise.reject(error);
         });
 
     // Delete any completed task documents whose IDs start with medicationId + "-"
-    const completedTasksRef = firebase.firestore()
+    const completedTasksPromise = firebase.firestore()
         .collection("users")
         .doc(user.uid)
         .collection("dependants")
         .doc(dependantId)
-        .collection("completed-tasks");
-
-    completedTasksRef.get()
+        .collection("completed-tasks")
+        .get()
         .then(snapshot => {
             const batch = firebase.firestore().batch();
             snapshot.forEach(doc => {
@@ -241,7 +245,17 @@ function removeMedication(medicationId) {
         })
         .catch(error => {
             console.error("Error removing completed tasks:", error);
+            return Promise.reject(error);
         });
+
+    return Promise.all([medicationPromise, completedTasksPromise])
+    .then(() => {
+        console.log("Medication and related tasks removed successfully");
+    })
+    .catch(error => {
+        console.error("Error in removeMedication:", error);
+        return Promise.reject(error);
+    });
 }
 
 // Reset UI if all medications are removed
@@ -284,7 +298,9 @@ function createMedicationForm() {
         return;
     }
 
+    if(window.innerWidth < 992){
     $(document.body).addClass("overflow-y-hidden");
+    }
     
     let container = document.createElement('div');
     container.className = 'medication-form';
@@ -430,9 +446,23 @@ function createMedicationForm() {
     form.addEventListener("submit", function (event) {
         event.preventDefault();
         console.log("Form submitted!");
-        addMedication();
-        form.reset();
+    
+        addMedication()
+            .then(() => {
+                console.log('displatching');
+                // Dispatch a custom event to notify other modules.
+                document.dispatchEvent(new CustomEvent("medicationAdded"));
+                form.reset();
+            })
+            .catch(error => {
+                console.error("Error adding medication:", error);
+            });
+    
+        document.getElementById('medication-form').remove();
+        $(document.body).removeClass("overflow-y-hidden");
     });
+    
+    
 
     // Append elements to form
 
@@ -481,7 +511,7 @@ function createMedicationForm() {
 
     container.appendChild(form);
 
-    anchor.insertAdjacentElement("afterend", container);
+    anchor.insertAdjacentElement("beforeend", container);
 
 }
 
@@ -489,14 +519,14 @@ function addMedication() {
     const user = firebase.auth().currentUser;
     if (!user) {
         console.error("No user signed in");
-        return;
+        return Promise.reject(new Error("No user signed in"));
     }
 
     const url = new URLSearchParams(window.location.search);
     const dependantId = url.get('id');
     if (!dependantId) {
         console.error("No dependant selected");
-        return;
+        return Promise.reject(new Error("No dependant selected"));
     }
 
     // Get form values
@@ -513,13 +543,13 @@ function addMedication() {
     // Basic field validation
     if (!startDateStr || !startTimeStr || !medicationName || !numPillsPerDose || !dosesPerDayValue) {
         console.error("Fill in all required fields");
-        return;
+        return Promise.reject(new Error("Fill in all required fields"));
     }
 
     const dosesPerDay = parseInt(dosesPerDayValue);
     if (isNaN(dosesPerDay) || dosesPerDay <= 0) {
         console.error("Doses per day must be a positive number");
-        return;
+        return Promise.reject(new Error("Doses per day must be a positive number"));
     }
 
     const startDateObj = new Date(startDateStr).toLocaleDateString('en-CA');
@@ -527,20 +557,20 @@ function addMedication() {
     console.log(Date(Date.now()));
     if (startDateObj < new Date(Date.now())) {
         console.error("Start date cannot be in the past");
-        return;
+        return Promise.reject(new Error("Start date cannot be in the past"));
     }
 
     // If not continuous, validate end date and end time
     if (!isContinuous) {
         if (!endDateStr || !endTimeStr) {
             console.error("Fill in end date and end time or select Continuous");
-            return;
+            return Promise.reject(new Error("Fill in end date and end time or select Continuous"));
         }
 
         const endDateObj = new Date(endDateStr).toLocaleDateString('en-CA');
         if (endDateObj < startDateObj) {
             console.error("End date must be after the start date");
-            return;
+            return Promise.reject(new Error("End date must be after the start date"));
         }
 
         // If the start and end dates are the same, ensure the end time is after the start time
@@ -549,7 +579,7 @@ function addMedication() {
             const [eHour, eMin] = endTimeStr.split(":").map(Number);
             if (eHour < sHour || (eHour === sHour && eMin <= sMin)) {
                 console.error("End time must be after start time when start and end dates are the same");
-                return;
+                return Promise.reject(new Error("End time must be after start time when start and end dates are the same"));
             }
         }
     }
@@ -575,28 +605,25 @@ function addMedication() {
         .doc(dependantId)
         .collection('medications');
 
-    medicationCollectionRef.add(medication)
+    // Return the promise chain so that the caller can use .then()
+    return medicationCollectionRef.add(medication)
         .then(docRef => {
             console.log("New medication added:", medicationName, "ID:", docRef.id);
 
             // Compute the schedule for the medication using the awake period rather than 24 hours.
             let scheduleArray = [];
 
-            // For each day, the awake period is defined by the start time and end time.
-            // For non-continuous mode, we use the provided end date.
-            // For continuous mode, we generate a default 7-day schedule and assume awake end at 10:00 PM.
             let dayStart = new Date(startDateStr);
             let dayEnd;
             if (isContinuous) {
                 dayEnd = new Date(dayStart);
-                dayEnd.setDate(dayEnd.getDate() + 90); // 7 days total
+                dayEnd.setDate(dayEnd.getDate() + 90); // continuous mode: 90 days schedule
             } else {
                 dayEnd = new Date(endDateStr);
             }
 
             // Parse the start time.
             const [startHour, startMinute] = startTimeStr.split(":").map(Number);
-            // For non-continuous, parse provided end time; otherwise, default to 22:00.
             let endHour, endMinute;
             if (!isContinuous) {
                 [endHour, endMinute] = endTimeStr.split(":").map(Number);
@@ -607,23 +634,18 @@ function addMedication() {
 
             // Iterate over each day in the scheduling range.
             for (let day = new Date(dayStart); day <= dayEnd; day.setDate(day.getDate() + 1)) {
-                // Create the awake period for this day.
                 let awakeStart = new Date(day);
                 awakeStart.setHours(startHour, startMinute, 0, 0);
 
                 let awakeEnd = new Date(day);
                 awakeEnd.setHours(endHour, endMinute, 0, 0);
 
-                // Calculate the total active minutes.
                 const activeMinutes = (awakeEnd - awakeStart) / (1000 * 60);
-
-                // If only one dose per day, schedule it at the start of the awake period.
                 let intervalMinutes = 0;
                 if (dosesPerDay > 1) {
                     intervalMinutes = activeMinutes / (dosesPerDay - 1);
                 }
 
-                // Schedule the doses evenly between awakeStart and awakeEnd.
                 for (let doseIndex = 0; doseIndex < dosesPerDay; doseIndex++) {
                     const doseTime = new Date(awakeStart.getTime() + doseIndex * intervalMinutes * 60000);
                     scheduleArray.push({
@@ -641,8 +663,10 @@ function addMedication() {
         })
         .catch(error => {
             console.error("Error adding medication or updating schedule:", error);
+            return Promise.reject(error);
         });
 }
+
 
 
 function saveNoteIssue() {

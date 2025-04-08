@@ -554,10 +554,21 @@ renderScheduleBelowCalendar() {
             groups[name].push(entry);
         });
 
+        const containerHeader = document.createElement('h2');
+        try {
+            console.log("hello");
+            const dateObj = new Date(this.selectedDate + 'T00:00:00');
+            containerHeader.textContent = `Schedule for ${dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+        } catch(e) {
+            console.log("hello");
+            containerHeader.textContent = `Schedule for ${this.selectedDate}`;
+        }
+
+        detailsContainer.appendChild(containerHeader);
         for (const name in groups) {
             let groupContainer = document.createElement('div');
             groupContainer.className = 'entry-group-below';
-            let header = document.createElement('h5');
+            let header = document.createElement('h3');
             header.innerText = name;
             groupContainer.appendChild(header);
 
@@ -571,15 +582,20 @@ renderScheduleBelowCalendar() {
             });
             detailsContainer.appendChild(groupContainer);
         }
+
+        
     } else {
-        const header = document.createElement('h4');
+        const header = document.createElement('h2');
         try {
+            console.log("hello");
             const dateObj = new Date(this.selectedDate + 'T00:00:00');
             header.textContent = `Schedule for ${dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
         } catch(e) {
+            console.log("hello");
             header.textContent = `Schedule for ${this.selectedDate}`;
         }
         detailsContainer.appendChild(header);
+        
 
         entriesToRender.forEach(entry => {
             const medEntry = document.createElement('div');
@@ -621,7 +637,7 @@ renderSideBar() {
         entry.doseTime.toLocaleDateString('en-CA') === this.selectedDate
     );
 
-    const header = document.createElement('h4');
+    const header = document.createElement('h2');
     try {
         const dateObj = new Date(this.selectedDate + 'T00:00:00');
         header.textContent = `Schedule for ${dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}`;
@@ -648,7 +664,7 @@ renderSideBar() {
         for (const name in groups) {
             let groupList = document.createElement('ul');
             groupList.className = 'sidebar-list-group';
-            let listHeader = document.createElement('h5');
+            let listHeader = document.createElement('h3');
             listHeader.innerText = name;
             sideBar.appendChild(listHeader);
             sideBar.appendChild(groupList);
@@ -686,12 +702,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Get the main container element where the calendar/login message will be displayed
     const calendarAppHostElement = document.getElementById('calendar');
-     if (!calendarAppHostElement) {
-         console.error("CRITICAL: The main host element with ID 'calendar' was not found in the HTML. Cannot initialize application.");
-         document.body.innerHTML = "<p style='color:red; font-weight:bold;'>Error: Application container missing.</p>"; // Display critical error
-         return;
-     }
-
+    if (!calendarAppHostElement) {
+        console.error("CRITICAL: The main host element with ID 'calendar' was not found in the HTML. Cannot initialize application.");
+        document.body.innerHTML = "<p style='color:red; font-weight:bold;'>Error: Application container missing.</p>";
+        return;
+    }
 
     // Listen for changes in Firebase authentication state
     firebase.auth().onAuthStateChanged(user => {
@@ -701,66 +716,94 @@ document.addEventListener('DOMContentLoaded', () => {
             globalUserId = user.uid; // Set the global variable
             console.log("Firebase Auth: User signed in with UID:", globalUserId);
 
-             // Ensure the host element is empty before initializing
+            // Ensure the host element is empty before initializing
             calendarAppHostElement.innerHTML = '';
 
             console.log("Initializing CalendarApp...");
             // Create an instance of the CalendarApp, passing the host element's ID
             const calendar = new CalendarApp('calendar');
 
-            // Check if the CalendarApp instance was created successfully (constructor checks container)
+            // Check if the CalendarApp instance was created successfully
             if (!calendar || !calendar.container) {
                 console.error("Failed to initialize CalendarApp instance properly (likely container issue).");
-                 calendarAppHostElement.innerHTML = "<p style='color:red;'>Error initializing calendar component.</p>";
+                calendarAppHostElement.innerHTML = "<p style='color:red;'>Error initializing calendar component.</p>";
                 return;
             }
 
             console.log("Calling loadMedicationSchedules...");
-            // Load schedules FIRST, then render the calendar with the data
+            // Load schedules first, then render the calendar with the data
             calendar.loadMedicationSchedules().then(() => {
                 console.log("Schedules loaded successfully. Rendering calendar view.");
 
                 calendar.renderCalendar(); // Render the calendar grid structure
-
-      
                 calendar.renderScheduleOnCalendar(); // Add summaries to cells
-                
 
                 const todayElement = calendar.calenderContainer?.querySelector('.calendar-day.today');
                 if (todayElement) {
-                     console.log("Auto-selecting today's date.");
+                    console.log("Auto-selecting today's date.");
                     calendar.selectDate(todayElement);
                 } else {
                     console.log("Today's date not in current view or not found, no auto-selection.");
                 }
 
                 console.log("Calendar rendering process complete.");
-
             }).catch(error => {
-               
                 console.error("Error during calendar setup (loading/rendering):", error);
-                 // Display error within the host element
-                 calendarAppHostElement.innerHTML = ''; 
-                 const errorMsg = document.createElement('p');
-                 errorMsg.textContent = `Error loading schedule data: ${error.message || 'Please try again later.'}`;
-                 errorMsg.style.color = 'red';
-                 calendarAppHostElement.appendChild(errorMsg);
+                // Display error within the host element
+                calendarAppHostElement.innerHTML = '';
+                const errorMsg = document.createElement('p');
+                errorMsg.textContent = `Error loading schedule data: ${error.message || 'Please try again later.'}`;
+                errorMsg.style.color = 'red';
+                calendarAppHostElement.appendChild(errorMsg);
+            });
 
+            // Add a custom event listener so that when a medication is added,
+            // the calendar updates by reloading schedules and re-rendering the view.
+            document.addEventListener("medicationAdded", () => {
+                console.log("Medication added event received in calendar script, updating calendar...");
+                calendar.loadMedicationSchedules().then(() => {
+                    calendar.renderCalendar();
+                    calendar.renderScheduleOnCalendar();
+                    const todayElement = calendar.calenderContainer?.querySelector('.calendar-day.today');
+                    if (todayElement) {
+                        console.log("Auto-selecting today's date.");
+                        calendar.selectDate(todayElement);
+                    } else {
+                        console.log("Today's date not in current view or not found, no auto-selection.");
+                    }
+                }).catch(err => {
+                    console.error("Error updating calendar after medication added:", err);
+                });
+            });
+
+            document.addEventListener("medicationRemoved", () => {
+                console.log("Medication added event received in calendar script, updating calendar...");
+                calendar.loadMedicationSchedules().then(() => {
+                    calendar.renderCalendar();
+                    calendar.renderScheduleOnCalendar();
+                    const todayElement = calendar.calenderContainer?.querySelector('.calendar-day.today');
+                    if (todayElement) {
+                        console.log("Auto-selecting today's date.");
+                        calendar.selectDate(todayElement);
+                    } else {
+                        console.log("Today's date not in current view or not found, no auto-selection.");
+                    }
+                }).catch(err => {
+                    console.error("Error updating calendar after medication added:", err);
+                });
             });
 
         } else {
- 
             console.log("Firebase Auth: No user signed in.");
-            globalUserId = null; 
+            globalUserId = null;
 
             calendarAppHostElement.innerHTML = '<p>Please log in to view your medication schedule.</p>';
-
             const appSpecificContainer = document.getElementById('calendar-container');
             if (appSpecificContainer) appSpecificContainer.remove();
             const sidebar = document.getElementById('calendar-sidebar');
             if (sidebar) sidebar.remove();
             const belowDetails = document.getElementById('daily-schedule-container');
-             if (belowDetails) belowDetails.remove();
+            if (belowDetails) belowDetails.remove();
         }
     });
 });

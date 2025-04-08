@@ -48,6 +48,7 @@ p {
   width: 100%;
   list-style: none;
   padding: 0 var(--space-sm);
+  margin: 0;
 }
 
 .nav-item {
