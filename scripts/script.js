@@ -1,11 +1,4 @@
-function logout() {
-    firebase.auth().signOut().then(() => {
-        // Sign-out successful.
-        console.log("logging out user");
-      }).catch((error) => {
-        // An error happened.
-      });
-}
+
 
 /**
  * Inserts content into nav skeleton on each page depending on login status.
