@@ -224,7 +224,7 @@ p {
   }
 
   .nav-logo {
-    height: 22px;
+    max-width: 100%;
   }
 
   .nav-item.logo .nav-link {
