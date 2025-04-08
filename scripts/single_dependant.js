@@ -34,7 +34,6 @@ function getCurrentDependant() {
             }
             
             loadNotesIssues();
-            initializeSummary();
             getMedicationList();
         } else {
             console.log("No user logged in");
@@ -284,6 +283,9 @@ function createMedicationForm() {
     if(document.getElementById('medication-form')){
         return;
     }
+
+    $(document.body).addClass("overflow-y-hidden");
+    
     let container = document.createElement('div');
     container.className = 'medication-form';
     container.id = 'medication-form';
@@ -439,6 +441,7 @@ function createMedicationForm() {
     exit.textContent = 'x';
     exit.addEventListener('click', () => {
         document.getElementById('medication-form').remove();
+        $(document.body).removeClass("overflow-y-hidden");
     });
 
     var title = document.createElement('h2');
@@ -845,17 +848,12 @@ function setupViewDetailsButton() {
 
         if($dependentDiv.hasClass("open")){
             $dependentDiv.slideUp(500, function() {
-                
-                $dependentDiv.removeClass("open");
-               
-                
+                $dependentDiv.removeClass("open"); 
             });
             $editbutton.text('View Details');
         } else {
             $dependentDiv.hide().slideDown(500, function() {
-              
                 $dependentDiv.addClass("open");
-               
             });
             $editbutton.text('Close Details');
         }

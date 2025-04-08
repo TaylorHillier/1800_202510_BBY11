@@ -25,12 +25,6 @@
     --nav-height-mobile: 4rem;
 }
 
-/* Reset & Base Styles */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
 
 body {
     font-family: 'Inter', 'Segoe UI', sans-serif;
@@ -40,6 +34,18 @@ body {
     margin: 0;
     padding: 0;
     height: 100%;
+}
+
+p {
+    margin: 0;
+}
+
+main {
+    width: 100%;
+}
+
+.overflow-y-hidden {
+    overflow-y: hidden;
 }
 
 a {
@@ -63,9 +69,10 @@ ul {
     margin-bottom: var(--nav-height-mobile);
 }
 
-@media(min-width:768px) {
+@media(min-width:992px) {
     .main-layout {
         display: flex;
+        margin-bottom: 0;
     }
 }
 

@@ -153,7 +153,6 @@
 }
 
 .close-btn {
-<<<<<<< HEAD
 
     cursor: pointer;
     font-size: 24px;
@@ -165,23 +164,6 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-=======
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  font-size: 24px;
-  cursor: pointer;
-  color: #6b7280;
-  background: none;
-  border: none;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.2s;
-  z-index: 10; /* Ensure it's above other elements */
->>>>>>> ea302c2b919f014789fae4ddc333835ef1c88f74
 }
 .close-btn:hover {
   color: #1f2937; /* Darker on hover */
