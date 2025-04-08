@@ -26,17 +26,24 @@ function createForm() {
     form.id = "dependants-form";
     form.className = "dependent-form";
 
+    var header = document.createElement("div");
+    header.id = 'add-dependent-header';
+    header.className = "add-dependent-header";
+
     // Close button
     var close = document.createElement("div");
     close.id = "close-form";
     close.className = "close-btn";
-    close.textContent = "×";
+    close.textContent = "X";
 
-    // Form title
-    var title = document.createElement("h2");
-    title.textContent = "Add New Dependent";
-    form.appendChild(title);
-    form.appendChild(close);
+        // Form title
+        var title = document.createElement("h2");
+        title.textContent = "Add New Dependent";
+
+    header.appendChild(title);
+    header.appendChild(close);
+
+    form.appendChild(header);
 
     // Create form sections
     createFormSection(form, "Basic Information", [

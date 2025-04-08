@@ -1,105 +1,342 @@
+/* Root variables and resets */
 :root {
-    /* Color Palette */
-    --slate-blue: #6B8FAF;
-    --soft-blue: #9BB5C9;
-    --slate-green: #7A9A7B;
-    --pale-green: #C4D7C4;
-    --navy: #2C3E50;
-    --white: #FFFFFF;
-    --light-gray: #F5F7FA;
-    --medium-gray: #E0E5EC;
-    --dark-text: #2D3748;
-    --light-text: #4A5568;
+  /* Color Palette */
+  --slate-blue: #6B8FAF;
+  --soft-blue: #9BB5C9;
+  --slate-green: #7A9A7B;
+  --pale-green: #C4D7C4;
+  --navy: #2C3E50;
+  --white: #FFFFFF;
+  --light-gray: #F5F7FA;
+  --medium-gray: #E0E5EC;
+  --dark-text: #2D3748;
+  --light-text: #4A5568;
   
-    /* Spacing */
-    --space-xs: 0.5rem;
-    --space-sm: 0.75rem;
-    --space-md: 1.25rem;
-    --space-lg: 2rem;
-    --space-xl: 3rem;
+  /* Spacing */
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1.25rem;
+  --space-lg: 2rem;
+  --space-xl: 3rem;
   
-    /* Sizes */
-    --nav-height-mobile: 4rem;
-    --nav-width-desktop: 220px;
-    --border-radius: 8px;
-    --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-  .dependent-profile {
-    max-width: 800px;
-    margin: 20px auto;
-    padding: 20px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  /* Sizes */
+  --nav-height-mobile: 4rem;
+  --nav-width-desktop: 220px;
+  --border-radius: 8px;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.profile-section {
-  margin-bottom: 2rem;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-.profile-section h3 {
-  color: #2c3e50;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 0.5rem;
-  margin-top: 0;
+body {
+  font-family: Arial, sans-serif;
+  background-color: var(--light-gray);
+  color: var(--dark-text);
+  line-height: 1.6;
 }
 
-.contact-card {
-  background: white;
-  padding: 1rem;
-  margin: 1rem 0;
-  border-radius: 6px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.contact-card h4 {
-    margin-top: 0;
-    color: #3498db;
-}
-
-.medication-form {
-  position: fixed;
-  top: 1%;
-  left: 0;
-  right: 0;
-  width: 99%;
-  padding: 1rem;
-  margin: 1%;
+/* Navigation */
+#navigation {
   background-color: var(--navy);
-  margin: auto;
-  border-radius: var(--border-radius);
-  color: white;
-  overflow-y: scroll;
-  max-height: 90vh;
+  color: var(--white);
+  padding: var(--space-md);
+  min-height: var(--nav-height-mobile);
 }
 
-#newMedication-form{
+/* Section styles */
+section {
+  background-color: var(--white);
+  padding: var(--space-md);
+  margin-bottom: var(--space-lg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+}
+
+/* Medications Section */
+#medications h1 {
+  font-size: 1.5rem;
+  margin-bottom: var(--space-sm);
+}
+
+#medications p {
+  margin-bottom: var(--space-sm);
+}
+
+#med-list {
+  list-style: none;
+  padding-left: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+#med-list li {
+  padding: var(--space-xs) 0;
+  border-bottom: 1px solid var(--medium-gray);
+}
+
+/* Buttons for adding and removing medications */
+#addMedication,
+#removeMedModeBtn {
+  background-color: var(--slate-green);
+  color: var(--white);
+  border: none;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  margin-right: var(--space-sm);
+  transition: background-color 0.3s ease;
+}
+
+#addMedication:hover,
+#removeMedModeBtn:hover {
+  background-color: var(--pale-green);
+  color: var(--dark-text);
+}
+
+/* Dependant Summary Section */
+.summary-section {
+  background-color: var(--pale-green);
+  padding: var(--space-sm);
+  margin-bottom: var(--space-lg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+}
+
+.summary-section h3 {
+  color: var(--navy);
+  margin-bottom: var(--space-sm);
+}
+
+/* Summary view styling */
+#summary-view {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-sm);
 }
 
-.medication-form input {
-  width: 100%;
-  border-radius: 4px;
+#summary-view p {
+  padding: var(--space-sm);
+  background-color: var(--white);
+  border: 1px solid var(--medium-gray);
+  border-radius: var(--border-radius);
+}
+
+/* Edit button styling in view mode */
+#edit-summary {
+  align-self: flex-start;
+  background-color: var(--soft-blue);
+  color: var(--dark-text);
   border: none;
-  padding: 0.5rem;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
-main{
-  position: relative;
-  flex: 1;
+#edit-summary:hover {
+  background-color: var(--slate-blue);
 }
 
+/* Summary edit container */
+#summary-edit {
+  display: none;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+#summary-edit textarea {
+  width: 100%;
+  min-height: 150px;
+  padding: var(--space-sm);
+  border: 1px solid var(--medium-gray);
+  border-radius: var(--border-radius);
+  resize: vertical;
+}
+
+#summary-edit button {
+  background-color: var(--soft-blue);
+  color: var(--dark-text);
+  border: none;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#summary-edit button:hover {
+  background-color: var(--slate-blue);
+}
+
+/* Summary feedback styling */
+#summary-feedback {
+  margin-top: var(--space-sm);
+  font-size: 0.9rem;
+}
+
+/* Dependent Details */
+/* Dependent Details (read-only view) */
+#dependent-details {
+  display: none;
+  padding: var(--space-sm);
+  background-color: var(--light-gray);
+  border: 1px solid var(--medium-gray);
+  border-radius: var(--border-radius);
+  margin-bottom: var(--space-lg);
+}
+
+
+/* Calendar Section */
+#calendar {
+  padding: var(--space-md);
+  background-color: var(--white);
+  border: 1px solid var(--medium-gray);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+}
+
+/* Notes and Issues Section */
+#notes-issues h2 {
+  color: var(--navy);
+  margin-bottom: var(--space-sm);
+}
+
+#view-notes-issues {
+  background-color: var(--light-gray);
+  padding: var(--space-sm);
+  border: 1px solid var(--medium-gray);
+  border-radius: var(--border-radius);
+  margin-bottom: var(--space-md);
+}
+
+#new-note-issue {
+  width: 100%;
+  min-height: 100px;
+  padding: var(--space-sm);
+  border: 1px solid var(--medium-gray);
+  border-radius: var(--border-radius);
+  resize: vertical;
+}
+
+/* Medication Form Modal Overlay */
+#medication-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent dark background */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000; /* High z-index ensures the modal is above other elements */
+}
+
+/* Medication Form Container (Modal) */
+.medication-form {
+  background-color: var(--white);
+  padding: var(--space-md);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  overflow-y: auto;           /* Scroll within the modal if content overflows */
+  margin: 0 auto;             /* Center horizontally */
+}
+
+@media (min-width: 992px) {
+  .medication-form { 
+    max-height: unset;           /* Ensure the modal never exceeds the viewport height */
+  }
+}
+
+/* Header for the Medication Form */
 .med-form-header {
   display: flex;
   justify-content: space-between;
-  color: white;
+  align-items: center;
+  margin-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--medium-gray);
+  padding-bottom: var(--space-xs);
 }
-.med-dates-container, .med-times-container{
- 
 
+/* Exit (Close) Button Style */
+.med-exit {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--dark-text);
+}
+
+/* General form element styling for the medication form */
+#newMedication-form label {
+  display: block;
+  margin-top: var(--space-sm);
+  font-weight: bold;
+}
+
+#newMedication-form input,
+#newMedication-form textarea {
+  width: 100%;
+  padding: var(--space-xs);
+  margin-top: var(--space-xs);
+  border: 1px solid var(--medium-gray);
+  border-radius: var(--border-radius);
+}
+
+/* Submit Button Styling for the medication form */
+#add-medication-button {
+  margin-top: var(--space-md);
+  padding: var(--space-xs) var(--space-sm);
+  background-color: var(--slate-green);
+  color: var(--white);
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  transition: background-color 0.3s ease;
+}
+
+#add-medication-button:hover {
+  background-color: var(--pale-green);
+  color: var(--dark-text);
+}
+
+/* Responsive adjustments for mobile screens */
+@media screen and (max-width: 992px) {
+  .medication-form {
+    margin: 0 1rem calc(var(--nav-height-mobile) + var(--space-sm)) 1rem;
+    position: fixed;       /* Fix the modal in the viewport */
+    top: 5%;
+    left: 0;
+    right: 0;
+  }
+}
+
+
+/* Responsive adjustments for mobile screens */
+@media screen and (max-width: 600px) {
+  /* Ensure the medication modal remains centered and has extra bottom margin 
+     to avoid overlapping a fixed navigation (if present) */
+  .medication-form {
+   
+    margin: 0 1rem calc(var(--nav-height-mobile) + var(--space-sm)) 1rem;
+  }
+}
+
+/* General responsive adjustments for the page */
+@media screen and (max-width: 768px) {
+  .main-layout {
+    padding: var(--space-sm);
+  }
+
+  #navigation {
+    padding: var(--space-sm);
+  }
+
+  section {
+    padding: var(--space-sm);
+  }
 }

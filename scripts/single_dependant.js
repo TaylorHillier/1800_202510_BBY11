@@ -24,28 +24,23 @@ function getCurrentDependant() {
                 .get();
 
             if (dependantDoc.exists) {
-                const data = dependantDoc.data();
-                // Update this to show all basic info
-                document.getElementById("dependant-info").innerHTML = `
-                    <h2>${data.firstname} ${data.lastname}</h2>
-                    <p><strong>Relationship:</strong> ${data.relationship || "Not specified"}</p>
-                    <p><strong>Birthdate:</strong> ${data.birthdate || "Not specified"}</p>
-                `;
-                
-                // Display all the other sections
-                displayDependentDetails(data);
+                // Store the entire dependant data in a global variable.
+                globalDependantData = dependantDoc.data();
+
+                // Render the dependant info (name, relationship, birthdate) in its container.
+                renderDependantView(globalDependantData);
+            } else {
+                console.log("No dependant found");
             }
             
             loadNotesIssues();
             initializeSummary();
-            getMedicationList(); // Make sure this is called
+            getMedicationList();
         } else {
             console.log("No user logged in");
         }
     });
 }
-
-
 getCurrentDependant();
 
 // Add this right after getCurrentDependant() call
@@ -286,6 +281,9 @@ getMedicationList();
 
 function createMedicationForm() {
 
+    if(document.getElementById('medication-form')){
+        return;
+    }
     let container = document.createElement('div');
     container.className = 'medication-form';
     container.id = 'medication-form';
@@ -708,164 +706,217 @@ function loadNotesIssues() {
             console.error('Error loading notes/issues: ', error);
         });
 }
-function initializeSummary() {
-    // Double-check we have required values
-    if (!globalUserId || !dependant) {
-        console.error("Missing required values for summary initialization");
-        return;
-    }
-    
-    setupSummary();
-    loadSummary();
+
+
+function enterEditDependantMode() {
+    renderDependantEditForm(globalDependantData);
 }
 
-function setupSummary() {
-    console.log("Setting up summary buttons"); // Debug log
+function renderDependantEditForm(dependent) {
+    const detailsContainer = document.getElementById("dependent-details");
+    if (!detailsContainer) return;
     
-    const editButton = document.getElementById("edit-summary");
-    const saveButton = document.getElementById("save-summary");
-    const cancelButton = document.getElementById("cancel-edit");
+    detailsContainer.innerHTML = `
+        <form id="edit-dependant-form">
+            <div class="profile-section">
+                <h3>Dependant Information</h3>
+                <label>First Name: <input type="text" id="edit-firstname" value="${dependent.firstname || ""}"></label><br>
+                <label>Last Name: <input type="text" id="edit-lastname" value="${dependent.lastname || ""}"></label><br>
+                <label>Relationship: <input type="text" id="edit-relationship" value="${dependent.relationship || ""}"></label><br>
+                <label>Birthdate: <input type="date" id="edit-birthdate" value="${dependent.birthdate || ""}"></label>
+            </div>
+            <div class="profile-section">
+                <h3>Health Summary</h3>
+                <textarea id="edit-healthSummary" style="width:100%;min-height:80px;">${dependent.healthSummary || ""}</textarea>
+            </div>
+            <div class="profile-section">
+                <h3>Medical Information</h3>
+                <label>Allergies: <input type="text" id="edit-allergies" value="${dependent.medicalInfo?.allergies || ""}"></label><br>
+                <label>Medications: <input type="text" id="edit-medications" value="${dependent.medicalInfo?.medications || ""}"></label><br>
+                <label>Health History:</label><br>
+                <textarea id="edit-healthHistory" style="width:100%;min-height:80px;">${dependent.medicalInfo?.healthHistory || ""}</textarea>
+            </div>
+            <div class="profile-section">
+                <h3>Emergency Contacts</h3>
+                <h4>Primary Contact</h4>
+                <label>Name: <input type="text" id="edit-primaryName" value="${dependent.emergencyContacts?.primary?.name || ""}"></label><br>
+                <label>Phone: <input type="text" id="edit-primaryPhone" value="${dependent.emergencyContacts?.primary?.phone || ""}"></label><br>
+                <label>Relationship: <input type="text" id="edit-primaryRelationship" value="${dependent.emergencyContacts?.primary?.relationship || ""}"></label><br>
+                <h4>Secondary Contact</h4>
+                <label>Name: <input type="text" id="edit-secondaryName" value="${dependent.emergencyContacts?.secondary?.name || ""}"></label><br>
+                <label>Phone: <input type="text" id="edit-secondaryPhone" value="${dependent.emergencyContacts?.secondary?.phone || ""}"></label><br>
+                <label>Relationship: <input type="text" id="edit-secondaryRelationship" value="${dependent.emergencyContacts?.secondary?.relationship || ""}"></label>
+            </div>
+            <div class="profile-section">
+                <h3>Additional Notes</h3>
+                <textarea id="edit-additionalInfo" style="width:100%;min-height:80px;">${dependent.additionalInfo || ""}</textarea>
+            </div>
+            <button type="button" id="save-dependant-edits">Save</button>
+            <button type="button" id="cancel-dependant-edits">Cancel</button>
+        </form>
+    `;
     
-    if (!editButton || !saveButton || !cancelButton) {
-        console.error("Missing summary UI elements");
-        return;
+    // Optionally clear or hide the dependant-info container to focus on the form.
+    const dependantInfoContainer = document.getElementById("dependant-info");
+    if (dependantInfoContainer) {
+        dependantInfoContainer.innerHTML = "";
     }
     
-    editButton.addEventListener("click", toggleEditMode);
-    saveButton.addEventListener("click", saveSummary);
-    cancelButton.addEventListener("click", toggleEditMode);
+    // Attach event listeners for Save and Cancel actions.
+    document.getElementById("save-dependant-edits").addEventListener("click", saveDependantEdits);
+    document.getElementById("cancel-dependant-edits").addEventListener("click", function () {
+        // Restore view mode using the global dependant data.
+        renderDependantView(globalDependantData);
+    });
 }
 
-function toggleEditMode() {
-    const summaryView = document.getElementById("summary-view");
-    const summaryEdit = document.getElementById("summary-edit");
-    const summaryText = document.getElementById("summary-text");
-    
-    if (!summaryView || !summaryEdit || !summaryText) {
-        console.error("Missing summary UI elements");
-        return;
+// This function renders the normal (read-only) view of dependant details.
+function renderDependantView(dependent) {
+    // Populate the primary dependant info.
+    const dependantInfoContainer = document.getElementById("dependant-info");
+    if (dependantInfoContainer) {
+        dependantInfoContainer.innerHTML = `
+            <h2>${dependent.firstname || ""} ${dependent.lastname || ""}</h2>
+            <p><strong>Relationship:</strong> ${dependent.relationship || "Not specified"}</p>
+            <p><strong>Birthdate:</strong> ${dependent.birthdate || "Not specified"}</p>
+        `;
     }
     
-    if (summaryEdit.style.display === "none" || !summaryEdit.style.display) {
-        summaryView.style.display = "none";
-        summaryEdit.style.display = "block";
-        summaryText.value = currentSummary;
-        summaryText.focus();
-    } else {
-        summaryView.style.display = "block";
-        summaryEdit.style.display = "none";
+    // Populate the detailed information container.
+    const detailsContainer = document.getElementById("dependent-details");
+    if (detailsContainer) {
+        detailsContainer.innerHTML = `
+            <div class="profile-section">
+                <h3>Health Summary</h3>
+                <p>${dependent.healthSummary || "No information provided"}</p>
+            </div>
+    
+            <div class="profile-section">
+                <h3>Medical Information</h3>
+                <p><strong>Allergies:</strong> ${dependent.medicalInfo?.allergies || "None"}</p>
+                <p><strong>Medications:</strong> ${dependent.medicalInfo?.medications || "None"}</p>
+                <p><strong>Health History:</strong> ${dependent.medicalInfo?.healthHistory || "No history provided"}</p>
+            </div>
+    
+            <div class="profile-section">
+                <h3>Emergency Contacts</h3>
+                <div class="contact-card">
+                    <h4>Primary Contact</h4>
+                    <p>${dependent.emergencyContacts?.primary?.name || "Not specified"}</p>
+                    <p>${dependent.emergencyContacts?.primary?.phone || ""}</p>
+                    <p>${dependent.emergencyContacts?.primary?.relationship || ""}</p>
+                </div>
+                <div class="contact-card">
+                    <h4>Secondary Contact</h4>
+                    <p>${dependent.emergencyContacts?.secondary?.name || "Not specified"}</p>
+                    <p>${dependent.emergencyContacts?.secondary?.phone || ""}</p>
+                    <p>${dependent.emergencyContacts?.secondary?.relationship || ""}</p>
+                </div>
+            </div>
+    
+            <div class="profile-section">
+                <h3>Additional Notes</h3>
+                <p>${dependent.additionalInfo || "No additional notes"}</p>
+            </div>
+            <button id="edit-dependant">Edit Dependant</button>
+        `;
+        
+        // Attach event listener for the Edit Dependant button.
+        const editButton = document.getElementById("edit-dependant");
+        if (editButton) {
+            editButton.addEventListener("click", function () {
+                // Call the existing function for rendering the edit form.
+                renderDependantEditForm(dependent);
+            });
+        }
     }
 }
 
-function loadSummary() {
-    console.log("Loading summary for", globalUserId, dependant); // Debug log
+function setupViewDetailsButton() {
+    const viewDetailsButton = document.getElementById("view-details");
+    if (!viewDetailsButton) return;
     
-    firebase.firestore()
-        .collection("users")
-        .doc(globalUserId)
-        .collection("dependants")
-        .doc(dependant)
-        .get()
-        .then(doc => {
-            if (doc.exists) {
-                currentSummary = doc.data().summary || "No summary yet. Click Edit to add one.";
-                document.getElementById("summary-display").textContent = currentSummary;
-                console.log("Summary loaded:", currentSummary); // Debug log
-            } else {
-                console.log("No summary found for this dependant");
+    viewDetailsButton.addEventListener("click", function () {
+     
+        renderDependantView(globalDependantData);
+      
+        const $dependentDiv = $(document.getElementById("dependent-details"));
+        const $editbutton = $(document.getElementById("view-details"))
+
+        if($dependentDiv.hasClass("open")){
+            $dependentDiv.slideUp(500, function() {
+                
+                $dependentDiv.removeClass("open");
+               
+                
+            });
+            $editbutton.text('View Details');
+        } else {
+            $dependentDiv.hide().slideDown(500, function() {
+              
+                $dependentDiv.addClass("open");
+               
+            });
+            $editbutton.text('Close Details');
+        }
+    });
+}
+
+
+// Call this function after the DOM is loaded or when your dependant data is ready.
+document.addEventListener("DOMContentLoaded", function () {
+    setupViewDetailsButton();
+});
+
+// Called when the user clicks Save in the edit dependant form.
+function saveDependantEdits() {
+    // Collect values from the form.
+    let updatedData = {
+        firstname: document.getElementById("edit-firstname").value.trim(),
+        lastname: document.getElementById("edit-lastname").value.trim(),
+        relationship: document.getElementById("edit-relationship").value.trim(),
+        birthdate: document.getElementById("edit-birthdate").value,
+        healthSummary: document.getElementById("edit-healthSummary").value.trim(),
+        medicalInfo: {
+            allergies: document.getElementById("edit-allergies").value.trim(),
+            medications: document.getElementById("edit-medications").value.trim(),
+            healthHistory: document.getElementById("edit-healthHistory").value.trim()
+        },
+        emergencyContacts: {
+            primary: {
+                name: document.getElementById("edit-primaryName").value.trim(),
+                phone: document.getElementById("edit-primaryPhone").value.trim(),
+                relationship: document.getElementById("edit-primaryRelationship").value.trim()
+            },
+            secondary: {
+                name: document.getElementById("edit-secondaryName").value.trim(),
+                phone: document.getElementById("edit-secondaryPhone").value.trim(),
+                relationship: document.getElementById("edit-secondaryRelationship").value.trim()
             }
-        })
-        .catch(error => {
-            console.error("Error loading summary: ", error);
-            document.getElementById("summary-display").textContent = "Error loading summary";
-        });
-}
+        },
+        additionalInfo: document.getElementById("edit-additionalInfo").value.trim()
+    };
 
-function saveSummary() {
-    const newSummary = document.getElementById("summary-text").value;
-    const feedback = document.getElementById("summary-feedback");
-    
-    if (!newSummary.trim()) {
-        feedback.textContent = "Please enter a summary";
-        feedback.style.display = "block";
-        feedback.style.color = "red";
-        return;
-    }
-
+    // Update Firestore with the edited dependant data.
     firebase.firestore()
         .collection("users")
         .doc(globalUserId)
         .collection("dependants")
         .doc(dependant)
-        .update({
-            summary: newSummary,
-            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-        })
+        .update(updatedData)
         .then(() => {
-            currentSummary = newSummary;
-            document.getElementById("summary-display").textContent = newSummary;
-            
-            feedback.textContent = "✓ Summary saved";
-            feedback.style.display = "block";
-            feedback.style.color = "green";
-            
-            setTimeout(() => {
-                feedback.style.display = "none";
-            }, 2000);
-            
-            toggleEditMode();
+            console.log("Dependant data updated successfully");
+            // Update the global dependant data with the new values.
+            globalDependantData = { ...globalDependantData, ...updatedData };
+            // Re-render the view mode with the updated data.
+            renderDependantView(globalDependantData);
         })
         .catch(error => {
-            console.error("Error saving summary: ", error);
-            feedback.textContent = "Error saving summary";
-            feedback.style.display = "block";
-            feedback.style.color = "red";
+            console.error("Error updating dependant data:", error);
         });
 }
-
 // Helper function to get dependant ID from URL
 function getDependantId() {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get('id');
-}
-
-function displayDependentDetails(dependent) {
-    const detailsContainer = document.getElementById("dependent-details");
-    
-    if (!detailsContainer) return;
-    
-    detailsContainer.innerHTML = `
-        <div class="profile-section">
-            <h3>Health Summary</h3>
-            <p>${dependent.healthSummary || "No information provided"}</p>
-        </div>
-
-        <div class="profile-section">
-            <h3>Medical Information</h3>
-            <p><strong>Allergies:</strong> ${dependent.medicalInfo?.allergies || "None"}</p>
-            <p><strong>Medications:</strong> ${dependent.medicalInfo?.medications || "None"}</p>
-            <p><strong>Health History:</strong> ${dependent.medicalInfo?.healthHistory || "No history provided"}</p>
-        </div>
-
-        <div class="profile-section">
-            <h3>Emergency Contacts</h3>
-            <div class="contact-card">
-                <h4>Primary Contact</h4>
-                <p>${dependent.emergencyContacts?.primary?.name || "Not specified"}</p>
-                <p>${dependent.emergencyContacts?.primary?.phone || ""}</p>
-                <p>${dependent.emergencyContacts?.primary?.relationship || ""}</p>
-            </div>
-            <div class="contact-card">
-                <h4>Secondary Contact</h4>
-                <p>${dependent.emergencyContacts?.secondary?.name || "Not specified"}</p>
-                <p>${dependent.emergencyContacts?.secondary?.phone || ""}</p>
-                <p>${dependent.emergencyContacts?.secondary?.relationship || ""}</p>
-            </div>
-        </div>
-
-        <div class="profile-section">
-            <h3>Additional Notes</h3>
-            <p>${dependent.additionalInfo || "No additional notes"}</p>
-        </div>
-    `;
 }
