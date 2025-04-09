@@ -223,9 +223,9 @@ p {
     margin-bottom: var(--space-lg);
   }
 
-  .nav-logo {
+  /* .nav-logo {
     max-width: 100%;
-  }
+  } */
 
   .nav-item.logo .nav-link {
     justify-content: flex-start;
