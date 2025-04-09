@@ -3,7 +3,7 @@
 // ==================================================
 
 // Global variable declarations
-var dependantQuant;  // Total number of dependants
+var dependentQuant;  // Total number of dependents
 let removeMode = false;  // Tracks whether "Remove Mode" is active
 
 /**
@@ -59,7 +59,7 @@ function displayBasicInfo(user) {
 }
 
 /**
- * Loads the recent activity from dependants' completed tasks and renders them.
+ * Loads the recent activity from dependents' completed tasks and renders them.
  * @param {string} userId - The user's UID.
  * @returns {Promise<void>}
  */
@@ -68,22 +68,22 @@ async function loadRecentActivity(userId) {
     const activityList = document.getElementById('activity-list');
     activityList.innerHTML = '<li>Loading activity...</li>';
 
-    const dependantsSnapshot = await firebase.firestore()
+    const dependentsSnapshot = await firebase.firestore()
       .collection('users')
       .doc(userId)
-      .collection('dependants')
+      .collection('dependents')
       .get();
 
     let allCompletedTasks = [];
-    for (const dependantDoc of dependantsSnapshot.docs) {
-      const dependantId = dependantDoc.id;
-      const dependantData = dependantDoc.data();
+    for (const dependentDoc of dependentsSnapshot.docs) {
+      const dependentId = dependentDoc.id;
+      const dependentData = dependentDoc.data();
 
       const completedTasksSnapshot = await firebase.firestore()
         .collection('users')
         .doc(userId)
-        .collection('dependants')
-        .doc(dependantId)
+        .collection('dependents')
+        .doc(dependentId)
         .collection('completed-tasks')
         .orderBy('completedAt', 'desc')
         .limit(3)
@@ -92,8 +92,8 @@ async function loadRecentActivity(userId) {
       completedTasksSnapshot.forEach(taskDoc => {
         allCompletedTasks.push({
           ...taskDoc.data(),
-          dependantName: dependantData.firstName || 'Unknown',
-          dependantLName: dependantData.lastName || '',
+          dependentName: dependentData.firstName || 'Unknown',
+          dependentLName: dependentData.lastName || '',
           id: taskDoc.id,
           timestamp: taskDoc.data().completedAt
         });
@@ -132,7 +132,7 @@ function displayRecentActivity(tasks) {
         <div class="activity-details">
           <span class="activity-text">
             Gave ${task.numPills || '1'} ${task.medicationName} to 
-            ${task.dependantName} ${task.dependantLName} at
+            ${task.dependentName} ${task.dependentLName} at
           </span>
           <span class="activity-time">${formattedDate}</span>
         </div>
@@ -142,28 +142,28 @@ function displayRecentActivity(tasks) {
 }
 
 /**
- * Loads the count of dependants for the signed-in user and updates UI elements.
+ * Loads the count of dependents for the signed-in user and updates UI elements.
  * @param {string} userId - The user's UID.
  * @returns {Promise<void>}
  */
 async function loadDependantsCount(userId) {
   try {
-    const dependantsSnapshot = await firebase.firestore()
+    const dependentsSnapshot = await firebase.firestore()
       .collection('users')
       .doc(userId)
-      .collection('dependants')
+      .collection('dependents')
       .get();
 
-    const count = dependantsSnapshot.size;
-    document.getElementById('dependants-count').textContent = count;
+    const count = dependentsSnapshot.size;
+    document.getElementById('dependents-count').textContent = count;
 
-    const statCard = document.querySelector('.stat-card[onclick*="dependants.html"] h3');
+    const statCard = document.querySelector('.stat-card[onclick*="dependents.html"] h3');
     if (statCard) {
       statCard.textContent = count;
     }
   } catch (error) {
-    console.error("Error loading dependants count:", error);
-    document.getElementById('dependants-count').textContent = '0';
+    console.error("Error loading dependents count:", error);
+    document.getElementById('dependents-count').textContent = '0';
   }
 }
 
@@ -179,21 +179,21 @@ async function loadUpcomingTasksCount(userId) {
     const tomorrowStart = new Date(todayStart);
     tomorrowStart.setDate(tomorrowStart.getDate() + 1);
 
-    const dependantsSnapshot = await firebase.firestore()
+    const dependentsSnapshot = await firebase.firestore()
       .collection('users')
       .doc(userId)
-      .collection('dependants')
+      .collection('dependents')
       .get();
 
     let totalTasksCount = 0;
     let completedTasksCount = 0;
-    for (const dependantDoc of dependantsSnapshot.docs) {
-      const dependantId = dependantDoc.id;
+    for (const dependentDoc of dependentsSnapshot.docs) {
+      const dependentId = dependentDoc.id;
       const medicationsSnapshot = await firebase.firestore()
         .collection('users')
         .doc(userId)
-        .collection('dependants')
-        .doc(dependantId)
+        .collection('dependents')
+        .doc(dependentId)
         .collection('medications')
         .get();
 
@@ -219,8 +219,8 @@ async function loadUpcomingTasksCount(userId) {
       const completedTasksSnapshot = await firebase.firestore()
         .collection('users')
         .doc(userId)
-        .collection('dependants')
-        .doc(dependantDoc.id)
+        .collection('dependents')
+        .doc(dependentDoc.id)
         .collection('completed-tasks')
         .where('completedAt', '>=', todayStart)
         .where('completedAt', '<', tomorrowStart)
@@ -254,19 +254,19 @@ async function loadCompletedTasksCount(userId) {
     const tomorrowStart = new Date(todayStart);
     tomorrowStart.setDate(tomorrowStart.getDate() + 1);
 
-    const dependantsSnapshot = await firebase.firestore()
+    const dependentsSnapshot = await firebase.firestore()
       .collection('users')
       .doc(userId)
-      .collection('dependants')
+      .collection('dependents')
       .get();
 
     let completedTasksCount = 0;
-    for (const dependantDoc of dependantsSnapshot.docs) {
+    for (const dependentDoc of dependentsSnapshot.docs) {
       const completedTasksSnapshot = await firebase.firestore()
         .collection('users')
         .doc(userId)
-        .collection('dependants')
-        .doc(dependantDoc.id)
+        .collection('dependents')
+        .doc(dependentDoc.id)
         .collection('completed-tasks')
         .where('completedAt', '>=', todayStart)
         .where('completedAt', '<', tomorrowStart)
@@ -586,10 +586,10 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 /**
- * Sets up event listeners for dependant actions (add & remove).
+ * Sets up event listeners for dependent actions (add & remove).
  */
 function setupButtons() {
-  const addButton = document.getElementById("add-dependant");
+  const addButton = document.getElementById("add-dependent");
   const removeButton = document.getElementById("removeModeBtn");
   if (addButton) {
     addButton.addEventListener("click", createForm);
@@ -603,24 +603,24 @@ function setupButtons() {
 //           UPDATE WELCOME & DISPLAY DETAILS
 // ==================================================
 
-// Update welcome message with dependant quantity once user is authenticated.
+// Update welcome message with dependent quantity once user is authenticated.
 firebase.auth().onAuthStateChanged(user => {
   if (user) {
     document.addEventListener('DOMContentLoaded', () => {
-      const welcome = document.getElementById("dependants-welcome");
+      const welcome = document.getElementById("dependents-welcome");
       const userName = user.displayName.split(" ")[0];
-      welcome.innerText = "Hello " + userName + ". You have " + dependantQuant + " dependants.";
+      welcome.innerText = "Hello " + userName + ". You have " + dependentQuant + " dependents.";
     });
   }
 });
 
-// If a dependant ID is provided in the URL, display its details.
+// If a dependent ID is provided in the URL, display its details.
 document.addEventListener('DOMContentLoaded', function () {
   const urlParams = new URLSearchParams(window.location.search);
   const dependentId = urlParams.get('id');
   if (dependentId) {
     displayDependentDetails(dependentId);
   } else {
-    console.log("No dependant ID provided");
+    console.log("No dependent ID provided");
   }
 });

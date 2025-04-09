@@ -27,7 +27,7 @@ class CalendarApp {
 
     // Determine page mode based on URL.
     const pageUrl = window.location.href;
-    this.isSingleDependant = pageUrl.includes('single_dependant');
+    this.isSingleDependant = pageUrl.includes('single_dependent');
     this.isCareTakerSchedule = pageUrl.includes('caretaker-schedule');
 
     this.init();
@@ -244,14 +244,14 @@ class CalendarApp {
    * Helper: Processes a single schedule entry.
    * @param {Object} entry - The raw schedule entry.
    * @param {string} medName - Medication name.
-   * @param {string} dependantName - Dependant name.
+   * @param {string} dependentName - Dependant name.
    * @param {string} numPills - Number of pills per dose.
    * @returns {Object|null} The processed entry, or null if invalid.
    */
-  processScheduleEntry(entry, medName, dependantName, numPills) {
+  processScheduleEntry(entry, medName, dependentName, numPills) {
     let processedEntry = { ...entry };
     processedEntry.medication = medName;
-    processedEntry.dependantName = dependantName;
+    processedEntry.dependentName = dependentName;
     processedEntry.numPillsPerDose = numPills || "1";
 
     if (processedEntry.doseTime && processedEntry.doseTime.toDate) {
@@ -259,14 +259,14 @@ class CalendarApp {
     } else if (processedEntry.doseTime) {
       processedEntry.doseTime = new Date(processedEntry.doseTime);
     } else {
-      console.warn(`Missing 'doseTime' for ${medName}, dependant ${dependantName}. Skipping.`);
+      console.warn(`Missing 'doseTime' for ${medName}, dependent ${dependentName}. Skipping.`);
       return null;
     }
 
     if (processedEntry.doseTime instanceof Date && !isNaN(processedEntry.doseTime)) {
       return processedEntry;
     } else {
-      console.warn(`Invalid 'doseTime' for ${medName}, dependant ${dependantName}. Skipping.`);
+      console.warn(`Invalid 'doseTime' for ${medName}, dependent ${dependentName}. Skipping.`);
       return null;
     }
   }
@@ -288,57 +288,57 @@ class CalendarApp {
     try {
       if (this.isCareTakerSchedule) {
         console.log("Loading caretaker schedule...");
-        const dependantsSnapshot = await firebase.firestore()
+        const dependentsSnapshot = await firebase.firestore()
           .collection('users')
           .doc(globalUserId)
-          .collection('dependants')
+          .collection('dependents')
           .get();
 
-        const schedulePromises = dependantsSnapshot.docs.map(async (dependantDoc) => {
-          const dependantId = dependantDoc.id;
-          const dependantData = dependantDoc.data();
-          const dependantName = (dependantData.firstname && dependantData.lastname)
-            ? `${dependantData.firstname} ${dependantData.lastname}`
-            : `Unnamed (${dependantId.substring(0, 5)})`;
+        const schedulePromises = dependentsSnapshot.docs.map(async (dependentDoc) => {
+          const dependentId = dependentDoc.id;
+          const dependentData = dependentDoc.data();
+          const dependentName = (dependentData.firstname && dependentData.lastname)
+            ? `${dependentData.firstname} ${dependentData.lastname}`
+            : `Unnamed (${dependentId.substring(0, 5)})`;
 
           const medsSnapshot = await firebase.firestore()
             .collection('users')
             .doc(globalUserId)
-            .collection('dependants')
-            .doc(dependantId)
+            .collection('dependents')
+            .doc(dependentId)
             .collection('medications')
             .get();
 
-          let dependantScheduleEntries = [];
+          let dependentScheduleEntries = [];
           medsSnapshot.forEach(doc => {
             const medData = doc.data();
             const medName = medData.name || 'Unknown Medication';
             if (medData.schedule && Array.isArray(medData.schedule)) {
               medData.schedule.forEach(entry => {
-                const processed = this.processScheduleEntry(entry, medName, dependantName, medData.numPillsPerDose);
+                const processed = this.processScheduleEntry(entry, medName, dependentName, medData.numPillsPerDose);
                 if (processed) {
-                  dependantScheduleEntries.push(processed);
+                  dependentScheduleEntries.push(processed);
                 }
               });
             }
           });
-          return dependantScheduleEntries;
+          return dependentScheduleEntries;
         });
         const allSchedules = await Promise.all(schedulePromises);
         combinedSchedule = allSchedules.flat();
       } else if (this.isSingleDependant) {
         const urlParams = new URLSearchParams(window.location.search);
-        const dependantId = urlParams.get('id');
-        if (!dependantId) {
-          console.error("Missing dependant ID in URL");
+        const dependentId = urlParams.get('id');
+        if (!dependentId) {
+          console.error("Missing dependent ID in URL");
           this.sortedSchedule = [];
-          return Promise.reject(new Error("Missing dependant ID in URL"));
+          return Promise.reject(new Error("Missing dependent ID in URL"));
         }
         const medsSnapshot = await firebase.firestore()
           .collection('users')
           .doc(globalUserId)
-          .collection('dependants')
-          .doc(dependantId)
+          .collection('dependents')
+          .doc(dependentId)
           .collection('medications')
           .get();
 
@@ -421,7 +421,7 @@ class CalendarApp {
       if (!groupedEntries[formattedDate]) {
         groupedEntries[formattedDate] = {};
       }
-      let groupKey = this.isCareTakerSchedule ? (entry.dependantName || 'Unknown Dependant') : 'default';
+      let groupKey = this.isCareTakerSchedule ? (entry.dependentName || 'Unknown Dependant') : 'default';
       if (!groupedEntries[formattedDate][groupKey]) {
         groupedEntries[formattedDate][groupKey] = [];
       }
@@ -532,7 +532,7 @@ class CalendarApp {
     if (this.isCareTakerSchedule) {
       let groups = {};
       entriesToRender.forEach(entry => {
-        const name = entry.dependantName || 'Unknown Dependant';
+        const name = entry.dependentName || 'Unknown Dependant';
         groups[name] = groups[name] || [];
         groups[name].push(entry);
       });
@@ -609,7 +609,7 @@ class CalendarApp {
     if (this.isCareTakerSchedule) {
       let groups = {};
       entriesToRender.forEach(entry => {
-        const name = entry.dependantName || 'Unknown Dependant';
+        const name = entry.dependentName || 'Unknown Dependant';
         groups[name] = groups[name] || [];
         groups[name].push(entry);
       });

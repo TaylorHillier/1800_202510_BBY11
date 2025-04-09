@@ -325,7 +325,7 @@ section {
 }
 
 /* Section Headings */
-#edit-dependant-form h3 {
+#edit-dependent-form h3 {
   color: var(--navy);
   margin-bottom: var(--space-sm);
   font-size: 1.2rem;
@@ -334,7 +334,7 @@ section {
 }
 
 /* Form Labels */
-#edit-dependant-form label {
+#edit-dependent-form label {
   display: block;
   font-weight: bold;
   margin-bottom: var(--space-xs);
@@ -342,9 +342,9 @@ section {
 }
 
 /* Input and Textarea Fields */
-#edit-dependant-form input[type="text"],
-#edit-dependant-form input[type="date"],
-#edit-dependant-form textarea {
+#edit-dependent-form input[type="text"],
+#edit-dependent-form input[type="date"],
+#edit-dependent-form textarea {
   width: 100%;
   padding: var(--space-xs);
   margin-bottom: var(--space-sm);
@@ -353,13 +353,13 @@ section {
   border-radius: var(--border-radius);
 }
 
-#edit-dependant-form textarea {
+#edit-dependent-form textarea {
   resize: vertical;
   min-height: 80px;
 }
 
 /* Buttons within the Edit Form */
-#edit-dependant-form button {
+#edit-dependent-form button {
   padding: var(--space-xs) var(--space-sm);
   border: none;
   border-radius: var(--border-radius);
@@ -370,23 +370,23 @@ section {
 }
 
 /* Save Button */
-#save-dependant-edits {
+#save-dependent-edits {
   background-color: var(--slate-green);
   color: var(--white);
 }
 
-#save-dependant-edits:hover {
+#save-dependent-edits:hover {
   background-color: var(--pale-green);
   color: var(--dark-text);
 }
 
 /* Cancel Button */
-#cancel-dependant-edits {
+#cancel-dependent-edits {
   background-color: var(--slate-blue);
   color: var(--white);
 }
 
-#cancel-dependant-edits:hover {
+#cancel-dependent-edits:hover {
   background-color: var(--soft-blue);
   color: var(--dark-text);
 }

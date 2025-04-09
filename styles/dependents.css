@@ -70,20 +70,20 @@ h2 {
   color: var(--navy);
 }
 
-#dependants-welcome {
+#dependents-welcome {
   font-weight: bold;
 }
 
 /* ================================================== */
 /*                  DEPENDANTS LIST                  */
 /* ================================================== */
-#dependants-list {
+#dependents-list {
   list-style: none;
   padding: 0;
   margin: var(--space-sm) 0;
 }
 
-#dependants-list li {
+#dependents-list li {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -91,11 +91,11 @@ h2 {
   border-bottom: 1px solid var(--medium-gray);
 }
 
-#dependants-list li:last-child {
+#dependents-list li:last-child {
   border-bottom: none;
 }
 
-.dependant-name{
+.dependent-name{
   font-weight: bold;
   font-size: 20px;
 }
@@ -103,7 +103,7 @@ h2 {
 /* ================================================== */
 /*                  FORM STYLES                      */
 /* ================================================== */
-.add-dependant-container {
+.add-dependent-container {
   position: fixed;
   top: 20px;
   left: 50%;
@@ -220,7 +220,7 @@ button:hover {
       padding: var(--space-sm);
   }
   
-  .add-dependant-container {
+  .add-dependent-container {
       width: 95%;
       padding: 15px;
   }

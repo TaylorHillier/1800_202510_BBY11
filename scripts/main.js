@@ -24,7 +24,7 @@ function formatTime(hours, minutes) {
 
 /**
  * Fetches and displays today’s medication tasks using each medication's stored schedule.
- * It also checks the dependant’s "completed-tasks" collection so that tasks already marked complete
+ * It also checks the dependent’s "completed-tasks" collection so that tasks already marked complete
  * are rendered with a line‑through style.
  */
 async function getTodayTasks(user) {
@@ -43,39 +43,39 @@ async function getTodayTasks(user) {
     todoListElement.innerHTML = '<li>Loading tasks...</li>';
 
     try {
-        // 1. Get all dependants for the current user.
-        const dependantsSnapshot = await firebase.firestore()
+        // 1. Get all dependents for the current user.
+        const dependentsSnapshot = await firebase.firestore()
             .collection('users')
             .doc(globalUser)
-            .collection('dependants')
+            .collection('dependents')
             .get();
 
         let allTasks = [];
 
-        // 2. Process each dependant.
-        const taskProcessingPromises = dependantsSnapshot.docs.map(async (dependantDoc) => {
-            const dependantId = dependantDoc.id;
-            const dependantData = dependantDoc.data();
-            const dependantName = dependantData.firstName || 'Unknown';
-            const dependantLName = dependantData.lastName || '';
+        // 2. Process each dependent.
+        const taskProcessingPromises = dependentsSnapshot.docs.map(async (dependentDoc) => {
+            const dependentId = dependentDoc.id;
+            const dependentData = dependentDoc.data();
+            const dependentName = dependentData.firstName || 'Unknown';
+            const dependentLName = dependentData.lastName || '';
 
-            // 2a. Get completed tasks for this dependant.
+            // 2a. Get completed tasks for this dependent.
             const completedSnapshot = await firebase.firestore()
                 .collection('users')
                 .doc(globalUser)
-                .collection('dependants')
-                .doc(dependantId)
+                .collection('dependents')
+                .doc(dependentId)
                 .collection('completed-tasks')
                 .get();
             const completedKeys = new Set(completedSnapshot.docs.map(doc => doc.id));
 
             try {
-                // 2b. Fetch medications for this dependant.
+                // 2b. Fetch medications for this dependent.
                 const medicationsSnapshot = await firebase.firestore()
                     .collection('users')
                     .doc(globalUser)
-                    .collection('dependants')
-                    .doc(dependantId)
+                    .collection('dependents')
+                    .doc(dependentId)
                     .collection('medications')
                     .get();
 
@@ -105,9 +105,9 @@ async function getTodayTasks(user) {
                                 const isCompleted = completedKeys.has(completedKey);
 
                                 const taskObject = {
-                                    dependantId: dependantId,
-                                    dependantName: dependantName,
-                                    dependantLName: dependantLName,
+                                    dependentId: dependentId,
+                                    dependentName: dependentName,
+                                    dependentLName: dependentLName,
                                     medicationName: medName,
                                     startTime: formattedDoseTime,
                                     // Use the new field name.
@@ -124,11 +124,11 @@ async function getTodayTasks(user) {
                             }
                         });
                     } else {
-                        console.warn(`No schedule found for medication '${medName}' for ${dependantName}`);
+                        console.warn(`No schedule found for medication '${medName}' for ${dependentName}`);
                     }
                 });
             } catch (medError) {
-                console.error(`Error fetching medications for ${dependantName} ${dependantLName}:`, medError);
+                console.error(`Error fetching medications for ${dependentName} ${dependentLName}:`, medError);
             }
         });
 
@@ -164,7 +164,7 @@ async function getTodayTasks(user) {
 
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
-                checkbox.id = `task-${index}-${task.dependantId}-${task.medicationDocId}`;
+                checkbox.id = `task-${index}-${task.dependentId}-${task.medicationDocId}`;
                 checkbox.className = 'todo-checkbox';
                 // Set initial state and styling based on whether task is already completed.
                 if (task.isCompleted) {
@@ -192,7 +192,7 @@ async function getTodayTasks(user) {
 
                 // Display the number of pills per dose along with medication name.
                 label.innerHTML = `
-                    <span class="dependant-name">${task.dependantName} ${task.dependantLName}</span><br>
+                    <span class="dependent-name">${task.dependentName} ${task.dependentLName}</span><br>
                     <span class="med-details">${task.numPillsPerDose} x ${task.medicationName}</span>
                     <span class="med-time">at ${task.startTime}</span>
                     <span class="due-time">${dueTimeString}</span>
@@ -293,8 +293,8 @@ function markTaskComplete(userId, task, isComplete, listItem) {
     const completedTaskRef = firebase.firestore()
         .collection('users')
         .doc(userId)
-        .collection('dependants')
-        .doc(task.dependantId)
+        .collection('dependents')
+        .doc(task.dependentId)
         .collection('completed-tasks')
         .doc(`${task.medicationDocId}-${task.startTime}`);
 

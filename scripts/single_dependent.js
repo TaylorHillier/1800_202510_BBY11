@@ -2,12 +2,12 @@
 //              GLOBAL VARIABLES & INITIAL SETUP
 // ==================================================
 
-var dependant;                 // Dependant ID from URL query parameter
+var dependent;                 // Dependant ID from URL query parameter
 var globalUserId;              // Authenticated user's UID
-let editMode = false;          // Tracks if the dependant is in edit mode
+let editMode = false;          // Tracks if the dependent is in edit mode
 let currentSummary = "";       // Placeholder (if used for summary functionality)
 
-// Global Firebase variable to store the full dependant data
+// Global Firebase variable to store the full dependent data
 let globalDependantData = {};
 
 // Medication UI state variables
@@ -25,33 +25,33 @@ if (medButton) {
 // ==================================================
 
 /**
- * Retrieves the current dependant (from URL) and fetches its data from Firestore.
+ * Retrieves the current dependent (from URL) and fetches its data from Firestore.
  */
 function getCurrentDependant() {
     const urlParams = new URLSearchParams(window.location.search);
-    dependant = urlParams.get('id');
+    dependent = urlParams.get('id');
 
     firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
             globalUserId = user.uid;
             try {
-                const dependantDoc = await firebase.firestore()
+                const dependentDoc = await firebase.firestore()
                     .collection('users')
                     .doc(user.uid)
-                    .collection('dependants')
-                    .doc(dependant)
+                    .collection('dependents')
+                    .doc(dependent)
                     .get();
 
-                if (dependantDoc.exists) {
-                    // Store full dependant data
-                    globalDependantData = dependantDoc.data();
-                    // Render read-only dependant view
+                if (dependentDoc.exists) {
+                    // Store full dependent data
+                    globalDependantData = dependentDoc.data();
+                    // Render read-only dependent view
                     renderDependantView(globalDependantData);
                 } else {
-                    console.log("No dependant found");
+                    console.log("No dependent found");
                 }
             } catch (error) {
-                console.error("Error fetching dependant data:", error);
+                console.error("Error fetching dependent data:", error);
             }
             // Load additional sections
             loadNotesIssues();
@@ -120,17 +120,17 @@ function toggleRemoveMedMode() {
 function getMedicationList() {
     firebase.auth().onAuthStateChanged(user => {
         if (user) {
-            const dependantId = new URLSearchParams(window.location.search).get('id');
-            if (!dependantId) {
-                console.error("No dependant selected");
+            const dependentId = new URLSearchParams(window.location.search).get('id');
+            if (!dependentId) {
+                console.error("No dependent selected");
                 return;
             }
 
             const medicationsRef = firebase.firestore()
                 .collection('users')
                 .doc(user.uid)
-                .collection('dependants')
-                .doc(dependantId)
+                .collection('dependents')
+                .doc(dependentId)
                 .collection('medications');
 
             const medListElement = document.getElementById("med-list");
@@ -221,18 +221,18 @@ function getMedicationList() {
  */
 function removeMedication(medicationId) {
     const user = firebase.auth().currentUser;
-    const dependantId = new URLSearchParams(window.location.search).get('id');
+    const dependentId = new URLSearchParams(window.location.search).get('id');
 
-    if (!user || !dependantId) {
-        console.error("No user signed in or no dependant selected");
-        return Promise.reject(new Error("Missing user or dependant"));
+    if (!user || !dependentId) {
+        console.error("No user signed in or no dependent selected");
+        return Promise.reject(new Error("Missing user or dependent"));
     }
 
     const medicationPromise = firebase.firestore()
         .collection("users")
         .doc(user.uid)
-        .collection("dependants")
-        .doc(dependantId)
+        .collection("dependents")
+        .doc(dependentId)
         .collection("medications")
         .doc(medicationId)
         .delete()
@@ -248,8 +248,8 @@ function removeMedication(medicationId) {
     const completedTasksPromise = firebase.firestore()
         .collection("users")
         .doc(user.uid)
-        .collection("dependants")
-        .doc(dependantId)
+        .collection("dependents")
+        .doc(dependentId)
         .collection("completed-tasks")
         .get()
         .then(snapshot => {
@@ -285,15 +285,15 @@ function removeMedication(medicationId) {
  */
 function checkIfLastMedication() {
     const user = firebase.auth().currentUser;
-    const dependantId = new URLSearchParams(window.location.search).get('id');
+    const dependentId = new URLSearchParams(window.location.search).get('id');
 
-    if (!user || !dependantId) return;
+    if (!user || !dependentId) return;
 
     firebase.firestore()
         .collection("users")
         .doc(user.uid)
-        .collection("dependants")
-        .doc(dependantId)
+        .collection("dependents")
+        .doc(dependentId)
         .collection("medications")
         .get()
         .then(snapshot => {
@@ -516,10 +516,10 @@ function addMedication() {
         return Promise.reject(new Error("No user signed in"));
     }
     const url = new URLSearchParams(window.location.search);
-    const dependantId = url.get('id');
-    if (!dependantId) {
-        console.error("No dependant selected");
-        return Promise.reject(new Error("No dependant selected"));
+    const dependentId = url.get('id');
+    if (!dependentId) {
+        console.error("No dependent selected");
+        return Promise.reject(new Error("No dependent selected"));
     }
 
     const startDateStr = document.getElementById("start-date").value.trim();
@@ -586,8 +586,8 @@ function addMedication() {
     const medicationCollectionRef = firebase.firestore()
         .collection('users')
         .doc(user.uid)
-        .collection('dependants')
-        .doc(dependantId)
+        .collection('dependents')
+        .doc(dependentId)
         .collection('medications');
 
     return medicationCollectionRef.add(medication)
@@ -643,11 +643,11 @@ function addMedication() {
 }
 
 /**
- * Saves a new note/issue for the dependant.
+ * Saves a new note/issue for the dependent.
  */
 function saveNoteIssue() {
     const userId = globalUserId;
-    const dependantId = dependant;
+    const dependentId = dependent;
     const newNoteIssue = document.getElementById('new-note-issue').value;
     if (newNoteIssue.trim() === '') {
         alert('Please enter a note or issue.');
@@ -660,8 +660,8 @@ function saveNoteIssue() {
     firebase.firestore()
         .collection('users')
         .doc(userId)
-        .collection('dependants')
-        .doc(dependantId)
+        .collection('dependents')
+        .doc(dependentId)
         .collection('notes-issues')
         .add(newEntry)
         .then(() => {
@@ -674,7 +674,7 @@ function saveNoteIssue() {
 }
 
 /**
- * Loads and renders the list of notes/issues for the current dependant.
+ * Loads and renders the list of notes/issues for the current dependent.
  */
 function loadNotesIssues() {
     const userId = globalUserId;
@@ -683,8 +683,8 @@ function loadNotesIssues() {
     firebase.firestore()
         .collection('users')
         .doc(userId)
-        .collection('dependants')
-        .doc(dependant)
+        .collection('dependents')
+        .doc(dependent)
         .collection('notes-issues')
         .orderBy('timestamp', 'desc')
         .get()
@@ -711,15 +711,15 @@ function loadNotesIssues() {
 // ==================================================
 
 /**
- * Switches to edit mode for the dependant and renders the editable form.
+ * Switches to edit mode for the dependent and renders the editable form.
  */
 function enterEditDependantMode() {
     renderDependantEditForm(globalDependantData);
 }
 
 /**
- * Renders the edit form for dependant details.
- * @param {Object} dependent - The dependant data object.
+ * Renders the edit form for dependent details.
+ * @param {Object} dependent - The dependent data object.
  */
 function renderDependantEditForm(dependent) {
     // In the flattened structure, basic info is at the top level.
@@ -732,7 +732,7 @@ function renderDependantEditForm(dependent) {
     if (!detailsContainer) return;
   
     detailsContainer.innerHTML = `
-      <form id="edit-dependant-form">
+      <form id="edit-dependent-form">
         <div class="profile-section">
           <h3>Dependant Information</h3>
           <label>First Name: <input type="text" id="edit-firstname" value="${dependent.firstName || ""}"></label><br>
@@ -766,27 +766,27 @@ function renderDependantEditForm(dependent) {
           <h3>Additional Notes</h3>
           <textarea id="edit-additionalInfo" style="width:100%;min-height:80px;">${additionalInfo.notes || ""}</textarea>
         </div>
-        <button type="button" id="save-dependant-edits">Save</button>
-        <button type="button" id="cancel-dependant-edits">Cancel</button>
+        <button type="button" id="save-dependent-edits">Save</button>
+        <button type="button" id="cancel-dependent-edits">Cancel</button>
       </form>
     `;
   
-    // Optionally clear the dependant-info container.
-    const infoContainer = document.getElementById("dependant-info");
+    // Optionally clear the dependent-info container.
+    const infoContainer = document.getElementById("dependent-info");
     if (infoContainer) {
       infoContainer.innerHTML = "";
     }
   
     // Attach events for form actions.
-    document.getElementById("save-dependant-edits").addEventListener("click", saveDependantEdits);
-    document.getElementById("cancel-dependant-edits").addEventListener("click", () => {
+    document.getElementById("save-dependent-edits").addEventListener("click", saveDependantEdits);
+    document.getElementById("cancel-dependent-edits").addEventListener("click", () => {
       renderDependantView(dependent);
     });
   }
   
   /**
-   * Renders the read-only view of dependant details.
-   * @param {Object} dependent - The dependant data object.
+   * Renders the read-only view of dependent details.
+   * @param {Object} dependent - The dependent data object.
    */
   function renderDependantView(dependent) {
     // In the flattened structure, basic info is directly on the dependent object.
@@ -795,7 +795,7 @@ function renderDependantEditForm(dependent) {
     const emergencyContacts = dependent.emergencyContacts || {};
     const additionalInfo = dependent.additionalInfo || {};
   
-    const infoContainer = document.getElementById("dependant-info");
+    const infoContainer = document.getElementById("dependent-info");
     if (infoContainer) {
       infoContainer.innerHTML = `
         <h2>${dependent.firstName || ""} ${dependent.lastName || ""}</h2>
@@ -835,11 +835,11 @@ function renderDependantEditForm(dependent) {
           <h3>Additional Notes</h3>
           <p>${additionalInfo.notes || "No additional notes"}</p>
         </div>
-        <button id="edit-dependant">Edit Dependant</button>
+        <button id="edit-dependent">Edit Dependant</button>
       `;
   
       // Attach event to the "Edit Dependant" button.
-      const editButton = document.getElementById("edit-dependant");
+      const editButton = document.getElementById("edit-dependent");
       if (editButton) {
         editButton.addEventListener("click", () => renderDependantEditForm(dependent));
       }
@@ -849,7 +849,7 @@ function renderDependantEditForm(dependent) {
   
 
 /**
- * Saves the edited dependant data to Firestore and refreshes the view.
+ * Saves the edited dependent data to Firestore and refreshes the view.
  */
 function saveDependantEdits() {
     const updatedData = {
@@ -881,17 +881,17 @@ function saveDependantEdits() {
     firebase.firestore()
         .collection("users")
         .doc(globalUserId)
-        .collection("dependants")
-        .doc(dependant)
+        .collection("dependents")
+        .doc(dependent)
         .update(updatedData)
         .then(() => {
             console.log("Dependant data updated successfully");
-            // Update global dependant data.
+            // Update global dependent data.
             globalDependantData = { ...globalDependantData, ...updatedData };
             renderDependantView(globalDependantData);
         })
         .catch(error => {
-            console.error("Error updating dependant data:", error);
+            console.error("Error updating dependent data:", error);
         });
 }
 
@@ -927,7 +927,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 /**
- * Retrieves the dependant ID from the URL.
+ * Retrieves the dependent ID from the URL.
  * @returns {string|null} Dependant ID, or null if not present.
  */
 function getDependantId() {
