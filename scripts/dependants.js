@@ -174,7 +174,7 @@ function createFormSection(form, sectionTitle, fields) {
 /**
  * Adds a new dependant to Firestore.
  * This function reads form values from the dependant form and adds the data under:
- *   users -> userId -> dependants -> dependantId -> subcollections.
+ *   users -> userId -> dependants -> dependantId (as a single document with nested properties)
  * @returns {Promise<string>} A promise that resolves with the newly created dependant document ID.
  * @throws {Error} If the user is not authenticated.
  */
@@ -186,13 +186,11 @@ async function addDependant() {
 
   const form = document.getElementById("dependants-form");
   const dependentData = {
-    basicInfo: {
-      firstName: form.firstname.value,
-      lastName: form.lastname.value,
-      birthdate: form.birthdate.value,
-      relationship: form.relationship.value,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    },
+    firstName: form.firstname.value,
+    lastName: form.lastname.value,
+    birthdate: form.birthdate.value,
+    relationship: form.relationship.value,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     healthSummary: {
       summary: form.health_summary.value
     },
@@ -218,18 +216,13 @@ async function addDependant() {
     }
   };
 
-  // Save dependant data in Firestore.
+  // Save dependant data in Firestore as one document with nested properties.
   const userRef = db.collection("users").doc(user.uid);
-  const dependantDocRef = await userRef.collection("dependants").add(dependentData.basicInfo);
-
-  // Add subcollections.
-  await dependantDocRef.collection("healthSummary").add(dependentData.healthSummary);
-  await dependantDocRef.collection("medicalInfo").add(dependentData.medicalInfo);
-  await dependantDocRef.collection("emergencyContacts").add(dependentData.emergencyContacts);
-  await dependantDocRef.collection("additionalInfo").add(dependentData.additionalInfo);
+  const dependantDocRef = await userRef.collection("dependants").add(dependentData);
 
   return dependantDocRef.id;
 }
+
 
 /**
  * Initializes the dependant page by setting up event handlers and loading data.

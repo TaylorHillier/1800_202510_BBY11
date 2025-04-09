@@ -722,125 +722,139 @@ function enterEditDependantMode() {
  * @param {Object} dependent - The dependant data object.
  */
 function renderDependantEditForm(dependent) {
+    // In the flattened structure, basic info is at the top level.
+    const healthData = dependent.healthSummary || {};
+    const medicalInfo = dependent.medicalInfo || {};
+    const emergencyContacts = dependent.emergencyContacts || {};
+    const additionalInfo = dependent.additionalInfo || {};
+  
     const detailsContainer = document.getElementById("dependent-details");
     if (!detailsContainer) return;
-    
+  
     detailsContainer.innerHTML = `
-        <form id="edit-dependant-form">
-            <div class="profile-section">
-                <h3>Dependant Information</h3>
-                <label>First Name: <input type="text" id="edit-firstname" value="${dependent.firstname || ""}"></label><br>
-                <label>Last Name: <input type="text" id="edit-lastname" value="${dependent.lastname || ""}"></label><br>
-                <label>Relationship: <input type="text" id="edit-relationship" value="${dependent.relationship || ""}"></label><br>
-                <label>Birthdate: <input type="date" id="edit-birthdate" value="${dependent.birthdate || ""}"></label>
-            </div>
-            <div class="profile-section">
-                <h3>Health Summary</h3>
-                <textarea id="edit-healthSummary" style="width:100%;min-height:80px;">${dependent.healthSummary || ""}</textarea>
-            </div>
-            <div class="profile-section">
-                <h3>Medical Information</h3>
-                <label>Allergies: <input type="text" id="edit-allergies" value="${dependent.medicalInfo?.allergies || ""}"></label><br>
-                <label>Medications: <input type="text" id="edit-medications" value="${dependent.medicalInfo?.medications || ""}"></label><br>
-                <label>Health History:</label><br>
-                <textarea id="edit-healthHistory" style="width:100%;min-height:80px;">${dependent.medicalInfo?.healthHistory || ""}</textarea>
-            </div>
-            <div class="profile-section">
-                <h3>Emergency Contacts</h3>
-                <h4>Primary Contact</h4>
-                <label>Name: <input type="text" id="edit-primaryName" value="${dependent.emergencyContacts?.primary?.name || ""}"></label><br>
-                <label>Phone: <input type="text" id="edit-primaryPhone" value="${dependent.emergencyContacts?.primary?.phone || ""}"></label><br>
-                <label>Relationship: <input type="text" id="edit-primaryRelationship" value="${dependent.emergencyContacts?.primary?.relationship || ""}"></label><br>
-                <h4>Secondary Contact</h4>
-                <label>Name: <input type="text" id="edit-secondaryName" value="${dependent.emergencyContacts?.secondary?.name || ""}"></label><br>
-                <label>Phone: <input type="text" id="edit-secondaryPhone" value="${dependent.emergencyContacts?.secondary?.phone || ""}"></label><br>
-                <label>Relationship: <input type="text" id="edit-secondaryRelationship" value="${dependent.emergencyContacts?.secondary?.relationship || ""}"></label>
-            </div>
-            <div class="profile-section">
-                <h3>Additional Notes</h3>
-                <textarea id="edit-additionalInfo" style="width:100%;min-height:80px;">${dependent.additionalInfo || ""}</textarea>
-            </div>
-            <button type="button" id="save-dependant-edits">Save</button>
-            <button type="button" id="cancel-dependant-edits">Cancel</button>
-        </form>
+      <form id="edit-dependant-form">
+        <div class="profile-section">
+          <h3>Dependant Information</h3>
+          <label>First Name: <input type="text" id="edit-firstname" value="${dependent.firstName || ""}"></label><br>
+          <label>Last Name: <input type="text" id="edit-lastname" value="${dependent.lastName || ""}"></label><br>
+          <label>Relationship: <input type="text" id="edit-relationship" value="${dependent.relationship || ""}"></label><br>
+          <label>Birthdate: <input type="date" id="edit-birthdate" value="${dependent.birthdate || ""}"></label>
+        </div>
+        <div class="profile-section">
+          <h3>Health Summary</h3>
+          <textarea id="edit-healthSummary" style="width:100%;min-height:80px;">${healthData.summary || ""}</textarea>
+        </div>
+        <div class="profile-section">
+          <h3>Medical Information</h3>
+          <label>Allergies: <input type="text" id="edit-allergies" value="${medicalInfo.allergies || ""}"></label><br>
+          <label>Medications: <input type="text" id="edit-medications" value="${medicalInfo.medications || ""}"></label><br>
+          <label>Health History:</label><br>
+          <textarea id="edit-healthHistory" style="width:100%;min-height:80px;">${medicalInfo.healthHistory || ""}</textarea>
+        </div>
+        <div class="profile-section">
+          <h3>Emergency Contacts</h3>
+          <h4>Primary Contact</h4>
+          <label>Name: <input type="text" id="edit-primaryName" value="${emergencyContacts.primary?.name || ""}"></label><br>
+          <label>Phone: <input type="text" id="edit-primaryPhone" value="${emergencyContacts.primary?.phone || ""}"></label><br>
+          <label>Relationship: <input type="text" id="edit-primaryRelationship" value="${emergencyContacts.primary?.relationship || ""}"></label><br>
+          <h4>Secondary Contact</h4>
+          <label>Name: <input type="text" id="edit-secondaryName" value="${emergencyContacts.secondary?.name || ""}"></label><br>
+          <label>Phone: <input type="text" id="edit-secondaryPhone" value="${emergencyContacts.secondary?.phone || ""}"></label><br>
+          <label>Relationship: <input type="text" id="edit-secondaryRelationship" value="${emergencyContacts.secondary?.relationship || ""}"></label>
+        </div>
+        <div class="profile-section">
+          <h3>Additional Notes</h3>
+          <textarea id="edit-additionalInfo" style="width:100%;min-height:80px;">${additionalInfo.notes || ""}</textarea>
+        </div>
+        <button type="button" id="save-dependant-edits">Save</button>
+        <button type="button" id="cancel-dependant-edits">Cancel</button>
+      </form>
     `;
-    
+  
     // Optionally clear the dependant-info container.
     const infoContainer = document.getElementById("dependant-info");
     if (infoContainer) {
-        infoContainer.innerHTML = "";
+      infoContainer.innerHTML = "";
     }
-    
+  
     // Attach events for form actions.
     document.getElementById("save-dependant-edits").addEventListener("click", saveDependantEdits);
     document.getElementById("cancel-dependant-edits").addEventListener("click", () => {
-        renderDependantView(globalDependantData);
+      renderDependantView(dependent);
     });
-}
-
-/**
- * Renders the read-only view of dependant details.
- * @param {Object} dependent - The dependant data object.
- */
-function renderDependantView(dependent) {
+  }
+  
+  /**
+   * Renders the read-only view of dependant details.
+   * @param {Object} dependent - The dependant data object.
+   */
+  function renderDependantView(dependent) {
+    // In the flattened structure, basic info is directly on the dependent object.
+    const healthData = dependent.healthSummary || {};
+    const medicalInfo = dependent.medicalInfo || {};
+    const emergencyContacts = dependent.emergencyContacts || {};
+    const additionalInfo = dependent.additionalInfo || {};
+  
     const infoContainer = document.getElementById("dependant-info");
     if (infoContainer) {
-        infoContainer.innerHTML = `
-            <h2>${dependent.firstname || ""} ${dependent.lastname || ""}</h2>
-            <p><strong>Relationship:</strong> ${dependent.relationship || "Not specified"}</p>
-            <p><strong>Birthdate:</strong> ${dependent.birthdate || "Not specified"}</p>
-        `;
+      infoContainer.innerHTML = `
+        <h2>${dependent.firstName || ""} ${dependent.lastName || ""}</h2>
+        <p><strong>Relationship:</strong> ${dependent.relationship || "Not specified"}</p>
+        <p><strong>Birthdate:</strong> ${dependent.birthdate || "Not specified"}</p>
+      `;
     }
     const detailsContainer = document.getElementById("dependent-details");
     if (detailsContainer) {
-        detailsContainer.innerHTML = `
-            <div class="profile-section">
-                <h3>Health Summary</h3>
-                <p>${dependent.healthSummary || "No information provided"}</p>
-            </div>
-            <div class="profile-section">
-                <h3>Medical Information</h3>
-                <p><strong>Allergies:</strong> ${dependent.medicalInfo?.allergies || "None"}</p>
-                <p><strong>Medications:</strong> ${dependent.medicalInfo?.medications || "None"}</p>
-                <p><strong>Health History:</strong> ${dependent.medicalInfo?.healthHistory || "No history provided"}</p>
-            </div>
-            <div class="profile-section">
-                <h3>Emergency Contacts</h3>
-                <div class="contact-card">
-                    <h4>Primary Contact</h4>
-                    <p>${dependent.emergencyContacts?.primary?.name || "Not specified"}</p>
-                    <p>${dependent.emergencyContacts?.primary?.phone || ""}</p>
-                    <p>${dependent.emergencyContacts?.primary?.relationship || ""}</p>
-                </div>
-                <div class="contact-card">
-                    <h4>Secondary Contact</h4>
-                    <p>${dependent.emergencyContacts?.secondary?.name || "Not specified"}</p>
-                    <p>${dependent.emergencyContacts?.secondary?.phone || ""}</p>
-                    <p>${dependent.emergencyContacts?.secondary?.relationship || ""}</p>
-                </div>
-            </div>
-            <div class="profile-section">
-                <h3>Additional Notes</h3>
-                <p>${dependent.additionalInfo || "No additional notes"}</p>
-            </div>
-            <button id="edit-dependant">Edit Dependant</button>
-        `;
-        
-        // Attach event to the "Edit Dependant" button.
-        const editButton = document.getElementById("edit-dependant");
-        if (editButton) {
-            editButton.addEventListener("click", () => renderDependantEditForm(dependent));
-        }
+      detailsContainer.innerHTML = `
+        <div class="profile-section">
+          <h3>Health Summary</h3>
+          <p>${healthData.summary || "No information provided"}</p>
+        </div>
+        <div class="profile-section">
+          <h3>Medical Information</h3>
+          <p><strong>Allergies:</strong> ${medicalInfo.allergies || "None"}</p>
+          <p><strong>Medications:</strong> ${medicalInfo.medications || "None"}</p>
+          <p><strong>Health History:</strong> ${medicalInfo.healthHistory || "No history provided"}</p>
+        </div>
+        <div class="profile-section">
+          <h3>Emergency Contacts</h3>
+          <div class="contact-card">
+            <h4>Primary Contact</h4>
+            <p>${emergencyContacts.primary?.name || "Not specified"}</p>
+            <p>${emergencyContacts.primary?.phone || ""}</p>
+            <p>${emergencyContacts.primary?.relationship || ""}</p>
+          </div>
+          <div class="contact-card">
+            <h4>Secondary Contact</h4>
+            <p>${emergencyContacts.secondary?.name || "Not specified"}</p>
+            <p>${emergencyContacts.secondary?.phone || ""}</p>
+            <p>${emergencyContacts.secondary?.relationship || ""}</p>
+          </div>
+        </div>
+        <div class="profile-section">
+          <h3>Additional Notes</h3>
+          <p>${additionalInfo.notes || "No additional notes"}</p>
+        </div>
+        <button id="edit-dependant">Edit Dependant</button>
+      `;
+  
+      // Attach event to the "Edit Dependant" button.
+      const editButton = document.getElementById("edit-dependant");
+      if (editButton) {
+        editButton.addEventListener("click", () => renderDependantEditForm(dependent));
+      }
     }
-}
+  }
+  
+  
 
 /**
  * Saves the edited dependant data to Firestore and refreshes the view.
  */
 function saveDependantEdits() {
     const updatedData = {
-        firstname: document.getElementById("edit-firstname").value.trim(),
-        lastname: document.getElementById("edit-lastname").value.trim(),
+        firstName: document.getElementById("edit-firstname").value.trim(),
+        lastName: document.getElementById("edit-lastname").value.trim(),
         relationship: document.getElementById("edit-relationship").value.trim(),
         birthdate: document.getElementById("edit-birthdate").value,
         healthSummary: document.getElementById("edit-healthSummary").value.trim(),
