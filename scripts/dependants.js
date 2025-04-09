@@ -331,11 +331,11 @@ function loadDependants() {
         // Container for the link and the remove button.
         const container = document.createElement("div");
         container.className = "dependant-container";
-
+        
         // Create the name link for viewing details.
         const nameLink = document.createElement("a");
         nameLink.href = `single_dependant.html?id=${doc.id}`;
-        nameLink.textContent = `${dependant.firstname} ${dependant.lastname}`;
+        nameLink.textContent = `${dependant.firstName} ${dependant.lastName}`;
         nameLink.className = "dependant-name";
 
         // Create the remove button.
@@ -414,13 +414,4 @@ firebase.auth().onAuthStateChanged(user => {
   }
 });
 
-// If there's a dependant ID in the URL, display details.
-document.addEventListener('DOMContentLoaded', function () {
-  const urlParams = new URLSearchParams(window.location.search);
-  const dependentId = urlParams.get('id');
-  if (dependentId) {
-    displayDependentDetails(dependentId);
-  } else {
-    console.log("No dependent ID provided");
-  }
-});
+
