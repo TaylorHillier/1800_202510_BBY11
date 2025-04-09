@@ -56,8 +56,8 @@ async function getTodayTasks(user) {
         const taskProcessingPromises = dependantsSnapshot.docs.map(async (dependantDoc) => {
             const dependantId = dependantDoc.id;
             const dependantData = dependantDoc.data();
-            const dependantName = dependantData.firstname || 'Unknown';
-            const dependantLName = dependantData.lastname || '';
+            const dependantName = dependantData.firstName || 'Unknown';
+            const dependantLName = dependantData.lastName || '';
 
             // 2a. Get completed tasks for this dependant.
             const completedSnapshot = await firebase.firestore()

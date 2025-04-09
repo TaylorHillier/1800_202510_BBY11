@@ -92,8 +92,8 @@ async function loadRecentActivity(userId) {
       completedTasksSnapshot.forEach(taskDoc => {
         allCompletedTasks.push({
           ...taskDoc.data(),
-          dependantName: dependantData.firstname || 'Unknown',
-          dependantLName: dependantData.lastname || '',
+          dependantName: dependantData.firstName || 'Unknown',
+          dependantLName: dependantData.lastName || '',
           id: taskDoc.id,
           timestamp: taskDoc.data().completedAt
         });
@@ -569,144 +569,6 @@ function formatActivityTime(timestamp) {
          date.toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
 
-// ==================================================
-//                DEPENDANTS LIST FUNCTIONS
-// ==================================================
-
-/**
- * Loads the list of dependants from Firestore and renders them in the UI.
- */
-function loadDependants() {
-  const user = firebase.auth().currentUser;
-  if (!user) {
-    console.error("No user signed in");
-    return;
-  }
-  const dependantsList = document.getElementById("dependants-list");
-  dependantsList.innerHTML = ""; // Clear any existing list.
-
-  firebase.firestore()
-    .collection("users")
-    .doc(user.uid)
-    .collection("dependants")
-    .get()
-    .then(querySnapshot => {
-      let dependants = [];
-      querySnapshot.forEach(doc => {
-        const dependant = doc.data();
-        dependants.push({ ...dependant, id: doc.id });
-      });
-
-      // Remove duplicates based on full name.
-      let uniqueDependants = [];
-      let seenNames = new Set();
-      dependants.forEach(dep => {
-        const fullName = `${dep.firstname} ${dep.lastname}`;
-        if (!seenNames.has(fullName)) {
-          seenNames.add(fullName);
-          uniqueDependants.push(dep);
-        }
-      });
-
-      if (uniqueDependants.length === 0) {
-        dependantsList.innerHTML = "<p>No dependants found.</p>";
-        return;
-      }
-
-      dependantQuant = querySnapshot.size;
-      console.log("Dependants found:", dependantQuant);
-
-      querySnapshot.forEach(doc => {
-        const dependant = doc.data();
-        const li = document.createElement("li");
-        li.className = "dependant-item";
-
-        // Container for name link and remove button.
-        const container = document.createElement("div");
-        container.className = "dependant-container";
-
-        // Dependants name link for details view.
-        const nameLink = document.createElement("a");
-        nameLink.href = `single_dependant.html?id=${doc.id}`;
-        nameLink.textContent = `${dependant.firstname} ${dependant.lastname}`;
-        nameLink.className = "dependant-name";
-
-        // Remove button.
-        const removeBtn = document.createElement("button");
-        removeBtn.textContent = "×";
-        removeBtn.className = "delete-dependant";
-        removeBtn.setAttribute("data-id", doc.id);
-        removeBtn.style.cssText = `
-          display: ${removeMode ? 'inline-block' : 'none'};
-          margin-left: 10px;
-          background-color: #ff4444;
-          color: white;
-          border: none;
-          border-radius: 4px;
-          padding: 3px 8px;
-          cursor: pointer;
-          font-size: 14px;
-          transition: background-color 0.2s;
-        `;
-        removeBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          if (confirm(`Remove ${dependant.firstname} ${dependant.lastname}?`)) {
-            removeDependant({ target: { getAttribute: () => doc.id } });
-          }
-        });
-
-        container.appendChild(nameLink);
-        container.appendChild(removeBtn);
-        li.appendChild(container);
-        dependantsList.appendChild(li);
-      });
-    })
-    .catch(error => {
-      console.error("Error loading dependants:", error);
-    });
-}
-
-/**
- * Toggles "Remove Mode" for dependants list, showing or hiding removal buttons.
- */
-function toggleRemoveMode() {
-  removeMode = !removeMode;
-  const deleteButtons = document.querySelectorAll('.delete-dependant');
-  deleteButtons.forEach(button => {
-    button.style.display = removeMode ? 'inline-block' : 'none';
-  });
-  const toggleBtn = document.getElementById('removeModeBtn');
-  if (toggleBtn) {
-    toggleBtn.textContent = removeMode ? 'Exit Remove Mode' : 'Remove Dependants';
-  }
-}
-
-/**
- * Removes a dependant from Firestore.
- * @param {Event} event - The click event from the remove button.
- */
-function removeDependant(event) {
-  const user = firebase.auth().currentUser;
-  const dependantId = event.target.getAttribute("data-id");
-  if (!user) {
-    console.error("No user signed in");
-    return;
-  }
-  firebase.firestore()
-    .collection("users")
-    .doc(user.uid)
-    .collection("dependants")
-    .doc(dependantId)
-    .delete()
-    .then(() => {
-      console.log("Dependant removed");
-      loadDependants();
-    })
-    .catch(error => {
-      console.error("Error removing dependant:", error);
-    });
-}
 
 // ==================================================
 //               INITIALIZATION & AUTH
