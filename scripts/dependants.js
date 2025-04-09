@@ -308,7 +308,7 @@ function loadDependants() {
       let uniqueDependants = [];
       let seenNames = new Set();
       dependants.forEach(dep => {
-        const fullName = `${dep.firstname} ${dep.lastname}`;
+        const fullName = `${dep.firstName} ${dep.lastName}`;
         if (!seenNames.has(fullName)) {
           seenNames.add(fullName);
           uniqueDependants.push(dep);
@@ -331,7 +331,7 @@ function loadDependants() {
         // Container for the link and the remove button.
         const container = document.createElement("div");
         container.className = "dependant-container";
-        
+
         // Create the name link for viewing details.
         const nameLink = document.createElement("a");
         nameLink.href = `single_dependant.html?id=${doc.id}`;
@@ -359,7 +359,7 @@ function loadDependants() {
         removeBtn.addEventListener("click", (e) => {
           e.preventDefault();
           e.stopPropagation();
-          if (confirm(`Remove ${dependant.firstname} ${dependant.lastname}?`)) {
+          if (confirm(`Remove ${dependant.firstName} ${dependant.lastName}?`)) {
             removeDependant({ target: { getAttribute: () => doc.id } });
           }
         });
