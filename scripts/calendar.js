@@ -27,7 +27,7 @@ class CalendarApp {
 
     // Determine page mode based on URL.
     const pageUrl = window.location.href;
-    this.isSingleDependant = pageUrl.includes('single_dependent');
+    this.isSingleDependent = pageUrl.includes('single_dependent');
     this.isCareTakerSchedule = pageUrl.includes('caretaker-schedule');
 
     this.init();
@@ -244,7 +244,7 @@ class CalendarApp {
    * Helper: Processes a single schedule entry.
    * @param {Object} entry - The raw schedule entry.
    * @param {string} medName - Medication name.
-   * @param {string} dependentName - Dependant name.
+   * @param {string} dependentName - Dependent name.
    * @param {string} numPills - Number of pills per dose.
    * @returns {Object|null} The processed entry, or null if invalid.
    */
@@ -297,8 +297,8 @@ class CalendarApp {
         const schedulePromises = dependentsSnapshot.docs.map(async (dependentDoc) => {
           const dependentId = dependentDoc.id;
           const dependentData = dependentDoc.data();
-          const dependentName = (dependentData.firstname && dependentData.lastname)
-            ? `${dependentData.firstname} ${dependentData.lastname}`
+          const dependentName = (dependentData.firstName && dependentData.lastName)
+            ? `${dependentData.firstName} ${dependentData.lastName}`
             : `Unnamed (${dependentId.substring(0, 5)})`;
 
           const medsSnapshot = await firebase.firestore()
@@ -326,7 +326,7 @@ class CalendarApp {
         });
         const allSchedules = await Promise.all(schedulePromises);
         combinedSchedule = allSchedules.flat();
-      } else if (this.isSingleDependant) {
+      } else if (this.isSingleDependent) {
         const urlParams = new URLSearchParams(window.location.search);
         const dependentId = urlParams.get('id');
         if (!dependentId) {
@@ -421,7 +421,7 @@ class CalendarApp {
       if (!groupedEntries[formattedDate]) {
         groupedEntries[formattedDate] = {};
       }
-      let groupKey = this.isCareTakerSchedule ? (entry.dependentName || 'Unknown Dependant') : 'default';
+      let groupKey = this.isCareTakerSchedule ? (entry.dependentName || 'Unknown Dependent') : 'default';
       if (!groupedEntries[formattedDate][groupKey]) {
         groupedEntries[formattedDate][groupKey] = [];
       }
@@ -467,7 +467,7 @@ class CalendarApp {
           mainEntryContainer.appendChild(groupContainer);
         } else {
           sum += events.length;
-          if (this.isSingleDependant) {
+          if (this.isSingleDependent) {
             const summary = document.createElement('div');
             summary.className = 'medication-summary';
             summary.innerHTML = `<div id="event-quant" class="event-quant">${events.length}</div>`;
@@ -532,7 +532,7 @@ class CalendarApp {
     if (this.isCareTakerSchedule) {
       let groups = {};
       entriesToRender.forEach(entry => {
-        const name = entry.dependentName || 'Unknown Dependant';
+        const name = entry.dependentName || 'Unknown Dependent';
         groups[name] = groups[name] || [];
         groups[name].push(entry);
       });
@@ -609,7 +609,7 @@ class CalendarApp {
     if (this.isCareTakerSchedule) {
       let groups = {};
       entriesToRender.forEach(entry => {
-        const name = entry.dependentName || 'Unknown Dependant';
+        const name = entry.dependentName || 'Unknown Dependent';
         groups[name] = groups[name] || [];
         groups[name].push(entry);
       });

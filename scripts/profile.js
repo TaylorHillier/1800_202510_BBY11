@@ -36,7 +36,7 @@ function initializeProfilePage() {
  */
 function loadUserProfile(user) {
   displayBasicInfo(user);
-  loadDependantsCount(user.uid);
+  loadDependentsCount(user.uid);
   loadUpcomingTasksCount(user.uid);
   loadCompletedTasksCount(user.uid);
   loadRecentActivity(user.uid);
@@ -146,7 +146,7 @@ function displayRecentActivity(tasks) {
  * @param {string} userId - The user's UID.
  * @returns {Promise<void>}
  */
-async function loadDependantsCount(userId) {
+async function loadDependentsCount(userId) {
   try {
     const dependentsSnapshot = await firebase.firestore()
       .collection('users')
@@ -578,7 +578,7 @@ document.addEventListener("DOMContentLoaded", function () {
   firebase.auth().onAuthStateChanged(user => {
     if (user) {
       setupButtons();
-      loadDependants();
+      loadDependents();
     } else {
       console.log("No user logged in.");
     }

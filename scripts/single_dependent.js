@@ -2,13 +2,13 @@
 //              GLOBAL VARIABLES & INITIAL SETUP
 // ==================================================
 
-var dependent;                 // Dependant ID from URL query parameter
+var dependent;                 // Dependent ID from URL query parameter
 var globalUserId;              // Authenticated user's UID
 let editMode = false;          // Tracks if the dependent is in edit mode
 let currentSummary = "";       // Placeholder (if used for summary functionality)
 
 // Global Firebase variable to store the full dependent data
-let globalDependantData = {};
+let globalDependentData = {};
 
 // Medication UI state variables
 let removeMedMode = false;     // Tracks if in medication remove mode
@@ -27,7 +27,7 @@ if (medButton) {
 /**
  * Retrieves the current dependent (from URL) and fetches its data from Firestore.
  */
-function getCurrentDependant() {
+function getCurrentDependent() {
     const urlParams = new URLSearchParams(window.location.search);
     dependent = urlParams.get('id');
 
@@ -44,9 +44,9 @@ function getCurrentDependant() {
 
                 if (dependentDoc.exists) {
                     // Store full dependent data
-                    globalDependantData = dependentDoc.data();
+                    globalDependentData = dependentDoc.data();
                     // Render read-only dependent view
-                    renderDependantView(globalDependantData);
+                    renderDependentView(globalDependentData);
                 } else {
                     console.log("No dependent found");
                 }
@@ -61,7 +61,7 @@ function getCurrentDependant() {
         }
     });
 }
-getCurrentDependant();
+getCurrentDependent();
 
 // Also set up additional button events once DOM is loaded.
 document.addEventListener("DOMContentLoaded", function () {
@@ -713,15 +713,15 @@ function loadNotesIssues() {
 /**
  * Switches to edit mode for the dependent and renders the editable form.
  */
-function enterEditDependantMode() {
-    renderDependantEditForm(globalDependantData);
+function enterEditDependentMode() {
+    renderDependentEditForm(globalDependentData);
 }
 
 /**
  * Renders the edit form for dependent details.
  * @param {Object} dependent - The dependent data object.
  */
-function renderDependantEditForm(dependent) {
+function renderDependentEditForm(dependent) {
     // In the flattened structure, basic info is at the top level.
     const healthData = dependent.healthSummary || {};
     const medicalInfo = dependent.medicalInfo || {};
@@ -734,7 +734,7 @@ function renderDependantEditForm(dependent) {
     detailsContainer.innerHTML = `
       <form id="edit-dependent-form">
         <div class="profile-section">
-          <h3>Dependant Information</h3>
+          <h3>Dependent Information</h3>
           <label>First Name: <input type="text" id="edit-firstname" value="${dependent.firstName || ""}"></label><br>
           <label>Last Name: <input type="text" id="edit-lastname" value="${dependent.lastName || ""}"></label><br>
           <label>Relationship: <input type="text" id="edit-relationship" value="${dependent.relationship || ""}"></label><br>
@@ -778,9 +778,9 @@ function renderDependantEditForm(dependent) {
     }
   
     // Attach events for form actions.
-    document.getElementById("save-dependent-edits").addEventListener("click", saveDependantEdits);
+    document.getElementById("save-dependent-edits").addEventListener("click", saveDependentEdits);
     document.getElementById("cancel-dependent-edits").addEventListener("click", () => {
-      renderDependantView(dependent);
+      renderDependentView(dependent);
     });
   }
   
@@ -788,7 +788,7 @@ function renderDependantEditForm(dependent) {
    * Renders the read-only view of dependent details.
    * @param {Object} dependent - The dependent data object.
    */
-  function renderDependantView(dependent) {
+  function renderDependentView(dependent) {
     // In the flattened structure, basic info is directly on the dependent object.
     const healthData = dependent.healthSummary || {};
     const medicalInfo = dependent.medicalInfo || {};
@@ -835,13 +835,13 @@ function renderDependantEditForm(dependent) {
           <h3>Additional Notes</h3>
           <p>${additionalInfo.notes || "No additional notes"}</p>
         </div>
-        <button id="edit-dependent">Edit Dependant</button>
+        <button id="edit-dependent">Edit Dependent</button>
       `;
   
-      // Attach event to the "Edit Dependant" button.
+      // Attach event to the "Edit Dependent" button.
       const editButton = document.getElementById("edit-dependent");
       if (editButton) {
-        editButton.addEventListener("click", () => renderDependantEditForm(dependent));
+        editButton.addEventListener("click", () => renderDependentEditForm(dependent));
       }
     }
   }
@@ -851,7 +851,7 @@ function renderDependantEditForm(dependent) {
 /**
  * Saves the edited dependent data to Firestore and refreshes the view.
  */
-function saveDependantEdits() {
+function saveDependentEdits() {
     const updatedData = {
         firstName: document.getElementById("edit-firstname").value.trim(),
         lastName: document.getElementById("edit-lastname").value.trim(),
@@ -885,10 +885,10 @@ function saveDependantEdits() {
         .doc(dependent)
         .update(updatedData)
         .then(() => {
-            console.log("Dependant data updated successfully");
+            console.log("Dependent data updated successfully");
             // Update global dependent data.
-            globalDependantData = { ...globalDependantData, ...updatedData };
-            renderDependantView(globalDependantData);
+            globalDependentData = { ...globalDependentData, ...updatedData };
+            renderDependentView(globalDependentData);
         })
         .catch(error => {
             console.error("Error updating dependent data:", error);
@@ -903,7 +903,7 @@ function setupViewDetailsButton() {
     if (!viewDetailsButton) return;
     
     viewDetailsButton.addEventListener("click", function () {
-        renderDependantView(globalDependantData);
+        renderDependentView(globalDependentData);
         const $dependentDiv = $(document.getElementById("dependent-details"));
         const $viewDetailsBtn = $(viewDetailsButton);
 
@@ -928,9 +928,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
 /**
  * Retrieves the dependent ID from the URL.
- * @returns {string|null} Dependant ID, or null if not present.
+ * @returns {string|null} Dependent ID, or null if not present.
  */
-function getDependantId() {
+function getDependentId() {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get('id');
 }

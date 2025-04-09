@@ -10,7 +10,7 @@ let removeMode = false;
 function getCurrentUser() {
   firebase.auth().onAuthStateChanged(user => {
     if (user) {
-      // Bind the "Add Dependant" button event if present.
+      // Bind the "Add Dependent" button event if present.
       const addButton = document.getElementById("add-dependent");
       if (addButton) {
         addButton.addEventListener("click", createForm);
@@ -22,13 +22,13 @@ function getCurrentUser() {
 }
 
 /**
- * Creates and displays the "Add Dependant" form as a new section in the main element.
+ * Creates and displays the "Add Dependent" form as a new section in the main element.
  */
 function createForm() {
   // Create container for the form.
-  const addDependantSection = document.createElement("section");
-  addDependantSection.id = "add-dependent-container";
-  addDependantSection.className = "add-dependent-container";
+  const addDependentSection = document.createElement("section");
+  addDependentSection.id = "add-dependent-container";
+  addDependentSection.className = "add-dependent-container";
 
   // Create the form element.
   const form = document.createElement("form");
@@ -101,9 +101,9 @@ function createForm() {
   form.addEventListener("submit", async function (event) {
     event.preventDefault();
     try {
-      await addDependant();
+      await addDependent();
       form.reset();
-      addDependantSection.remove();
+      addDependentSection.remove();
       alert("Dependent added successfully!");
     } catch (error) {
       console.error("Error adding dependent: ", error);
@@ -113,13 +113,13 @@ function createForm() {
 
   // Bind close button to remove the form.
   closeBtn.addEventListener("click", () => {
-    addDependantSection.remove();
+    addDependentSection.remove();
   });
 
   // Append the form to its container and then to the main element.
-  addDependantSection.appendChild(form);
+  addDependentSection.appendChild(form);
   if (!document.getElementById("add-dependent-container")) {
-    document.getElementsByTagName('main')[0].appendChild(addDependantSection);
+    document.getElementsByTagName('main')[0].appendChild(addDependentSection);
   }
 }
 
@@ -178,7 +178,7 @@ function createFormSection(form, sectionTitle, fields) {
  * @returns {Promise<string>} A promise that resolves with the newly created dependent document ID.
  * @throws {Error} If the user is not authenticated.
  */
-async function addDependant() {
+async function addDependent() {
   const user = firebase.auth().currentUser;
   if (!user) {
     throw new Error("User not authenticated");
@@ -231,7 +231,7 @@ document.addEventListener("DOMContentLoaded", function () {
   firebase.auth().onAuthStateChanged(user => {
     if (user) {
       setupButtons();
-      loadDependants(); // Load dependents on page load.
+      loadDependents(); // Load dependents on page load.
     } else {
       console.log("No user logged in.");
     }
@@ -268,14 +268,14 @@ function toggleRemoveMode() {
   // Update remove mode button text.
   const toggleBtn = document.getElementById('removeModeBtn');
   if (toggleBtn) {
-    toggleBtn.textContent = removeMode ? 'Exit Remove Mode' : 'Remove Dependants';
+    toggleBtn.textContent = removeMode ? 'Exit Remove Mode' : 'Remove Dependents';
   }
 }
 
 /**
  * Loads the list of dependents from Firestore and renders them.
  */
-function loadDependants() {
+function loadDependents() {
   const user = firebase.auth().currentUser;
   if (!user) {
     console.error("No user signed in");
@@ -298,23 +298,23 @@ function loadDependants() {
       });
 
       // Remove duplicates based on full name.
-      let uniqueDependants = [];
+      let uniqueDependents = [];
       let seenNames = new Set();
       dependents.forEach(dep => {
         const fullName = `${dep.firstName} ${dep.lastName}`;
         if (!seenNames.has(fullName)) {
           seenNames.add(fullName);
-          uniqueDependants.push(dep);
+          uniqueDependents.push(dep);
         }
       });
 
-      if (uniqueDependants.length === 0) {
+      if (uniqueDependents.length === 0) {
         dependentsList.innerHTML = "<p>No dependents found.</p>";
         return;
       }
 
       dependentQuant = querySnapshot.size;
-      console.log("Dependants found:", dependentQuant);
+      console.log("Dependents found:", dependentQuant);
 
       querySnapshot.forEach(doc => {
         const dependent = doc.data();
@@ -353,7 +353,7 @@ function loadDependants() {
           e.preventDefault();
           e.stopPropagation();
           if (confirm(`Remove ${dependent.firstName} ${dependent.lastName}?`)) {
-            removeDependant({ target: { getAttribute: () => doc.id } });
+            removeDependent({ target: { getAttribute: () => doc.id } });
           }
         });
 
@@ -372,7 +372,7 @@ function loadDependants() {
  * Removes a dependent from Firestore.
  * @param {Event} event - The click event from the remove button.
  */
-function removeDependant(event) {
+function removeDependent(event) {
   const user = firebase.auth().currentUser;
   const dependentId = event.target.getAttribute("data-id");
   
@@ -388,8 +388,8 @@ function removeDependant(event) {
     .doc(dependentId)
     .delete()
     .then(() => {
-      console.log("Dependant removed");
-      loadDependants(); 
+      console.log("Dependent removed");
+      loadDependents(); 
     })
     .catch(error => {
       console.error("Error removing dependent:", error);
